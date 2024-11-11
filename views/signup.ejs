@@ -1,0 +1,263 @@
+<!-- views/signup.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .signup-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+    .invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+
+}
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+    </style>
+</head>
+<body>
+
+
+
+    <div class="container">
+        <div class="signup-container">
+            <h2 class="text-center mb-4">Create an Account</h2>
+
+              <!-- General Error Message -->
+        <% if (locals.errors?.general) { %>
+            <div class="alert alert-danger" id="errorContainer" role="alert">
+                <%= errors.general %>
+            </div>
+        <% } %>
+        <div id="successContainer" class="alert alert-success d-none" role="alert"></div>
+
+    <!-- ! first name section -->
+            <form id="signupForm" method ="POST" action="/users/signup">
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input 
+                        type="text" 
+                        class="form-control <%= locals.errors?.firstname ? 'is-invalid' : '' %>"
+                        id="firstName" 
+                        name="firstName"
+                        placeholder="Enter your First Name " 
+                        value="<%= locals.firstName || '' %>"
+                        required
+                    >
+                    <% if (locals.errors?.firstname) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.firstname %>
+                        </div>
+                    <% } %>
+                </div>
+
+<!-- ! last name section    -->
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input 
+                        type="text" 
+                        class="form-control <%= locals.errors?.lastname ? 'is-invalid' : '' %>"
+                        id="lastName" 
+                        name="lastName"
+                        placeholder="Enter your Last Name " 
+                        value="<%= locals.lastName || '' %>"
+                        required
+                    >
+                    <% if (locals.errors?.lastname) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.lastname %>
+                        </div>
+                    <% } %>
+                </div>
+
+               
+    <!--  email section -->
+
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input 
+                        type="email" 
+                        class="form-control <%= locals.errors?.email ? 'is-invalid' : '' %>"
+                        id="email" 
+                        name="email" 
+                        placeholder="Enter your Email"
+                        value="<%= locals.email || '' %>"
+                        required
+                    >
+                    <% if (locals.errors?.email) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.email %>
+                        </div>
+                    <% } %>
+                </div>
+    
+
+    <!-- ! password section -->
+                
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input 
+                        type="password" 
+                        class="form-control <%= locals.errors?.password ? 'is-invalid' : '' %>"
+                        id="password" 
+                        name="password"
+                        placeholder="Password must be at least 6 characters long."
+                        required
+                    >
+                    <% if (locals.errors?.password) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.password %>
+                        </div>
+                    <% } %>
+                </div>
+    
+
+              <!-- ! confirm password -->
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                <input 
+                    type="password" 
+                    class="form-control <%= locals.errors?.password ? 'is-invalid' : '' %>"
+                    id="confirmPassword" 
+                    name="confirmPassword"
+                    placeholder="Password must be at least 6 characters long."
+                    required
+                >
+                <% if (locals.errors?.confirmPassword) { %>
+                    <div class="invalid-feedback">
+                        <%= errors.confirmPassword %>
+                    </div>
+                <% } %>
+            </div>
+
+                <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+        </form>
+
+    
+            <div class="text-center mt-3">
+                <p>Already have an account? <a href="/users/login">Login here</a></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // public/js/signup-validation.js
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get all form values
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    // Reset previous errors
+    const errorElements = document.querySelectorAll('.invalid-feedback');
+    errorElements.forEach(element => element.remove());
+    document.querySelectorAll('.is-invalid').forEach(element => {
+        element.classList.remove('is-invalid');
+    });
+
+    let hasError = false;
+
+    // First Name Validation
+    if (!firstName) {
+        showError('firstName', 'First name is required');
+        hasError = true;
+    } else if (firstName.length < 2) {
+        showError('firstName', 'First name must be at least 2 characters');
+        hasError = true;
+    } else if (!/^[A-Za-z\s-']+$/.test(firstName)) {
+        showError('firstName', 'First name can only contain letters');
+        hasError = true;
+    }
+
+    // Last Name Validation
+    if (!lastName) {
+        showError('lastName', 'Last name is required');
+        hasError = true;
+    } else if (lastName.length < 1) {
+        showError('lastName', 'Last name must be at least 2 characters');
+        hasError = true;
+    } else if (!/^[A-Za-z\s-']+$/.test(lastName)) {
+        showError('lastName', 'Last name can only contain letters');
+        hasError = true;
+    }
+
+    // Email Validation
+    if (!email) {
+        showError('email', 'Email is required');
+        hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('email', 'Please enter a valid email address');
+        hasError = true;
+    }
+
+    // Password Validation
+    if (!password) {
+        showError('password', 'Password is required');
+        hasError = true;
+    } else {
+        // Check password strength
+        // const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const isLongEnough = password.length >= 6;
+
+        if (!isLongEnough  || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+            showError('password', 'Password must be at least 6 characters and contain uppercase, lowercase, number and special character');
+            hasError = true;
+        }
+    }
+
+    // Confirm Password Validation
+    if (!confirmPassword) {
+        showError('confirmPassword', 'Please confirm your password');
+        hasError = true;
+    } else if (password !== confirmPassword) {
+        showError('confirmPassword', 'Passwords do not match');
+        hasError = true;
+    }
+
+    // If no errors, submit the form
+    if (!hasError) {
+        this.submit();
+    }
+});
+
+// Simple function to show errors
+function showError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    field.classList.add('is-invalid');
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback';
+    errorDiv.textContent = message;
+    
+    field.parentNode.appendChild(errorDiv);
+}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

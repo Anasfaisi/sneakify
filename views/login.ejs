@@ -1,0 +1,233 @@
+<!-- views/login.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 2rem auto;
+            padding: 2rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+            border-color: #80bdff;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-Commerce</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products">Products</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <% if (locals.user) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/profile">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/cart">Cart</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+                    <% } else { %>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/users/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/users/signup">Sign Up</a>
+                        </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+//login form
+    <div class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login to Your Account</h2>
+            
+            <% if (locals.success) { %>
+                <div class="alert alert-success" role="alert">
+                    <%= success %>
+                </div>
+            <% } %>
+    
+            <form action="/users/login" method="POST" novalidate>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input 
+                        type="email" 
+                        class="form-control <%= locals.errors?.email ? 'is-invalid' : '' %>"
+                        id="email" 
+                        name="email" 
+                        value="<%= locals.email || '' %>"
+                        required
+                        autofocus
+                    >
+                    <% if (locals.errors?.email) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.email %>
+                        </div>
+                    <% } %>
+                </div>
+    
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input 
+                        type="password" 
+                        class="form-control <%= locals.errors?.password ? 'is-invalid' : '' %>"
+                        id="password" 
+                        name="password"
+                        required
+                    >
+                    <% if (locals.errors?.password) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.password %>
+                        </div>
+                    <% } %>
+                </div>
+    
+                <div class="mb-3 form-check">
+                    <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="rememberMe" 
+                        name="rememberMe"
+                    >
+                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                </div>
+    
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+    
+            <div class="text-center mt-3">
+                <p>Don't have an account? <a href="/users/signup">Sign up here</a></p>
+                <p><a href="/users/forgot-password">Forgot your password?</a></p>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- Login Form
+    <div class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login to Your Account</h2>
+            
+            <% if (locals.error) { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <% if (locals.success) { %>
+                <div class="alert alert-success" role="alert">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <form action="/users/login" method="POST" novalidate>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input 
+                        type="email" 
+                        class="form-control" 
+                        id="email" 
+                        name="email" 
+                        value="<%= locals.email || '' %>"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input 
+                        type="password" 
+                        class="form-control" 
+                        id="password" 
+                        name="password"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="rememberMe" 
+                        name="rememberMe"
+                    >
+                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p>Don't have an account? <a href="/users/signup">Sign up here</a></p>
+                <p><a href="/users/forgot-password">Forgot your password?</a></p>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input');
+        
+            inputs.forEach((input, index) => {
+                input.addEventListener('keydown', function(e) {
+                    // Check if the pressed key is Enter
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent form submission
+                        
+                        // Move to next input if it exists
+                        if (index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        } else {
+                            // If it's the last input, submit the form
+                            form.submit();
+                        }
+                    }
+                });
+            });
+        
+            // Only allow form submission when clicking the submit button
+            form.addEventListener('submit', function(e) {
+                // Add any form validation here if needed
+                // If validation fails, call e.preventDefault()
+            });
+        });
+        </script>
+    
+</body>
+</html>
