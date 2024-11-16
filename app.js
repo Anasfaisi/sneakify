@@ -1,5 +1,5 @@
 const express = require("express");
-const session = require("express-session")
+const session = require("express-session");
 const path = require("path");
 const adminRouter = require("./routes/adminRoute");
 const usersRouter = require("./routes/userRoute");
@@ -17,22 +17,39 @@ app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(session({
-  secret:'key',
-  resave:false,
-  saveUninitialized:false,
-  cookie:{secure:false}
-}))
+app.use(express.static(path.join(__dirname, "uploads")));
+// Prevent caching by setting headers
+app.use((req, res, next) => {
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
 
-// app.use("/", adminRouter);
-app.get("/",(req,res)=>{
-  res.json({"message":"server is running"})
-})
+// Configure session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+    },
+  })
+);
+
+app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
-app.use((req,res,next)=>{
-  console.log(`${req.method}  and the url is ${req.url}`)
-  next()
-})
+app.use((req, res, next) => {
+  console.log(`${req.method}  and the url is ${req.url}`);
+  next();
+});
 
 app.listen(PORT, () =>
   console.log("server listening at http://localhost:3000/users/signup")

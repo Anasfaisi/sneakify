@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 2rem auto;
+            padding: 2rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            border-color: #80bdff;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login to Your Account</h2>
+
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="email" name="email" required autofocus>
+                </div>
+                
+                
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                
+                
+                <div id="generalError" class="error-message" style="display: none;">Please enter a valid email address.</div>
+                
+
+
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p>Don't have an account? <a href="/users/signup">Sign up here</a></p>
+                <p><a href="/users/forgot-password">Forgot your password?</a></p>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+            event.preventDefault()
+            let isValid = true
+
+            let email = document.getElementById("email").value
+            let password = document.getElementById("password").value
+            let generalError = document.getElementById("generalError")
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if(!emailPattern.test(email)){
+                generalError.style.display ="block"
+               isvalid = false
+            }
+
+            if (password.length < 6) {
+                generalError.style.display = "block"
+                isValid = false
+            }
+
+            if (isValid) {
+                
+
+                try {
+                    let response = await fetch("/users/login", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ email, password })
+                    })
+                    console.log(response);
+                    const data = await response.json()
+                    console.log(data)
+                    if (data.success) {
+                        console.log(data.success)
+                        window.location.href = "/users/home"
+                    } else {
+                            generalError.innerHTML = data.message
+                            generalError.style.display = "block"
+                        }
+                    
+                } catch (error) {
+
+                    console.log("error in front end validation", error)
+                    if(error){
+                     generalError.innerHTML = "your accournt please blocked please contact admin"
+                     generalError.style.color='red'
+                            generalError.style.display = "block"
+                    }
+                }
+            }
+
+        })
+
+
+
+
+    </script>
+
+</body>
+
+</html>

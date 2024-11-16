@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        padding: 48px 0 0;
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+      }
+
+      .sidebar-sticky {
+        position: relative;
+        top: 0;
+        height: calc(100vh - 48px);
+        padding-top: .5rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      @supports ((position: -webkit-sticky) or (position: sticky)) {
+        .sidebar-sticky {
+          position: -webkit-sticky;
+          position: sticky;
+        }
+      }
+
+      .sidebar .nav-link {
+        font-weight: 500;
+        color: #333;
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .sidebar .nav-link.active {
+        color: #007bff;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+      }
+
+      .sidebar .nav-link:hover {
+        background-color: #f8f9fa;
+      }
+
+      .stats-card {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.2s;
+      }
+
+      .stats-card:hover {
+        transform: translateY(-3px);
+      }
+
+      .stats-icon {
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+      }
+
+      .top-products-table img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+
+      .chart-container {
+        height: 300px;
+        margin-top: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+      <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Sneakify Admin</a>
+      <div class="d-flex align-items-center">
+        <div class="dropdown mr-3">
+          <button class="btn btn-dark dropdown-toggle" type="button" id="notificationsDropdown" data-toggle="dropdown">
+            <i class="fas fa-bell"></i>
+            <span class="badge badge-danger">3</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="#">New order #123</a>
+            <a class="dropdown-item" href="#">Low stock alert</a>
+            <a class="dropdown-item" href="#">New customer signup</a>
+          </div>
+        </div>
+        <button class="btn btn-outline-light" id="logoutButton">
+          <i class="fas fa-sign-out-alt mr-1"></i>Logout
+        </button>
+      </div>
+    </nav>
+
+
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Dashboard Overview</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                <i class="fas fa-calendar"></i>
+                This week
+              </button>
+            </div>
+          </div>
+          <%-include("admin/partials") %>
+
+          <!-- Statistics Cards -->
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="card stats-card bg-primary text-white">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-subtitle mb-2">Total Sales</h6>
+                      <h3 class="card-title mb-0">₹89,450</h3>
+                      <small class="text-white-50">+12.5% from last month</small>
+                    </div>
+                    <div class="stats-icon bg-primary-light">
+                      <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-subtitle mb-2">Total Orders</h6>
+                      <h3 class="card-title mb-0">156</h3>
+                      <small class="text-white-50">+8.2% from last month</small>
+                    </div>
+                    <div class="stats-icon bg-success-light">
+                      <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card stats-card bg-info text-white">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-subtitle mb-2">Total Customers</h6>
+                      <h3 class="card-title mb-0">2,854</h3>
+                      <small class="text-white-50">+15.3% from last month</small>
+                    </div>
+                    <div class="stats-icon bg-info-light">
+                      <i class="fas fa-users fa-2x"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card stats-card bg-warning text-white">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-subtitle mb-2">Products Stock</h6>
+                      <h3 class="card-title mb-0">486</h3>
+                      <small class="text-white-50">4 items low stock</small>
+                    </div>
+                    <div class="stats-icon bg-warning-light">
+                      <i class="fas fa-box fa-2x"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Best Selling Products -->
+          <div class="row">
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Best Selling Products</h5>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-hover top-products-table">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Price</th>
+                          <th>Sold</th>
+                          <th>Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <img src="#" alt="Nike Jordan" class="mr-2">
+                              <span>Nike Jordan Special Edition</span>
+                            </div>
+                          </td>
+                          <td>₹3,000</td>
+                          <td>124 pairs</td>
+                          <td>₹372,000</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <img src="/api/placeholder/40/40" alt="Air Max" class="mr-2">
+                              <span>Nike Air Max 270</span>
+                            </div>
+                          </td>
+                          <td>₹2,800</td>
+                          <td>98 pairs</td>
+                          <td>₹274,400</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <img src="/api/placeholder/40/40" alt="Ultra Boost" class="mr-2">
+                              <span>Adidas Ultra Boost</span>
+                            </div>
+                          </td>
+                          <td>₹2,500</td>
+                          <td>87 pairs</td>
+                          <td>₹217,500</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                  <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action">
+                      <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Order #12345</h6>
+                        <small class="text-muted">3 mins ago</small>
+                      </div>
+                      <p class="mb-1">Nike Jordan - Size 42</p>
+                      <small class="text-muted">₹3,000</small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                      <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Order #12344</h6>
+                        <small class="text-muted">34 mins ago</small>
+                      </div>
+                      <p class="mb-1">Air Max 270 - Size 41</p>
+                      <small class="text-muted">₹2,800</small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                      <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Order #12343</h6>
+                        <small class="text-muted">2 hours ago</small>
+                      </div>
+                      <p class="mb-1">Ultra Boost - Size 43</p>
+                      <small class="text-muted">₹2,500</small>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document.getElementById("logoutButton").addEventListener("click", async () => {
+        try {
+          const response = await fetch("/admin/logout", {
+            method: "GET",
+            headers: {
+              "content-type": "application/json"
+            }
+          });
+
+          if (response.ok) {
+            window.location.href = "/admin/login";
+          } else {
+            console.log("Logout failed");
+          }
+        } catch (error) {
+          console.log("error from home ejs in logout validation  " + error);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -169,6 +169,8 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 
     // Reset previous errors
     const errorElements = document.querySelectorAll('.invalid-feedback');
@@ -186,7 +188,7 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     } else if (firstName.length < 2) {
         showError('firstName', 'First name must be at least 2 characters');
         hasError = true;
-    } else if (!/^[A-Za-z\s-']+$/.test(firstName)) {
+    } else if (!/^[A-Za-z0-9\s-']+$/.test(firstName)) {
         showError('firstName', 'First name can only contain letters');
         hasError = true;
     }
@@ -207,7 +209,8 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     if (!email) {
         showError('email', 'Email is required');
         hasError = true;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!errorPattern.test(email)) {
+        console.log("checking the email validation")
         showError('email', 'Please enter a valid email address');
         hasError = true;
     }
@@ -219,12 +222,12 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     } else {
         // Check password strength
         // const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumbers = /\d/.test(password);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        // const hasLowerCase = /[a-z]/.test(password);
+        // const hasNumbers = /\d/.test(password);
+        // const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
         const isLongEnough = password.length >= 6;
 
-        if (!isLongEnough  || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+        if (!isLongEnough) {
             showError('password', 'Password must be at least 6 characters and contain uppercase, lowercase, number and special character');
             hasError = true;
         }
@@ -261,3 +264,4 @@ function showError(fieldId, message) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+  

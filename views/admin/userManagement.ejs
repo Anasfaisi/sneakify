@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Users List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #2e2e2e;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #aad9ca;
+            height: 100vh;
+            padding-top: 20px;
+            position: fixed;
+            width: 250px;
+        }
+
+        .sidebar a {
+            color: #000;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 15px;
+            display: block;
+        }
+
+        .sidebar a.active {
+            color: #007bff;
+        }
+
+        .content {
+            margin-left: 270px;
+            padding: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f0f0f0;
+        }
+
+        .table-container {
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        .btn-block {
+            background-color: #ffcccc;
+        }
+
+        .btn-unblock {
+            background-color: #ccffcc;
+        }
+    </style><!-- Include SweetAlert2 CSS and JS from CDN -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.min.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="/admin/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+            <a href="/admin/products"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders"><i class="fas fa-shopping-cart"></i> Orders</a>
+            <a href="/admin/offers"><i class="fas fa-tags"></i> Offers</a>
+            <a href="/admin/coupons"><i class="fas fa-percent"></i> Coupons</a>
+            <a href="/admin/deals"><i class="fas fa-gift"></i> Deals</a>
+            <a href="/admin/categories"><i class="fas fa-th-large"></i> Categories</a>
+            <a href="/admin/settings"><i class="fas fa-cog"></i> Settings</a>
+            <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="top-bar">
+                <h2>Users List</h2>
+                <div class="user-profile">
+                    <span class="me-2">Anas (Admin)</span>
+                    <img src="#" alt="Admin" class="rounded-circle" width="40">
+                    <i class="fas fa-bell ms-3"></i>
+                </div>
+            </div>
+
+            <div class="table-container  d-flex flex-column mt-4">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>S.No</th>
+                            <th>FirstName</th>
+                            <th>LastName</th>
+                            <th>Email</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach((user, index)=> { %>
+                            <tr>
+                                <td>
+                                    <%= index + 1 %>
+                                </td>
+                                <td>
+                                    <%= user.firstName %>
+                                </td>
+                                <td>
+                                    <%= user.lastName %>
+                                </td>
+                                <td>
+                                    <%= user.email %>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/<%= user._id %>/<%= user.isBlocked ? 'unblock' : 'block' %>" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn <%= user.isBlocked ? 'btn-success' : 'btn-danger' %>">
+                                            <%= user.isBlocked ? 'Unblock' : 'Block' %>
+                                        </button>
+                                    </form>
+
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+                <p class="mt-3 text-muted">Showing 1-13 of 24</p>
+                <div class="d-flex justify-content-center">
+                    <button class="btn btn-secondary mx-1">&lt;</button>
+                    <button class="btn btn-secondary mx-1">&gt;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+       
+       document.addEventListener('DOMContentLoaded', function() {
+    const actionButtons = document.querySelectorAll('[id^="action-btn-"]'); // Select buttons starting with 'action-btn-'
+    actionButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const action = button.getAttribute('data-action');
+            const userId = button.getAttribute('data-user-id');
+            console.log(userId);
+            const confirmation = await Swal.fire({
+        title: `Are you sure?`,
+        text: `Do you want to ${action} this user?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+        reverseButtons: true
+    });
+    
+    if (!confirmation.isConfirmed) return; 
+
+    
+    button.disabled = true;
+    button.innerText = 'Processing...';
+            
+            
+            try {
+                const response = await fetch(`/admin/users/${userId}/${action}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: action }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                console.log(response)
+                const data = await response.json();
+                console.log(data)
+
+                if (data.success) {
+                    
+                    button.classList.toggle('btn-danger');
+                    button.classList.toggle('btn-success');
+                    button.innerText = (action === 'block') ? 'Unblock' : 'Block';
+                    window.location.reload()
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: `User has been ${action === 'block' ? 'blocked' : 'unblocked'} successfully.`,
+                        confirmButtonText: 'Okay'
+                    });
+                } else {
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed!',
+                        text: 'Failed to update user status.',
+                        confirmButtonText: 'Retry'
+                    });
+                }
+            } catch (error) {
+                
+                console.error('Error:', error);
+
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: 'There was an error while processing your request.',
+                    confirmButtonText: 'Close'
+                });
+            }
+        });
+    });
+});
+
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.all.min.js"></script>
+
+</body>
+
+</html>
