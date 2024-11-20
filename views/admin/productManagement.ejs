@@ -19,8 +19,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Management</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <style>
         .sidebar {
@@ -64,7 +62,12 @@
         }
     </style>
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -148,17 +151,23 @@
                                                 class="product-image">
                                         </td>
                                         <td>
-                                            <span class="badge <%= product.isActive ? 'bg-success' : 'bg-danger' %>">
-                                                <%= product.isActive ? 'Yes' : 'No' %>
-                                            </span>
+                                           
+                                            <button 
+                                            id="listButton-<%= product._id %>" 
+                                            data-product-id="<%= product._id %>"
+                                            class="btn <%= product.isActive ? 'btn-danger' : 'btn-success' %>">
+                                            <%= product.isActive ? 'UnList' : 'List' %>
+                                        </button>
+                                        
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary me-1">
+                                            <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadProductData('<%= product._id %>')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-danger">
+                                            
+                                            <!-- <button class="btn btn-sm btn-danger">
                                                 <i class="fas fa-trash"></i>
-                                            </button>
+                                            </button> -->
                                         </td>
                                     </tr>
                                     <% }) %>
@@ -204,39 +213,25 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="category" class="form-label">Category</label>
-                                        <input type="text" class="form-control" id="category" name="category" required>
-                                    </div>
+                                        <select class="form-control" id="category" name="category" required>
+                                          <option value="">Select Category</option> 
+                                          <% categories.forEach((category) => { %>
+                                            <option value="<%= category._id %>"><%= category.name %></option>
+                                          <% }) %>
+                                        </select>
+                                      </div>
                                     <div class="mb-3">
                                         <label for="imageInput1" class="form-label">Upload Product Image 1</label>
-                                        <input type="file" class="form-control" id="imageInput1">
-                                        <div class="crop-container mt-3">
-                                            <img id="imagePreview1" src="#" alt="Preview"
-                                                style="max-width: 100%; display: none;">
+                                        <input type="file" multiple class="form-control" id="imageInput" required>
+                                        <!-- Cropper Container -->
+                                        <div id="cropContainer" style="display: none;">
+                                            <img id="cropImage" style="max-width: 100%; max-height: 400px;" />
+                                            <button type="button" id="cropButton">Crop</button>
+                                            <button type="button" id="skipButton">Skip</button>
+                                            <button type="button" id="closeCropperButton">Close Cropper</button>
                                         </div>
-                                        <button id="cropButton1" class="btn btn-primary mt-3" disabled>Crop & Upload
-                                            Image 1</button>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="imageInput2" class="form-label">Upload Product Image 2</label>
-                                        <input type="file" class="form-control" id="imageInput2">
-                                        <div class="crop-container mt-3">
-                                            <img id="imagePreview2" src="#" alt="Preview"
-                                                style="max-width: 100%; display: none;">
-                                        </div>
-                                        <button id="cropButton2" class="btn btn-primary mt-3" disabled>Crop & Upload
-                                            Image 2</button>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="imageInput3" class="form-label">Upload Product Image 3</label>
-                                        <input type="file" class="form-control" id="imageInput3">
-                                        <div class="crop-container mt-3">
-                                            <img id="imagePreview3" src="#" alt="Preview"
-                                                style="max-width: 100%; display: none;">
-                                        </div>
-                                        <button id="cropButton3" class="btn btn-primary mt-3" disabled>Crop & Upload
-                                            Image 3</button>
+                                        <input type="file" id="croppedImages" multiple hidden>
+                                        <div id="croppedImageContainer"></div>
                                     </div>
 
 
@@ -254,19 +249,334 @@
     </div>
 
 
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                        <form id="editProductForm" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <!-- Hidden field to store the product ID -->
+                                <input type="hidden" id="productId" name="productId">
+
+                                <div class="mb-3">
+                                    <label for="editName" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="editName" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="editDescription" name="description" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editStock" class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="editStock" name="stock" min="0" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editPrice" class="form-label">Price</label>
+                                    <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0"
+                                        required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-control" id="category" name="category" required>
+                                      <option value="">Select Category</option> 
+                                      <% categories.forEach((category) => { %>
+                                        <option value="<%= category._id %>"><%= category.name %></option>
+                                      <% }) %>
+                                    </select>
+                                  </div>
+                                <div class="mb-3">
+                                    <label for="editImageInput" class="form-label">Update Product Images</label>
+                                    <input type="file" multiple class="form-control" id="editImageInput" name="images">
+                            
+                                    <div id="currentImagesContainer">
+                                        <p>Current Images:</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Update Product</button>
+                            </div>
+                        </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        //add image
+        const imageInput = document.getElementById('imageInput');
+        const cropContainer = document.getElementById('cropContainer');
+        const cropImage = document.getElementById('cropImage');
+        const cropButton = document.getElementById('cropButton');
+        const skipButton = document.getElementById('skipButton');
+        const closeCropperButton = document.getElementById('closeCropperButton');
+        const croppedImageContainer = document.getElementById('croppedImageContainer');
+        const croppedImagesInput = document.getElementById('croppedImages');
+
+        let cropper;
+        let imageQueue = [];
+        let currentImageIndex = -1;
+        let croppedFiles = []; // Array to store cropped files
+
+        const loadImageToCropper = () => {
+            if (currentImageIndex >= 0 && currentImageIndex < imageQueue.length) {
+                const file = imageQueue[currentImageIndex];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    cropImage.src = e.target.result;
+
+                    // Initialize or reset Cropper.js
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1, // Adjust as needed
+                        viewMode: 2,
+                    });
+
+                    cropContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                cropContainer.style.display = 'none'; // Hide the cropper if no images left
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            }
+        };
+
+        const dataURLtoFile = (dataurl, filename) => {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        };
+
+        imageInput.addEventListener('change', (event) => {
+            imageQueue = Array.from(event.target.files); // Add files to the queue
+            currentImageIndex = 0;
+            loadImageToCropper(); // Load the first image
+        });
+
+        cropButton.addEventListener('click', () => {
+            if (cropper) {
+                const croppedCanvas = cropper.getCroppedCanvas();
+                const croppedImageDataURL = croppedCanvas.toDataURL('image/png');
+
+                // Create and display the cropped image
+                const croppedImg = document.createElement('img');
+                croppedImg.src = croppedImageDataURL;
+                croppedImg.style.maxWidth = '200px'; // Adjust size if needed
+                croppedImg.style.margin = '10px';
+                croppedImageContainer.appendChild(croppedImg);
+
+                // Convert dataURL to File object and add to croppedFiles array
+                const croppedFile = dataURLtoFile(
+                    croppedImageDataURL,
+                    `cropped-image-${currentImageIndex + 1}.png`
+                );
+                croppedFiles.push(croppedFile);
+
+                // Update the hidden input's files property
+                const dataTransfer = new DataTransfer();
+                croppedFiles.forEach((file) => dataTransfer.items.add(file));
+                croppedImagesInput.files = dataTransfer.files;
+
+                // Move to the next image
+                currentImageIndex++;
+                loadImageToCropper();
+            }
+        });
+
+        skipButton.addEventListener('click', () => {
+            currentImageIndex++;
+            loadImageToCropper(); // Skip to the next image
+        });
+
+        closeCropperButton.addEventListener('click', () => {
+            cropContainer.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            imageQueue = [];
+            currentImageIndex = -1; // Reset the queue
+        });
+    </script>
+    <script>
+        // add product
+        const addProductForm = document.getElementById('addProductForm');
+
+        addProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Create a FormData object
+            const formData = new FormData(addProductForm);
+
+            // Append cropped images from the hidden input to the FormData
+            const croppedFiles = croppedImagesInput.files;
+            for (let i = 0; i < croppedFiles.length; i++) {
+                formData.append('croppedImages', croppedFiles[i]);
+            }
+
+            // Log FormData keys and values for testing
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+
+            console.log(formData);
+
+            fetch('/admin/products/add', {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    location.reload()
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+
+    <script>
+        //edit product
+       async function loadProductData(productId) {
+       try{
+          let response = await fetch(`/admin/products/${productId}`)
+          let data = await response.json()
+          console.log(data);
+
+            document.getElementById('productId').value = data._id;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editDescription').value = data.description;
+            document.getElementById('editStock').value = data.stock;
+            document.getElementById('editPrice').value = data.price;
+            document.getElementById('editCategory').value = data.category;
+
+            // Display current images
+            const imagesContainer = document.getElementById('currentImagesContainer');
+            imagesContainer.innerHTML = ''; 
+            data.images.forEach(image => {
+                const imgElement = document.createElement('img');
+                imgElement.src =  "/"+  image; 
+                imgElement.classList.add('img-thumbnail', 'me-2'); 
+                imgElement.style.width = '100px'; 
+                imagesContainer.appendChild(imgElement);
+
+                const deleteButton = createElement("button")
+                deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute', 'top-0', 'end-0')
+                deleteButton.innerHTML="&times"
+                
+
+            });
+        }
+        catch(error){ console.error('Error loading product data:', error)}
+}
+
+
+    </script>
+
+ <script>
+    // list and unlist
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get all buttons for listing/unlisting
+        const buttons = document.querySelectorAll('[id^="listButton-"]');
+    
+        buttons.forEach(button => {
+            button.addEventListener('click', async (event) => {
+                event.preventDefault();
+                const productId = button.getAttribute('data-product-id');
+                const action = button.classList.contains('btn-success') ? 'list' : 'unList';
+    
+                // SweetAlert2 to confirm action
+                Swal.fire({
+                    title: `Are you sure you want to ${action === 'list' ? 'list' : 'unlist'} this product?`,
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: `Yes, ${action === 'list' ? 'List' : 'Unlist'} it!`,
+                    cancelButtonText: 'No, cancel!',
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        // Send fetch request to backend to toggle product status
+                        try {
+                            const response = await fetch(`/admin/products/${productId}/${action}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                            });
+    
+                            const resultData = await response.json();
+                        console.log(resultData);
+                            if (response.ok) {
+                                // Toastify to show success message
+                                Toastify({
+                                    text: resultData.message,
+                                    duration: 1500,
+                                    backgroundColor: "green",
+                                }).showToast();
+                               setTimeout(()=>{
+                                 location.reload();
+                               },1000)
+                            } else {
+                                // Toastify for error message
+                                Toastify({
+                                    text: resultData.message || 'Something went wrong',
+                                    duration: 3000,
+                                    backgroundColor: "red",
+                                }).showToast();
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            Toastify({
+                                text: 'Error while processing request',
+                                duration: 3000,
+                                backgroundColor: "red",
+                            }).showToast();
+                        }
+                    } else {
+                        // User canceled the action
+                        Toastify({
+                            text: 'Action canceled',
+                            duration: 3000,
+                            backgroundColor: "orange",
+                        }).showToast();
+                    }
+                });
+            });
+        });
+    });
+    
+</script>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </body>
 
 </html>
 
 <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
 </body>
 
 </html>

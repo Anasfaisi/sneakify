@@ -1,0 +1,108 @@
+<%-include("partials/header") %>
+
+<div class="container-fluid">
+    <div class="row mt-4">
+        <!-- Sidebar: Filters -->
+        <aside class="col-md-3">
+            <h5 class="fw-bold mb-3">Filters</h5>
+            <form id="filter-form">
+                <!-- Size Filter -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Size</h6>
+                    <div>
+                        <input type="checkbox" id="size-7" name="size" value="7">
+                        <label for="size-7">7</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="size-8" name="size" value="8">
+                        <label for="size-8">8</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="size-9" name="size" value="9">
+                        <label for="size-9">9</label>
+                    </div>
+                </div>
+
+                <!-- Color Filter -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Color</h6>
+                    <div>
+                        <input type="checkbox" id="color-red" name="color" value="Red">
+                        <label for="color-red">Red</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="color-blue" name="color" value="Blue">
+                        <label for="color-blue">Blue</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="color-black" name="color" value="Black">
+                        <label for="color-black">Black</label>
+                    </div>
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Brand</h6>
+                    <div>
+                        <input type="checkbox" id="brand-nike" name="brand" value="Nike">
+                        <label for="brand-nike">Nike</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="brand-adidas" name="brand" value="Adidas">
+                        <label for="brand-adidas">Adidas</label>
+                    </div>
+                </div>
+
+                <!-- Gender Filter -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Gender</h6>
+                    <div>
+                        <input type="checkbox" id="gender-male" name="gender" value="Male">
+                        <label for="gender-male">Male</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="gender-female" name="gender" value="Female">
+                        <label for="gender-female">Female</label>
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Category</h6>
+                    <div>
+                        <input type="checkbox" id="category-sneakers" name="category" value="Sneakers">
+                        <label for="category-sneakers">Sneakers</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="category-sports" name="category" value="Sports">
+                        <label for="category-sports">Sports</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </form>
+        </aside>
+        <main class="col-md-9" onclick="window.location.href='/users/productDetails'">
+            <div class="product-list d-flex flex-wrap gap-4">
+                <% if (products.length > 0) { %>
+                    <% products.forEach(product => { %>
+                        <div class="product-card card shadow-sm">
+                            <img src="/<%= product.images[0] %>" alt="<%= product.name %>" class="card-img-top product-image ">
+                            <div class="card-body">
+                                <h2 class="card-title product-name"><%= product.name %></h2>
+                                <p class="card-text product-description"><%= product.description %></p>
+                                <p class="card-text product-price">$<%= product.price.toFixed(2) %></p>
+                                <button class="btn btn-primary w-100">Buy Now</button>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p>No products available at the moment. Please check back later!</p>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</div>
+
+
+<%-include("partials/footer") %>

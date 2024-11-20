@@ -1,0 +1,221 @@
+.product-card {
+    border: none;
+    transition: transform 0.3s;
+    margin-bottom: 30px;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    height: 250px;
+    object-fit: cover;
+}
+
+.nav-link {
+    color: #333;
+    font-weight: 500;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.section-title {
+    position: relative;
+    margin-bottom: 40px;
+    padding-bottom: 15px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: #000;
+}
+
+.price {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.product-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    height: 40px;
+    overflow: hidden;
+}
+
+.filters {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.product-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.product-name {
+    font-size: 1.5em;
+    margin: 10px 0;
+}
+
+.product-description {
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.product-price {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Custom styles for the navbar */
+.navbar-light .navbar-brand {
+    font-weight: bold;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: #333;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: #007bff;
+}
+
+.navbar-light .navbar-nav .nav-item.active .nav-link {
+    color: #007bff;
+}
+
+/* Custom styles for the footer */
+.footer {
+    background-color: #000;
+    color: #fff;
+    padding: 50px 0;
+}
+
+.footer .footer-title {
+    font-weight: bold;
+}
+
+.footer .footer-links a {
+    color: #ddd;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer .footer-links a:hover {
+    color: #fff;
+}
+
+.footer .newsletter input[type="email"] {
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    width: calc(100% - 80px);
+    margin-right: 10px;
+}
+
+.footer .newsletter button {
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.footer .newsletter button:hover {
+    background-color: #0056b3;
+}
+/* Welcome Section */
+.container-fluid .row img {
+max-width: 80%;
+border-radius: 10px;
+}
+
+.container-fluid h1 {
+font-size: 3rem;
+color: #333;
+padding-left: 2rem;
+}
+
+.container-fluid p {
+font-size: 1.2rem;
+color: #555;
+}
+
+/* Community Section */
+.position-relative img {
+filter: brightness(0.8); /* To slightly darken the background */
+}
+
+.position-absolute {
+background: rgba(0, 0, 0, 0.5); /* Semi-transparent background for text */
+padding: 20px;
+border-radius: 10px;
+}

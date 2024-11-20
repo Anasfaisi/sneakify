@@ -61,9 +61,11 @@ exports.logout = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find(); // Fetches all products
+    const products = await Product.find(); 
+    const categories = await Category.find({ isActive: true });
+
     res.render("admin/productManagement", {
-      products,
+      products,categories
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -74,13 +76,16 @@ exports.addProducts = async (req, res) => {
   try {
     let { name, description, stock, price, category } = req.body;
 
+
+
+    console.log(req.files);
     
+
     
     console.log(name, description, stock, price, category);
 
-    const imageUrls = req.files.map((file) => `/uploads/${file.filename}`); // Array of URLs
+    const imageUrls = req.files.map((file) => file.filename); // Array of URLs
     const imageNumber = req.body.imageNumber; // Determine which image this is
-       console.log(`${imageNumber} is uploaded and has ${imageUrl} url`)
     if (
       !name ||
       !description ||
@@ -120,10 +125,119 @@ exports.addProducts = async (req, res) => {
     const savedProduct = await newProduct.save();
     res.status(201).json({success:true, message: "product added succesfully", savedProduct});
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+
+
+exports.unListProducts = async (req, res) => {
+  console.log("addddd");
+  try {
+      const productId = req.params.id;
+      const action = req.params.action; 
+      console.log(productId);
+      console.log(action);
+      console.log("sdfghjkl");
+
+      // Find the product by ID
+      const product = await Product.findById(productId);
+      console.log(product);
+
+      if (!product) {
+          return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Switch the active status
+      if (action === 'list') {
+          product.isActive = true;
+      } else if (action === 'unList') {
+          product.isActive = false;
+      }
+
+      // Save the updated product
+      await product.save();
+
+      res.status(200).json({ message: 'Product status updated successfully' });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error updating product status' });
+  }
+};
+
+
+exports.listProducts = async (req, res) => {
+  console.log("aaaaaa");
+  try {
+    console.log(req.params);
+      const productId = req.params.id;
+      const action = req.params.action; 
+      console.log(productId);
+      console.log(action);
+
+
+      // Find the product by ID
+      const product = await Product.findById(productId);
+      console.log(product);
+
+      if (!product) {
+          return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Switch the active status
+      if (action === 'list') {
+          product.isActive = true;
+      } else if (action === 'unList') {
+          product.isActive = false;
+      }
+
+      // Save the updated product
+      await product.save();
+
+      res.status(200).json({ message: 'Product status updated successfully' });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error updating product status' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getEditProducts= async (req,res)=>{
+  console.log("reaching in edit product")
+   try {
+    const product = await Product.findById(req.params.id);
+    console.log(product);
+
+      // Set the folder path for the images
+
+      // Map the images array to include the full path for each image
+      console.log(product);
+    res.json(product);
+} catch (err) {
+    res.status(500).json({ error: 'Failed to fetch product details.' });
+}
+}
+
+
+exports.editProducts = async(req,res)=>{
+
+
+}
 // ===========================================================================
 exports.listUsers = async (req, res) => {
   try {
@@ -139,9 +253,9 @@ exports.blockUser = async (req, res) => {
   try {
     console.log("it is reaching in block user");
     const userId = req.params.id;
-    // console.log(userId)
+    console.log(userId)
     let check = await User.findByIdAndUpdate(userId, { isBlocked: true });
-    // console.log(check);
+    console.log(check);
     res.redirect("/admin/users");
   } catch (error) {
     res.status(500).json({ message: "Error blocking user" });
@@ -169,14 +283,31 @@ exports.getAllCategories = async (req, res) => {
 };
 
 exports.addCategory = async (req, res) => {
-  const { name } = req.body;
+  let { name } = req.body;
+  name = name.toLowerCase();
   console.log(name);
   try {
-    const category = new Category({ name, isActive: true });
+    
+    const category = new Category({ name, isActive: true })
     console.log(category);
-    await category.save();
-    res.redirect("/admin/category");
+
+    //checking for existing category
+   
+
+let existingCategories = await Category.find({ name: { $regex: name, $options: 'i' } });
+if (existingCategories.length > 0) {
+  console.log("Matching categories found:", existingCategories);
+  return res.status(400).json({ success: false, message: "Category already exists" });
+}else{
+  const savedCategory = await category.save();
+  console.log(savedCategory); 
+  res.status(200).json({success:true,message:"succesfully updated"})
+}
+
+
   } catch (error) {
+    console.log('error',error);
+    
     res.status(500).send("Error adding category");
   }
 };
@@ -220,3 +351,6 @@ exports.updateCategory = async (req, res) => {
     res.status(500).send("Error updating category");
   }
 };
+
+
+// =================================================================================

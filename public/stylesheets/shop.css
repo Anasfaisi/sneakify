@@ -1,0 +1,34 @@
+/* Sidebar */
+aside {
+    border-right: 1px solid #ddd;
+    padding-right: 15px;
+}
+
+aside h5, aside h6 {
+    color: #333;
+}
+
+/* Product Grid */
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Buttons */
+button {
+    font-size: 0.9rem;
+    color: red;
+}

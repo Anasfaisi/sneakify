@@ -7,15 +7,16 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        minlength: 3
+        minlength: 3,
+        unique:true
     },
     isActive: {
         type: Boolean,
         default: true
     },
     categoryId: {
-        type: String,
-        unique: true,
+        type: Number,
+        unique:true,
      }
 }, {
     timestamps: true

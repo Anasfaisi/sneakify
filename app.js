@@ -5,6 +5,7 @@ const adminRouter = require("./routes/adminRoute");
 const usersRouter = require("./routes/userRoute");
 const connectDB = require("./config/db");
 const PORT = process.env.PORT;
+const passport = require("./config/passport")
 
 const app = express();
 require("dotenv").config();
@@ -44,6 +45,10 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get("/",(req,res)=>res.redirect("/users/home"))
 app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
 app.use((req, res, next) => {
@@ -52,5 +57,5 @@ app.use((req, res, next) => {
 });
 
 app.listen(PORT, () =>
-  console.log("server listening at http://localhost:3000/users/signup")
+  console.log("server listening at http://localhost:3000")
 );

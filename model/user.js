@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, 'Please enter your password'],
+        required: false,
         minLength: [6, 'Password must be at least 6 characters'],
     },
     isVerified: {
@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
     isBlocked: {
         type: Boolean,
         default: false
+    },
+    googleId:{
+        type:String,
+        unique:true
     }
 });
 // Hash password before saving

@@ -4,6 +4,7 @@ const router = express.Router();
 const controller = require("../controller/adminController");
 const { isAdmin } = require("../middlewares/auth");
 const upload = require("../config/multer");
+const Product = require("../model/products")
 
 router.get("/login", controller.getLogin);
 router.post("/login", controller.postLogin);
@@ -21,7 +22,12 @@ router.post("/category/:id/activate", controller.activateCategory);
 router.post("/category/:id/deactivate", controller.deactivateCategory);
 
 router.get("/products", controller.getProducts);
-router.post('/products/add', upload.array('image',3), controller.addProducts);
+router.post('/products/add', upload.array('croppedImages'), controller.addProducts);
+router.get('/products/:id',controller.getEditProducts)
+// router.post('/products/:id',controller.editProducts)
+router.post('/products/:id/:action',controller.listProducts) 
+router.post('/products/:id/:action',controller.unListProducts) 
+
 
 
 

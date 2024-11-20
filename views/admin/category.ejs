@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sneakify - Category Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 
 <body class="bg-gray-100">
@@ -41,30 +42,34 @@
             <header class="bg-white shadow-sm">
                 <div class="flex justify-between items-center px-6 py-4">
                     <h1 class="text-xl font-semibold">Category</h1>
-                    <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New</button>
+                    <button onclick="openAddModal()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New</button>
                 </div>
             </header>
 
 
-       <!-- Add Category Modal -->
-       <div id="addCategoryModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
-        <div class="flex items-center justify-center min-h-screen">
-            <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
-                <h2 class="text-lg font-bold mb-4">Add Category</h2>
-                <form id="addCategoryForm">
-                    <div class="mb-4">
-                        <label for="addName" class="block text-gray-700">Category Name:</label>
-                        <input type="text" id="addName" name="name" class="w-full px-3 py-2 border rounded" required>
-                        <p id="addNameError" class="text-red-500 text-xs hidden">Category name must be at least 3 characters long</p>
+            <!-- Add Category Modal -->
+            <div id="addCategoryModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
+                        <h2 class="text-lg font-bold mb-4">Add Category</h2>
+                        <form id="addCategoryForm">
+                            <div class="mb-4">
+                                <label for="addName" class="block text-gray-700">Category Name:</label>
+                                <input type="text" id="addName" name="name" class="w-full px-3 py-2 border rounded"
+                                    required pattern="^[A-Za-z\s]+$" title="Only letters and spaces are allowed.">
+                                <p id="addNameError" class="text-red-500 text-xs hidden">Category name must be at least
+                                    3 characters long</p>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" onclick="closeAddModal()"
+                                    class="px-4 py-2 bg-gray-200 rounded mr-2">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="flex justify-end">
-                        <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-200 rounded mr-2">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
-    </div>
             <!-- Edit Category Modal -->
             <div id="editCategoryModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
                 <div class="flex items-center justify-center min-h-screen">
@@ -116,7 +121,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap flex space-x-4">
                                             <!-- Edit Button -->
-                                            <a href="/admin/category/edit/<%= category.id %>"
+                                            <a href="/admin/category/edit/<%= category._id %>"
                                                 class="text-blue-600 hover:text-blue-900">
                                                 Edit
                                             </a>
@@ -141,13 +146,13 @@
     </div>
 
     <script>
-         function openAddModal() {
-                    document.getElementById('addCategoryModal').classList.remove('hidden');
-                }
+        function openAddModal() {
+            document.getElementById('addCategoryModal').classList.remove('hidden');
+        }
 
-                function closeAddModal() {
-                    document.getElementById('addCategoryModal').classList.add('hidden');
-                }
+        function closeAddModal() {
+            document.getElementById('addCategoryModal').classList.add('hidden');
+        }
 
 
         function openEditModal(category) {
@@ -160,68 +165,108 @@
         function closeModal() {
             document.getElementById('editCategoryModal').classList.add('hidden');
         }
-        document.getElementById('addCategoryForm').addEventListener('click', async function(event) {
-                    event.preventDefault();
-                    const name = document.getElementById('addName').value;
-                    const nameError = document.getElementById('addNameError');
+        document.getElementById('addCategoryForm').addEventListener('click', async function (event) {
+            event.preventDefault();
+            const name = document.getElementById('addName').value.trim();
+            const nameError = document.getElementById('addNameError');
+            const isValidName = /^[A-Za-z\s]+$/.test(name)
 
-                    if (name.length < 3) {
-                        nameError.classList.remove('hidden');
-                        return;
-                    } else {
-                        nameError.classList.add('hidden');
-                    }
+            if (name.length < 3) {
+                nameError.classList.remove('hidden');
+                return;
+            }
+            else {
+                nameError.classList.add('hidden');
+            }
 
-                    try {
-                        const response = await fetch('/admin/category/add', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ name })
-                        });
-                        console.log(response)
+            if (isValidName==false) {
+                event.preventDefault();
+                Swal.fire({
+                        icon: "error",
+                        title: "Oops..",
+                        text: "Category name must only contain letters and spaces !",
+                    });
+                    
+                    return false
+            }
+            console.log(isValidName);
 
-                        if (response.ok) {
-                            closeAddModal();
-                            window.location.reload();
-                        } else {
-                            console.error('Failed to add category');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
+            try {
+                const response = await fetch('/admin/category/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                console.log(response)
+                let data = await response.json()
+                console.log(data);
+
+                if (response.ok) {
+                    closeAddModal();
+                    Swal.fire({
+                        icon: "success",
+                        title: "success...",
+                        text: data.message ?? "Something went wrong!",
+
+                    });
+                    setTimeout(() => {
+
+                        location.reload();
+                    }, 1500);
+                } else {
+                    console.error(data.message);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: data.message ?? "Something went wrong!",
+                    });
+
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: "Something went wrong!",
+
+                });
+            }
+        });
+
+        document.getElementById('editCategoryForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const id = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('editName').value;
+            const nameError = document.getElementById('editNameError');
+
+            if (name.length < 3) {
+                nameError.classList.remove('hidden');
+                return;
+            } else {
+                nameError.classList.add('hidden');
+            }
+
+            try {
+                const response = await fetch(`/admin/category/edit/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
                 });
 
-                document.getElementById('editCategoryForm').addEventListener('submit', async function(event) {
-                    event.preventDefault();
-                    const id = document.getElementById('editCategoryId').value;
-                    const name = document.getElementById('editName').value;
-                    const nameError = document.getElementById('editNameError');
+                if (response.ok) {
+                    closeEditModal();
+                    window.location.reload();
+                } else {
+                    console.error('Failed to edit category');
 
-                    if (name.length < 3) {
-                        nameError.classList.remove('hidden');
-                        return;
-                    } else {
-                        nameError.classList.add('hidden');
-                    }
-
-                    try {
-                        const response = await fetch(`/admin/category/edit/${id}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ name })
-                        });
-
-                        if (response.ok) {
-                            closeEditModal();
-                            window.location.reload();
-                        } else {
-                            console.error('Failed to edit category');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </body>
 
 </html>

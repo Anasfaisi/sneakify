@@ -3,6 +3,7 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const emailService = require("../config/emailService");
 const { resolveContent } = require("nodemailer/lib/shared");
+const Product = require("../model/products");
 
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString("hex");
@@ -260,5 +261,30 @@ exports.getForgetPassword = (req, res) => {
 exports.postForgetPassword = (req, res) => {};
 
 exports.home = async (req, res) => {
-  res.render("users/home");
-};
+  try {
+    const products = await Product.find({ isActive: true });
+    res.render('users/home', { products }); 
+} catch (error) {
+    console.error('Error fetching products:', error.message);
+    res.status(500).send('Server error');
+}};
+
+exports.listingProducts = async(req,res)=>{
+  try{
+    const products = await Product.find({isActive:true})
+    console.log(products);
+  res.render("users/shop",{
+    products
+  })
+  }
+  catch(error){}
+}
+
+
+exports.productDetails = async (req,res)=>{
+   try{
+      res.render("users/productDetails")
+   }
+   catch(error){}
+
+}
