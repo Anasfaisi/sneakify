@@ -1,0 +1,280 @@
+<%-include("partials/header") %>
+<div class="container mt-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <%- include('partials/profileSidebar') %>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-header text-center bg-primary text-white">
+          <h3>User Profile</h3>
+        </div>
+        <div class="card-body">
+          <h5 class="mb-3">User Details</h5>
+          <p><strong>First Name:</strong> <%= user.firstName %></p>
+          <p><strong>Last Name:</strong> <%= user.lastName %></p>
+          <p><strong>Email:</strong> <%= user.email %></p>
+
+          <hr>
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+              Edit Profile
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+              Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Additional Styling -->
+<style>
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+
+  
+ <!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProfileForm">
+          <div class="mb-3">
+            <label for="editFirstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="editFirstName" name="firstName" value="<%= user.firstName %>" >
+          </div>
+          <div class="mb-3">
+            <label for="editLastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="editLastName" name="lastName" value="<%= user.lastName %>" >
+          </div>
+          <div class="mb-3">
+            <label for="editEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="editEmail" name="email" value="<%= user.email %>" readonly>
+            <span class="text-danger">Email cannot be changed</span>
+          </div>
+          <!-- <div class="mb-3">
+            <label for="editPhone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="editPhone" name="phone" value="<%= user.phone %>" >
+          </div> -->
+          <button type="submit" class="btn btn-success w-100">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Change Password Modal -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editPassword">
+            <div class="mb-3 " id="pd">
+              <label for="currentPassword" class="form-label">Current Password</label>
+              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">New Password</label>
+              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+    const editProfileForm = document.getElementById("editProfileForm");
+
+editProfileForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const firstName = document.getElementById("editFirstName").value.trim();
+  const lastName = document.getElementById("editLastName").value.trim();
+  const email = document.getElementById("editEmail").value.trim();
+  // const phone = document.getElementById("editPhone").value.trim();
+
+  // Error container
+  let errorDiv = document.getElementById("errorDiv");
+  if (!errorDiv) {
+    errorDiv = document.createElement("div");
+    errorDiv.id = "errorDiv";
+    errorDiv.style.color = "red";
+    errorDiv.style.marginBottom = "10px";
+    editProfileForm.insertBefore(errorDiv, editProfileForm.firstChild);
+  }
+  errorDiv.innerHTML = ""; 
+
+  // Validation
+  if (!firstName || !lastName || !email ) {
+    errorDiv.innerHTML = "All fields are required.";
+    return;
+  }
+  if(!/^[A-Za-z]+$/.test(firstName)){
+    errorDiv.innerHTML="first name must be a uppercase and lower"
+    return
+  }
+
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    errorDiv.innerHTML = "Invalid email format.";
+    return;
+  }
+
+  // if (!/^\d{10}$/.test(phone)) {
+  //   errorDiv.innerHTML = "Phone number must be exactly 10 digits.";
+  //   return;
+  // }
+
+
+  try {
+      const response = await fetch("/users/editProfile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email }),
+      });
+      console.log(response);
+      const data = await response.json();
+      console.log(data);
+
+      if (response.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Profile Updated",
+          text: data.message,
+        }).then(() => {
+          location.reload(); 
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message,
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred while updating the profile.",
+      });
+      console.error("Error updating profile:", error);
+    }
+  });
+</script>
+
+  <script>
+    //editPassword
+   const editPassword = document.getElementById("editPassword")
+   editPassword.addEventListener("submit",async(e)=>{
+    console.log("haai");
+
+    e.preventDefault()
+    const currentPassword= document.getElementById("currentPassword").value.trim()
+    const newPassword = document.getElementById("newPassword").value.trim()
+    const confirmPassword = document.getElementById("confirmPassword").value.trim()
+    const errorMessages = document.createElement("div")
+    const pd = document.getElementById("pd")
+    errorMessages.style.color="red";
+    errorMessages.innerHTML="";
+    pd.append(errorMessages)
+
+    //  // Password Validation
+    // const hasUpperCase = /[A-Z]/.test(confirmPassword);
+    // const hasLowerCase = /[a-z]/.test(confirmPassword);
+    // const hasNumbers = /\d/.test(confirmPassword);
+    // const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(confirmPassword);
+    // const isLongEnough = confirmPassword.length >= 6;
+    let  validpassword = true
+ 
+
+  if (!currentPassword||!newPassword||!confirmPassword) {
+    console.log("in first condition");
+    errorMessages.innerHTML = "all fields are required"
+     validpassword=false
+
+    } 
+    // else if (!hasUpperCase||!hasLowerCase||!hasNumbers||!hasSpecialChar||!isLongEnough) {
+    //   console.log("in second");
+    //   errorMessages.innerHTML='password must be a combination of uppercase,lowecase,number,special character and atleast 6 digit';
+    //   validpassword=false
+    // }
+    if(currentPassword===newPassword){
+      errorMessages.innerHTML="new password should be different from your previous password"
+      validpassword=false;
+    }
+
+    if(validpassword==true){
+      console.log("in third");
+      try{
+      
+      let response = await fetch("/users/editPassword",{
+        method:"PATCH",
+        headers:{"content-Type":"application/json"},
+        body:JSON.stringify({
+          newPassword,
+          confirmPassword,
+          currentPassword
+        })
+        
+      })
+      console.log(response);
+     let data = await response.json()
+     if(response.ok){
+       
+       Swal.fire({
+         icon: "success",
+         title: data.message,
+         showConfirmButton: true,
+        }).then(result=>{
+          if (result.isConfirmed){
+            location.reload() 
+            
+          }
+        })
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message,
+        });
+      }
+      
+    } catch (error) {
+      //  console.log(error)
+       Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "error in updating the pasword",
+        });
+    }
+    
+  }
+})
+  </script>
+
+
+<%-include("partials/footer") %>
+

@@ -2,6 +2,7 @@
 aside {
     border-right: 1px solid #ddd;
     padding-right: 15px;
+    background-color: aqua;
 }
 
 aside h5, aside h6 {
@@ -31,4 +32,22 @@ aside h5, aside h6 {
 button {
     font-size: 0.9rem;
     color: red;
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    margin-left: 200px;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: bold;
 }

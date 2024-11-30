@@ -1,0 +1,66 @@
+<%- include("partials/header") %>
+
+<div class="container mt-5">
+  <div class="text-center">
+    <h1>Thank You for Your Order!</h1>
+    <p class="text-success">Your order has been successfully placed.</p>
+    <p class="fw-bold">Order ID: <%= order._id %></p>
+  </div>
+
+  <hr />
+
+  <div class="mt-4">
+    <h3>Order Summary</h3>
+    <p><strong>Order Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %></p>
+    <p><strong>Status:</strong> <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></p>
+    <p><strong>Payment Method:</strong> 
+      <%= order.paymentMethod === "cashOnDelivery" ? "Cash on Delivery (COD)" : order.paymentMethod %>
+    </p>
+  </div>
+
+  <hr />
+
+  <div class="mt-4">
+    <h3>Shipping Address</h3>
+    <p><%= order.addressDetails.firstName %> <%= order.addressDetails.lastName %></p>
+    <p><%= order.addressDetails.address %></p>
+    <p><%= order.addressDetails.city %>, <%= order.addressDetails.state %> - <%= order.addressDetails.pincode %></p>
+    <p><%= order.addressDetails.country %></p>
+    <p><strong>Phone:</strong> <%= order.addressDetails.phone %></p>
+  </div>
+
+  <hr />
+
+  <div class="mt-4">
+    <h3>Products</h3>
+    <% order.products.forEach(product => { %>
+      <div class="d-flex align-items-center mb-3">
+        <% if (product.imageUrl) { %>
+          <img src="/<%= product.imageUrl[0] %>" alt="<%= product.name %>" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
+        <% } %>
+        <div>
+          <h5><%= product.name %></h5>
+          <p class="mb-0">Size: <%= product.size %></p>
+          <p class="mb-0">Price: ₹<%= product.price %></p>
+          <p class="mb-0">Quantity: <%= product.quantity %></p>
+          <p>Total: ₹<%= product.total %></p>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <hr />
+
+  <div class="mt-4">
+    <h3>Order Total</h3>
+    <p><strong>Items Total:</strong> ₹<%= order.totalAmount %></p>
+    <p><strong>Shipping Charge:</strong> ₹<%= order.shippingCharge %></p>
+    <h4 class="fw-bold">Grand Total: ₹<%= order.grandTotal %></h4>
+  </div>
+
+  <div class="text-center mt-5">
+    <a href="/users/shop" class="btn btn-primary">Continue Shopping</a>
+  </div>
+</div>
+
+<%- include("partials/footer") %>

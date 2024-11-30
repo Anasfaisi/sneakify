@@ -1,0 +1,95 @@
+<%- include("partials/header") %>
+
+<div class="container mt-5">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3">
+        <%- include('partials/profileSidebar') %>
+      </div>
+  
+      <!-- Order Details Section -->
+      <div class="col-md-9">
+        <div class="card">
+          <div class="card-header text-center bg-primary text-white">
+            <h3>Order Details</h3>
+          </div>
+          <div class="card-body">
+            <h5 class="mb-3">Order ID: <%= order.id %></h5>
+            <p><strong>Date:</strong> <%= new Date(order.date).toLocaleDateString() %></p>
+            
+            <h6>Items:</h6>
+            <ul>
+              <% order.products.forEach(item => { %>
+                <li>
+                  <strong><%= item.name %></strong> (Qty: <%= item.quantity %>) - <%= item.price %> each
+                  <br><small><%= item.description %></small>
+                </li>
+              <% }) %>
+            </ul>
+  
+            <h6>Total Price: <%= order.totalAmount %></h6>
+            <p><strong>Status:</strong> <%= order.status %></p>
+            
+            <!-- Payment Status -->
+            <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+            
+            <!-- Shipping Details -->
+            <h6>Shipping Details:</h6>
+            <p><strong>Address:</strong> 1234 Main St, Cityville, Country - 123456</p>
+            <p><strong>Shipping Method:</strong> Standard Shipping</p>
+            <p><strong>Estimated Delivery:</strong> <%= new Date(order.shippingDate).toLocaleDateString() %></p>
+  
+            <% if (order.status === 'pending') { %>
+              <button id="cancelOrderButton" class="btn btn-danger" data-order-id="<%= order.id %>">Cancel Order</button>
+            <% } else { %>
+              <p>This order can no longer be cancelled.</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+<script>
+    const cancelOrderButton = document.getElementById("cancelOrderButton");
+  
+    if (cancelOrderButton) {
+      cancelOrderButton.addEventListener("click", async (e) => {
+        const orderId = cancelOrderButton.getAttribute("data-order-id");
+  
+        try {
+          const response = await fetch(`/users/orderCancel/${orderId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+  
+          const data = await response.json();
+  
+          if (response.ok) {
+            Swal.fire({
+              icon: "success",
+              title: "Order Cancelled",
+              text: data.message,
+            }).then(() => {
+              window.location.href = `/users/orderDetails/${orderId}`;
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: data.message,
+            });
+          }
+        } catch (error) {
+          console.error("Error canceling the order:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "An unexpected error occurred while canceling the order.",
+          });
+        }
+      });
+    }
+  </script>
+<%- include("partials/footer") %>

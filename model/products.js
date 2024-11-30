@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const sizeStockSchema = new mongoose.Schema({
+  size: { type: String, required: true },
+
+  stock: { type: Number, required: true, min: 0 }, 
+});
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -11,11 +17,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    stock: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+   
     price: {
       type: Number,
       required: true,
@@ -35,6 +37,8 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    sizes: { type: [sizeStockSchema], required: true },
+
   },
   {
     timestamps: true,

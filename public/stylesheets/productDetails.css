@@ -16,3 +16,11 @@
 .btn-outline-danger:hover {
     background-color: #f8d7da;
 }
+.product-card a {
+    cursor: pointer;
+}
+
+.product-card img:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}

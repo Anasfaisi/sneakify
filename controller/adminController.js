@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const Product = require("../model/products");
 const User = require("../model/user");
 const Category = require("../model/category");
+const Order = require("../model/order")
 
 exports.getLogin = async (req, res) => {
   if (req.session.admin) {
@@ -41,6 +42,7 @@ exports.postLogin = async (req, res) => {
 };
 
 exports.getDashboard = async (req, res) => {
+  
   res.render("admin/dashboard");
 };
 
@@ -60,10 +62,11 @@ exports.logout = async (req, res) => {
 // =========================================================================
 
 exports.getProducts = async (req, res) => {
+  console.log("the admin is ",req.session.admin);
   try {
     const products = await Product.find(); 
     const categories = await Category.find({ isActive: true });
-
+ 
     res.render("admin/productManagement", {
       products,categories
     });
@@ -74,61 +77,70 @@ exports.getProducts = async (req, res) => {
 
 exports.addProducts = async (req, res) => {
   try {
-    let { name, description, stock, price, category } = req.body;
+    let { name, description, price, category, sizes } = req.body;
 
+    // Parse sizes (coming as a JSON string from the frontend)
+    if (typeof sizes === "string") {
+      sizes = JSON.parse(sizes);
+    }
 
+    // Validate sizes
+    if (!Array.isArray(sizes) || sizes.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Sizes must be provided as a non-empty array." });
+    }
 
-    console.log(req.files);
-    
+    const isValidSizes = sizes.every(
+      (item) =>
+        typeof item.size === "string" &&
+        item.size.trim() !== "" &&
+        typeof item.stock === "number" &&
+        item.stock >= 0
+    );
 
-    
-    console.log(name, description, stock, price, category);
+    if (!isValidSizes) {
+      return res
+        .status(400)
+        .json({ message: "Invalid sizes format. Each size must include size and stock." });
+    }
 
-    const imageUrls = req.files.map((file) => file.filename); // Array of URLs
-    const imageNumber = req.body.imageNumber; // Determine which image this is
-    if (
-      !name ||
-      !description ||
-      stock === undefined ||
-      price === undefined ||
-      !category
-    ) {
+    // Parse and validate other fields
+    const imageUrls = req.files.map((file) => file.filename); // Assuming files are uploaded successfully
+    if (!name || !description || !price || !category) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
 
-    stock = Number(stock);
     price = Number(price);
-
-    if (typeof stock !== "number" || stock < 0) {
-      return res
-        .status(400)
-        .json({ message: "Stock must be a non-negative number." });
-    }
-    if (typeof price !== "number" || price < 0) {
+    if (typeof price !== "number" || price <= 0) {
       return res
         .status(400)
         .json({ message: "Price must be a non-negative number." });
     }
 
+    // Create the new product with the validated data
     const newProduct = new Product({
       name,
       description,
-      stock,
       price,
-      images:imageUrls,
       category,
+      sizes, // Use the parsed sizes array
+      images: imageUrls,
       isActive: true,
     });
 
     const savedProduct = await newProduct.save();
-    res.status(201).json({success:true, message: "product added succesfully", savedProduct});
+    res
+      .status(201)
+      .json({ success: true, message: "Product added successfully", savedProduct });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 
@@ -166,7 +178,7 @@ exports.unListProducts = async (req, res) => {
   }
 };
 
-
+//to list the products
 exports.listProducts = async (req, res) => {
   console.log("aaaaaa");
   try {
@@ -177,7 +189,6 @@ exports.listProducts = async (req, res) => {
       console.log(action);
 
 
-      // Find the product by ID
       const product = await Product.findById(productId);
       console.log(product);
 
@@ -185,14 +196,12 @@ exports.listProducts = async (req, res) => {
           return res.status(404).json({ message: 'Product not found' });
       }
 
-      // Switch the active status
       if (action === 'list') {
           product.isActive = true;
       } else if (action === 'unList') {
           product.isActive = false;
       }
 
-      // Save the updated product
       await product.save();
 
       res.status(200).json({ message: 'Product status updated successfully' });
@@ -203,6 +212,69 @@ exports.listProducts = async (req, res) => {
 };
 
 
+
+
+exports.getOrders = async (req, res) => {
+  try {
+    console.log("Fetching orders...");
+    const orders = await Order.find()
+      .populate('userId', ) 
+      .populate('products.productId'); 
+    console.log(orders);
+    res.render("admin/orderManagement", { orders });
+  } catch (error) {
+    console.log("Error in fetching orders:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+exports.getOrderDetails = async (req,res)=>{
+  console.log("it is reaching in order details")
+  try {
+    const orderId = req.params.id;
+    const userId = req.session.passport.user;
+    const order = await Order.findById(orderId).populate("userId")
+    .populate("products.productId")
+    console.log(order);
+
+    res.status(200).json(order)
+  } catch (error) {
+    console.log(error,"error occured in getting order details")
+  }
+}
+
+
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['pending', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.json({ success: true, message: 'Order status updated successfully', order });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to update order status' });
+  }
+};
+
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' }, { new: true });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.json({ success: true, message: 'Order has been cancelled', order });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to cancel order' });
+  }
+};
 
 
 
@@ -218,15 +290,8 @@ exports.listProducts = async (req, res) => {
 
 
 exports.getEditProducts= async (req,res)=>{
-  console.log("reaching in edit product")
-   try {
+  try {
     const product = await Product.findById(req.params.id);
-    console.log(product);
-
-      // Set the folder path for the images
-
-      // Map the images array to include the full path for each image
-      console.log(product);
     res.json(product);
 } catch (err) {
     res.status(500).json({ error: 'Failed to fetch product details.' });
@@ -234,14 +299,61 @@ exports.getEditProducts= async (req,res)=>{
 }
 
 
-exports.editProducts = async(req,res)=>{
 
 
-}
+exports.editProducts = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { name, description, price, category, existingImages, deletedImages } = req.body;
+
+    console.log("Body Data:", req.body);
+    console.log("Uploaded Files:", req.files);
+
+    // Parse JSON data from the frontend
+    const existingImagesList = JSON.parse(existingImages || '[]');
+    const deletedImagesList = JSON.parse(deletedImages || '[]');
+
+    // Handle new images
+    const newImages = req.files.map(file => file.filename);
+
+    // Remove deleted images from the server
+    if (deletedImagesList.length > 0) {
+      deletedImagesList.forEach(image => {
+        const imagePath = path.join(__dirname, '../uploads', image);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath); // Delete the file from the server
+        }
+      });
+    }
+
+    // Final list of images: Existing (minus deleted) + Newly added
+    const updatedImages = [
+      ...existingImagesList.filter(img => !deletedImagesList.includes(img)),
+      ...newImages,
+    ];
+
+    // Update the product in the database
+    await Product.findByIdAndUpdate(productId, {
+      name,
+      description,
+      stock,
+      price,
+      category,
+      images: updatedImages, // Update with combined images
+    });
+
+    res.status(200).json({ message: 'Product updated successfully!', images: updatedImages });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+};
+
 // ===========================================================================
 exports.listUsers = async (req, res) => {
   try {
     const users = await User.find({});
+    console.log(users)
 
     res.render("admin/userManagement", { users });
   } catch (error) {
@@ -249,28 +361,37 @@ exports.listUsers = async (req, res) => {
   }
 };
 
-exports.blockUser = async (req, res) => {
+exports.updateUserStatus = async (req, res) => {
   try {
-    console.log("it is reaching in block user");
     const userId = req.params.id;
-    console.log(userId)
-    let check = await User.findByIdAndUpdate(userId, { isBlocked: true });
-    console.log(check);
-    res.redirect("/admin/users");
+    console.log(userId);
+    const { isBlocked } = req.body;
+    console.log(isBlocked);
+    
+
+    const updatedUser = await User.findByIdAndUpdate(userId, { isBlocked }, { new: true });
+    console.log(updatedUser);
+    if (isBlocked && req.session.user && req.session.user._id === userId) {
+      console.log("in the session destroying");
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Error destroying session:", err);
+        }
+        res.clearCookie("connect.sid")
+        return res.redirect("/users/login")
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `User has been ${isBlocked ? "blocked" : "unblocked"} successfully`,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error blocking user" });
+    console.error("Error updating user status:", error);
+    res.status(500).json({ success: false, message: "Error updating user status" });
   }
 };
 
-exports.unblockUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    await User.findByIdAndUpdate(userId, { isBlocked: false });
-    res.redirect("/admin/users");
-  } catch (error) {
-    res.status(500).json({ message: "Error unblocking user" });
-  }
-};
 
 // =============================================================================
 exports.getAllCategories = async (req, res) => {
@@ -343,10 +464,13 @@ exports.deactivateCategory = async (req, res) => {
 };
 
 exports.updateCategory = async (req, res) => {
+  console.log("it is in update");
   const { name } = req.body;
+  console.log(name);
   try {
-    await Category.findByIdAndUpdate(req.params.id, { name });
-    res.redirect("/admin/category");
+    let category = await Category.findByIdAndUpdate(req.params.id, { name });
+    console.log(category);
+    res.status(200).json({"success":true,message:"succesfully updated"})
   } catch (error) {
     res.status(500).send("Error updating category");
   }

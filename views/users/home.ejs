@@ -1,4 +1,6 @@
 <%-include("partials/header") %>
+    <link rel="stylesheet" href="home.css">
+    <a href="/users/logout">logout</a>
     
 
     <!-- Home Section -->
@@ -27,6 +29,22 @@
                     Be part of an exclusive group of sneaker enthusiasts. Discover the latest trends and styles.
                 </p>
             </div>
+        </div>
+    </div>
+
+    <div class="related-products mt-5 p-5">
+        <h3>New Arrivals</h3>
+        <div class="d-flex flex-wrap gap-4 p-5">
+            <% products.forEach(product => { %>
+               <a href="/users/shop"> <div class="product-card card shadow-sm" style="width: 18rem;">
+                    <img src="/<%= product.images[0] %>" class="card-img-top" alt="<%= product.name %>">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= product.name %></h5>
+                        <p class="card-text">$<%= product.price.toFixed(2) %></p>
+                        <a href="/users/productDetails/<%= product._id %>" class="btn btn-primary w-100">View Details</a>
+                    </div></a>
+                </div>
+            <% }); %>
         </div>
     </div>
     

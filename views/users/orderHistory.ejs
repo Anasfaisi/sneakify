@@ -1,0 +1,172 @@
+<%- include('partials/header') %>
+
+<style>
+  /* Add some padding to the container */
+  .container {
+    margin-top: 5rem;
+  }
+  .row {
+    margin-top: 2rem;
+  }
+  .col-md-3 {
+    margin-right: 2rem;
+  }
+  .col-md-9 {
+    margin-left: 2rem;
+  }.container {
+    padding: 20px;
+  }
+
+  /* Make the table look more elegant */
+  .table {
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+  }
+
+  /* Add shadow to the table */
+  .table-bordered {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Style the table headers */
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    border-bottom: 2px solid #ddd;
+  }
+
+  /* Style the table rows */
+  .table tbody tr {
+    transition: background-color 0.3s ease;
+  }
+
+  /* Add hover effect for rows */
+  .table tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+
+  /* Style for the card to make it stand out */
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Customize the buttons */
+  .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+  }
+
+  .btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
+
+  /* Make the "View Details" button more prominent */
+  .btn-info.btn-sm {
+    padding: 5px 10px;
+    font-size: 14px;
+  }
+
+  /* Add spacing between the cards */
+  .card-body {
+    padding: 20px;
+  }
+
+  /* Align the sidebar and content properly */
+  .row {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  /* Add some margin around the table for better spacing */
+  .table-responsive {
+    margin-top: 20px;
+  }
+
+  /* Style the order items list */
+  ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+  }
+
+  /* Style for the action buttons container */
+  td button {
+    margin-left: 10px;
+  }
+</style>
+
+<div class="container mt-2">
+  <div class="row">
+    <!-- Sidebar Section -->
+    <div class="col-md-3">
+      <%- include('partials/profileSidebar') %>
+    </div>
+
+    <!-- Order History Section -->
+    <div class="col-md-9">
+      <div class="card shadow-sm">
+        <div class="card-header text-center bg-primary text-white">
+          <h3>Order History</h3>
+        </div>
+        <div class="card-body">
+          <% if (orders && orders.length > 0) { %>
+            <table class="table table-bordered table-striped shadow-sm">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% orders.forEach(order => { %>
+                  <tr>
+                    <td><%= order.id %></td>
+                    <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                    <td>
+                      <ul>
+                        <% order.products.forEach(item => { %>
+                          <li><%= item.name %> (Qty: <%= item.quantity %>)</li>
+                        <% }) %>
+                      </ul>
+                    </td>
+                    <td><%= order.status %></td>
+                    <td>
+                      <!-- View More Details Button -->
+                      <a href="/users/orderDetails/<%= order.id %>" class="btn btn-info btn-sm">View Details</a>
+
+                      <% if (order.status === 'Pending') { %>
+                        <!-- Cancel Order Button -->
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelOrderModal" data-order-id="<%= order.id %>">Cancel Order</button>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <p>No orders found.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>
+

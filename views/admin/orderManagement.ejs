@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sneakify - Order Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+  <%- include("partials/sidebar") %>
+  <div class="w-75">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+      <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+        <h1 class="fs-5 fw-semibold">Orders</h1>
+      </div>
+    </header>
+
+    <!-- Orders Table -->
+    <div class="p-4">
+      <div class="card">
+        <div class="card-body">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th scope="col">Order ID</th>
+                <th scope="col">User Name</th>
+                <th scope="col">Order Status</th>
+                <th scope="col">Total Amount</th>
+                <th scope="col">Date Ordered</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% orders.forEach((order) => { %>
+                <tr>
+                  <td><%= order._id %></td>
+                  <td><%= order.userId.name %></td> <!-- Assuming user name is populated -->
+                  <td><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></td>
+                  <td>$<%= order.grandTotal.toFixed(2) %></td>
+                  <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                  <td>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal" onclick="viewOrderDetails('<%= order._id %>')">View Details</button>
+                    <td>
+                      <button class="btn btn-success btn-sm"style="display: inline;" onclick="updateOrderStatus('<%= order._id %>')">Update Status</button>
+                      </td>
+                      <td>
+                      <button class="btn btn-danger btn-sm" style="display: inline;" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    </td>
+                    
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Order Modal -->
+    <div id="viewOrderModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Order Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="orderDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function viewOrderDetails(orderId) {
+      fetch(`/admin/orderDetails/${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data._id);
+          const orderDetails = document.getElementById('orderDetails');
+          orderDetails.innerHTML = `
+            <p><strong>Order ID:</strong> ${data._id}</p>
+            <p><strong>User Name:</strong> ${data.userId.firstName}</p>
+            <p><strong>Order Status:</strong> ${data.status}</p>
+            <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
+            <p><strong>Products:</strong></p>
+            <ul>
+              ${data.products.map(product => `
+                <li>${product.name} - $${product.price} x ${product.quantity} (Total: $${product.total})</li>
+              `).join('')}
+            </ul>
+            <p><strong>Total Amount:</strong> $${data.grandTotal.toFixed(2)}</p>
+            <p><strong>Address:</strong> ${data.addressDetails.address}, ${data.addressDetails.city}, ${data.addressDetails.state}, ${data.addressDetails.country} - ${data.addressDetails.pincode}</p>
+          `;
+        });
+    }
+
+
+    
+  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function updateOrderStatus(orderId) {
+    Swal.fire({
+      title: 'Update Order Status',
+      input: 'select',
+      inputOptions: {
+        pending: 'Pending',
+        shipped: 'Shipped',
+        delivered: 'Delivered',
+        cancelled: 'Cancelled'
+      },
+      inputPlaceholder: 'Select a new status',
+      showCancelButton: true,
+      confirmButtonText: 'Update',
+      preConfirm: (newStatus) => {
+        if (!newStatus) {
+          Swal.showValidationMessage('You need to select a status!');
+        }
+        return newStatus;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/orders/${orderId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: result.value })
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              Swal.fire('Updated!', 'Order status updated successfully.', 'success').then(() => {
+                location.reload(); // Reload the page to reflect changes
+              });
+            } else {
+              Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
+            }
+          })
+          .catch((error) => {
+            console.error('Error updating status:', error);
+            Swal.fire('Error!', 'Failed to update the order status.', 'error');
+          });
+      }
+    });
+  }
+
+  // Function to cancel order
+  function cancelOrder(orderId) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This action will cancel the order!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, cancel it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/orders/${orderId}/cancel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              Swal.fire('Cancelled!', 'The order has been cancelled.', 'success').then(() => {
+                location.reload(); // Reload the page to reflect changes
+              });
+            } else {
+              Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
+            }
+          })
+          .catch((error) => {
+            console.error('Error cancelling order:', error);
+            Swal.fire('Error!', 'Failed to cancel the order.', 'error');
+          });
+      }
+    });
+  }
+</script>
+
+</body>
+
+</html>

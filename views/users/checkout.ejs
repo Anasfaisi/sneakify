@@ -1,0 +1,390 @@
+<%-include("partials/header") %>
+
+<div class="container mt-4">
+  <h3>Checkout</h3>
+  <nav>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link active" href="#">Address</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Payment</a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="row">
+    <!-- Address Section -->
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title">Shipping Address</h3>
+          <% if (addresses.length > 0) { %>
+          <% addresses.forEach((address, index) => { %>
+          <div class="card mb-3">
+            <div class="card-body">
+              <p><strong><%= address.firstName %> <%= address.lastName %></strong></p>
+              <p><%= address.address %></p>
+              <p><%= address.city %>, <%= address.state %>, <%= address.pincode %></p>
+              <p><%= address.country %></p>
+              <p>Phone: <%= address.phone %></p>
+
+              <!-- Button to select this address -->
+              <button class="btn btn-outline-primary btn-sm w-100 mt-2 select-address" data-index="<%= index %>">Use This Address</button>
+            </div>
+          </div>
+
+          <!-- Hidden address details -->
+          <div class="hidden-address" id="hidden-address-<%= index %>" style="display: none;">
+            <input type="text" class="hidden" id="hidden-firstName-<%= index %>" value="<%= address.firstName %>">
+            <div id="hidden-firstNameError-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-lastName-<%= index %>" value="<%= address.lastName %>">
+            <div id="hidden-lastNameError-<%= index %>" class="error-message text-danger"></div>
+
+            <textarea class="hidden" id="hidden-addressLine1-<%= index %>"><%= address.address %></textarea>
+            <div id="hidden-addressLine1Error-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-city-<%= index %>" value="<%= address.city %>">
+            <div id="hidden-cityError-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-state-<%= index %>" value="<%= address.state %>">
+            <div id="hidden-stateError-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-pincode-<%= index %>" value="<%= address.pincode %>">
+            <div id="hidden-pincodeError-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-country-<%= index %>" value="<%= address.country %>">
+            <div id="hidden-countryError-<%= index %>" class="error-message text-danger"></div>
+
+            <input type="text" class="hidden" id="hidden-phone-<%= index %>" value="<%= address.phone %>">
+            <div id="hidden-phoneError-<%= index %>" class="error-message text-danger"></div>
+          </div>
+
+          <% }); %>
+
+          <% } else { %>
+          <p>No saved addresses found.</p>
+          <% } %>
+        </div>
+      </div>
+      <p class="text-center w-100 mt-3" data-bs-toggle="modal" data-bs-target="#addAddressModal"> Address</p>
+    </div>
+
+    <!-- Order Details Section -->
+    <div class="col-lg-6 ">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title">Order Details</h3>
+          <% products.forEach(product => { %>
+          <div class="d-flex align-items-center mb-3">
+            <img src="/<%= product.imageUrl %>" alt="<%= product.name %>" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
+            <div>
+              <h5 class="mb-1"><%= product.name %></h5>
+              <p class="mb-0"><%= product.description %></p>
+              <p class="mb-0">Size: <%= product.size %></p>
+              <p class="mb-0">Price: ₹<%= product.price %></p>
+              <p class="mb-0">Quantity: <%= product.quantity %></p>
+              <p>Total: ₹<%= product.total %></p>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="card">
+        <div class="card-body">
+          <h3 class="card-title">Order Summary</h3>
+          <p>Items Total: ₹<%= totalItemsPrice %></p>
+          <p>Shipping: ₹<%= shippingCharge %>
+            <% if (shippingCharge === 0) { %>
+            <span class="text-success">(Free)</span>
+            <% } %>
+          </p>
+          <h4 class="fw-bold">Grand Total: ₹<%= grandTotal %></h4>
+          <button id="placeOrder" class="btn btn-success w-100 mt-3">Place Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-lg-12">
+      <h5 class="mt-4">Add New Address</h5>
+      <form id="newAddressForm">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="firstName" required>
+          </div>
+          <div class="col-md-6">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="lastName" required>
+          </div>
+          <div class="col-md-12">
+            <label for="addressLine1" class="form-label">Address Line</label>
+            <textarea class="form-control" id="addressLine1" rows="2" required></textarea>
+          </div>
+          <div class="col-md-4">
+            <label for="city" class="form-label">City</label>
+            <input type="text" class="form-control" id="city" required>
+          </div>
+          <div class="col-md-4">
+            <label for="state" class="form-label">State</label>
+            <input type="text" class="form-control" id="state" required>
+          </div>
+          <div class="col-md-4">
+            <label for="pincode" class="form-label">Pincode</label>
+            <input type="text" class="form-control" id="pincode" required>
+          </div>
+          <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="phone" required>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+  <hr>
+
+  <div class="row mt-4">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Payment Method</h4>
+
+          <!-- Border box for explanation -->
+          <div class="border p-3" style="border: 1px solid #ccc; border-radius: 5px;">
+            <p class="text-muted" style="font-size: 14px;">
+              Select your preferred payment method. <strong>Cash on Delivery (COD)</strong> allows you to pay with cash when the product is delivered to your address.
+            </p>
+
+            <!-- Cash on Delivery option -->
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cashOnDelivery" checked>
+              <label class="form-check-label" for="cod">
+                Cash on Delivery (COD)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+  const addressButtons = document.querySelectorAll('.select-address');
+  addressButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      const index = e.target.getAttribute('data-index');
+
+      const hiddenAddress = document.getElementById(`hidden-address-${index}`);
+
+      const firstName = document.getElementById(`hidden-firstName-${index}`).value;
+      const lastName = document.getElementById(`hidden-lastName-${index}`).value;
+      const addressLine = document.getElementById(`hidden-addressLine1-${index}`).value;
+      const city = document.getElementById(`hidden-city-${index}`).value;
+      const state = document.getElementById(`hidden-state-${index}`).value;
+      const pincode = document.getElementById(`hidden-pincode-${index}`).value;
+      const country = document.getElementById(`hidden-country-${index}`).value;
+      const phone = document.getElementById(`hidden-phone-${index}`).value;
+
+      document.getElementById('firstName').value = firstName;
+      document.getElementById('lastName').value = lastName;
+      document.getElementById('addressLine1').value = addressLine;
+      document.getElementById('city').value = city;
+      document.getElementById('state').value = state;
+      document.getElementById('pincode').value = pincode;
+      document.getElementById('phone').value = phone;
+    });
+  });
+</script>
+<script>
+  function validateAddressFields(index) {
+  const nameRegex = /^[a-zA-Z\s]+$/;
+  const numberRegex = /^\d+$/;
+
+  // Reset error messages
+  document.getElementById(`hidden-firstNameError-${index}`).textContent = '';
+  document.getElementById(`hidden-lastNameError-${index}`).textContent = '';
+  document.getElementById(`hidden-addressLine1Error-${index}`).textContent = '';
+  document.getElementById(`hidden-cityError-${index}`).textContent = '';
+  document.getElementById(`hidden-stateError-${index}`).textContent = '';
+  document.getElementById(`hidden-pincodeError-${index}`).textContent = '';
+  document.getElementById(`hidden-countryError-${index}`).textContent = '';
+  document.getElementById(`hidden-phoneError-${index}`).textContent = '';
+
+  // Validate First Name
+  const firstName = document.getElementById(`hidden-firstName-${index}`).value;
+  if (!nameRegex.test(firstName)) {
+    document.getElementById(`hidden-firstNameError-${index}`).textContent = 'Alphabets only';
+    return false;
+  }
+
+  // Validate Last Name
+  const lastName = document.getElementById(`hidden-lastName-${index}`).value;
+  if (!nameRegex.test(lastName)) {
+    document.getElementById(`hidden-lastNameError-${index}`).textContent = 'Alphabets only';
+    return false;
+  }
+
+  // Validate Address Line
+  const addressLine1 = document.getElementById(`hidden-addressLine1-${index}`).value;
+  if (!addressLine1.trim()) {
+    document.getElementById(`hidden-addressLine1Error-${index}`).textContent = 'Address cannot be empty';
+    return false;
+  }
+
+  // Validate City
+  const city = document.getElementById(`hidden-city-${index}`).value;
+  if (!nameRegex.test(city)) {
+    document.getElementById(`hidden-cityError-${index}`).textContent = 'Alphabets only';
+    return false;
+  }
+
+  // Validate State
+  const state = document.getElementById(`hidden-state-${index}`).value;
+  if (!nameRegex.test(state)) {
+    document.getElementById(`hidden-stateError-${index}`).textContent = 'Alphabets only';
+    return false;
+  }
+
+  // Validate Pincode
+  const pincode = document.getElementById(`hidden-pincode-${index}`).value;
+  if (!numberRegex.test(pincode) || pincode.length !== 6) {
+    document.getElementById(`hidden-pincodeError-${index}`).textContent = 'Pincode must be exactly 6 digits';
+    return false;
+  }
+
+  // Validate Country
+  const country = document.getElementById(`hidden-country-${index}`).value;
+  if (!nameRegex.test(country)) {
+    document.getElementById(`hidden-countryError-${index}`).textContent = 'Alphabets only';
+    return false;
+  }
+
+  // Validate Phone
+  const phone = document.getElementById(`hidden-phone-${index}`).value;
+  if (!numberRegex.test(phone) || phone.length !== 10) {
+    document.getElementById(`hidden-phoneError-${index}`).textContent = 'Phone number must be exactly 10 digits';
+    return false;
+  }
+
+  return true; // All validations passed
+}
+
+</script>
+
+<script>
+  document.getElementById("placeOrder").addEventListener("click", async (event) => {
+    event.preventDefault();
+    
+
+    const addressDetails = {
+      firstName: document.getElementById("firstName").value,
+      lastName: document.getElementById("lastName").value,
+      address: document.getElementById("addressLine1").value,
+      city: document.getElementById("city").value,
+      state: document.getElementById("state").value,
+      pincode: document.getElementById("pincode").value,
+      country: "India",
+      phone: document.getElementById("phone").value,
+    };
+
+
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+    console.log(paymentMethod);
+
+    if (!paymentMethod) {
+      Swal.fire({
+        icon: "warning",
+        title: "Payment Method Required",
+        text: "Please select a payment method.",
+        showConfirmButton: false,
+        timer: 1000,
+      });
+      return;
+    }
+
+
+    try {
+      const response = await fetch("/users/placeOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          addressDetails,
+          paymentMethod
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Order Placed!",
+          text: `Your order ID is ${result.orderId}`,
+          showConfirmButton: true,
+        }).then(() => {
+
+          window.location.href = `/users/orderPlaced?orderId=${result.orderId}`;
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Please try again.",
+          text: "please add the address.",
+          showConfirmButton: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "An Error Occurred",
+        text: "Something went wrong. Please try again later.",
+        showConfirmButton: true,
+      });
+    }
+
+  });
+</script>
+
+
+<style>
+  .address-box {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+  }
+
+  .product-item {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+
+  .product-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .body {
+    background-color: red;
+  }
+</style>
+
+
+<%-include("partials/footer") %>

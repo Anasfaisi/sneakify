@@ -1,266 +1,174 @@
-
 <%-include("partials/header") %>
-
-    <div class="container">
-        <div class="signup-container">
-            <h2 class="text-center mb-4">Create an Account</h2>
-
-              <!-- General Error Message -->
-        <% if (locals.errors?.general) { %>
-            <div class="alert alert-danger" id="errorContainer" role="alert">
-                <%= errors.general %>
-            </div>
-        <% } %>
-        <div id="successContainer" class="alert alert-success d-none" role="alert"></div>
-
-    <!-- ! first name section -->
-            <form id="signupForm" method ="POST" action="/users/signup">
-                <div class="mb-3">
-                    <label for="firstName" class="form-label">First Name</label>
-                    <input 
-                        type="text" 
-                        class="form-control <%= locals.errors?.firstname ? 'is-invalid' : '' %>"
-                        id="firstName" 
-                        name="firstName"
-                        placeholder="Enter your First Name " 
-                        value="<%= locals.firstName || '' %>"
-                        required
-                    >
-                    <% if (locals.errors?.firstname) { %>
-                        <div class="invalid-feedback">
-                            <%= errors.firstname %>
-                        </div>
-                    <% } %>
-                </div>
-
-<!-- ! last name section    -->
-                <div class="mb-3">
-                    <label for="lastName" class="form-label">Last Name</label>
-                    <input 
-                        type="text" 
-                        class="form-control <%= locals.errors?.lastname ? 'is-invalid' : '' %>"
-                        id="lastName" 
-                        name="lastName"
-                        placeholder="Enter your Last Name " 
-                        value="<%= locals.lastName || '' %>"
-                        required
-                    >
-                    <% if (locals.errors?.lastname) { %>
-                        <div class="invalid-feedback">
-                            <%= errors.lastname %>
-                        </div>
-                    <% } %>
-                </div>
-
-               
-    <!--  email section -->
+<link rel="stylesheet" href="signup.css">
 
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email address</label>
-                    <input 
-                        type="email" 
-                        class="form-control <%= locals.errors?.email ? 'is-invalid' : '' %>"
-                        id="email" 
-                        name="email" 
-                        placeholder="Enter your Email"
-                        value="<%= locals.email || '' %>"
-                        required
-                    >
-                    <% if (locals.errors?.email) { %>
-                        <div class="invalid-feedback">
-                            <%= errors.email %>
-                        </div>
-                    <% } %>
-                </div>
-    
+<div class="container">
+  <div class="signup-container">
+    <h2 class="text-center mb-4">Create an Account</h2>
 
-    <!-- ! password section -->
-                
+    <!-- General Error Message -->
+    <div id="errorContainer" class="alert alert-danger d-none" role="alert"></div>
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input 
-                        type="password" 
-                        class="form-control <%= locals.errors?.password ? 'is-invalid' : '' %>"
-                        id="password" 
-                        name="password"
-                        placeholder="Password must be at least 6 characters long."
-                        required
-                    >
-                    <% if (locals.errors?.password) { %>
-                        <div class="invalid-feedback">
-                            <%= errors.password %>
-                        </div>
-                    <% } %>
-                </div>
-    
+    <form id="signupForm" method="POST" action="/users/signup">
+      <div class="mb-3">
+        <label for="firstName" class="form-label">First Name</label>
+        <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your First Name " required>
+      </div>
 
-              <!-- ! confirm password -->
-              <div class="mb-3">
-                <label for="confirmPassword" class="form-label">Confirm Password</label>
-                <input 
-                    type="password" 
-                    class="form-control <%= locals.errors?.password ? 'is-invalid' : '' %>"
-                    id="confirmPassword" 
-                    name="confirmPassword"
-                    placeholder="Password must be at least 6 characters long."
-                    required
-                >
-                <% if (locals.errors?.confirmPassword) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.confirmPassword %>
-                    </div>
-                <% } %>
-            </div>
+      <div class="mb-3">
+        <label for="lastName" class="form-label">Last Name</label>
+        <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your Last Name " required>
+      </div>
 
-                <button type="submit" class="btn btn-primary w-100">Sign Up</button>
-        </form>
-        <div>
-            <a href="/users/auth/google" id="googleSignup">
-                signup with google
-            </a>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your Email" required>
+      </div>
 
-        </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Password must be at least 6 characters long." required>
+      </div>
 
-    
-            <div class="text-center mt-3">
-                <p>Already have an account? <a href="/users/login">Login here</a></p>
-            </div>
-        </div>
+      <div class="mb-3">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Password must be at least 6 characters long." required>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+    </form>
+
+    <div>
+      <a href="/users/auth/google" id="googleSignup">signup with google</a>
     </div>
-    <script>
-        // public/js/signup-validation.js
 
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    <div class="text-center mt-3">
+      <p>Already have an account? <a href="/users/login">Login here</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
-    const error = document.getElementById("errorContainer")
-    // Get all form values
+
+    const errorContainer = document.getElementById("errorContainer");
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const errorPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // Reset previous errors
-    const errorElements = document.querySelectorAll('.invalid-feedback');
-    errorElements.forEach(element => element.remove());
-    document.querySelectorAll('.is-invalid').forEach(element => {
-        element.classList.remove('is-invalid');
-    });
+    errorContainer.classList.add('d-none');
+    errorContainer.innerHTML = '';
+    const errorElements = document.querySelectorAll('.is-invalid');
+    errorElements.forEach(element => element.classList.remove('is-invalid'));
 
     let hasError = false;
+    let errorMessages = [];
 
     // First Name Validation
     if (!firstName) {
-        showError('firstName', 'First name is required');
-        hasError = true;
+      errorMessages.push('First name is required');
+      document.getElementById('firstName').classList.add('is-invalid');
+      hasError = true;
     } else if (firstName.length < 2) {
-        showError('firstName', 'First name must be at least 2 characters');
-        hasError = true;
-    } else if (!/^[A-Za-z0-9\s-']+$/.test(firstName)) {
-        showError('firstName', 'First name can only contain letters');
-        hasError = true;
+      errorMessages.push('First name must be at least 2 characters');
+      document.getElementById('firstName').classList.add('is-invalid');
+      hasError = true;
     }
 
     // Last Name Validation
     if (!lastName) {
-        showError('lastName', 'Last name is required');
-        hasError = true;
+      errorMessages.push('Last name is required');
+      document.getElementById('lastName').classList.add('is-invalid');
+      hasError = true;
     } else if (lastName.length < 1) {
-        showError('lastName', 'Last name must be at least 2 characters');
-        hasError = true;
-    } else if (!/^[A-Za-z\s-']+$/.test(lastName)) {
-        showError('lastName', 'Last name can only contain letters');
-        hasError = true;
+      errorMessages.push('Last name must be at least 1 character');
+      document.getElementById('lastName').classList.add('is-invalid');
+      hasError = true;
     }
 
     // Email Validation
     if (!email) {
-        showError('email', 'Email is required');
-        hasError = true;
-    } else if (!errorPattern.test(email)) {
-        console.log("checking the email validation")
-        showError('email', 'Please enter a valid email address');
-        hasError = true;
+      errorMessages.push('Email is required');
+      document.getElementById('email').classList.add('is-invalid');
+      hasError = true;
+    } else if (!emailPattern.test(email)) {
+      errorMessages.push('Please enter a valid email address');
+      document.getElementById('email').classList.add('is-invalid');
+      hasError = true;
     }
 
     // Password Validation
-    if (!password) {
-        showError('password', 'Password is required');
-        hasError = true;
-    } else {
-        // Check password strength
-        // const hasUpperCase = /[A-Z]/.test(password);
-        // const hasLowerCase = /[a-z]/.test(password);
-        // const hasNumbers = /\d/.test(password);
-        // const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-        const isLongEnough = password.length >= 6;
-
-        if (!isLongEnough) {
-            showError('password', 'Password must be at least 6 characters and contain uppercase, lowercase, number and special character');
-            hasError = true;
-        }
-    }
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const isLongEnough = password.length >= 6;
+    // if (!password) {
+    //   errorMessages.push('Password is required');
+    //   document.getElementById('password').classList.add('is-invalid');
+    //   hasError = true;
+    // } else if (!hasUpperCase||!hasLowerCase||!hasNumbers||!hasSpecialChar||!isLongEnough) {
+    //   errorMessages.push('password must be a combination of uppercase,lowecase,number,special character and atleast 6 digit');
+    //   document.getElementById('password').classList.add('is-invalid');
+    //   hasError = true;
+    // }
 
     // Confirm Password Validation
     if (!confirmPassword) {
-        showError('confirmPassword', 'Please confirm your password');
-        hasError = true;
+      errorMessages.push('Please confirm your password');
+      document.getElementById('confirmPassword').classList.add('is-invalid');
+      hasError = true;
     } else if (password !== confirmPassword) {
-        showError('confirmPassword', 'Passwords do not match');
-        hasError = true;
+      errorMessages.push('Passwords do not match');
+      document.getElementById('confirmPassword').classList.add('is-invalid');
+      hasError = true;
     }
 
-    // If no errors, submit the form
-    if (!hasError) {
-       let response = await fetch ("/users/signup",{
-        method:"POST",
-        headers:{
-            "content-Type":"application/json"
-        },
-        body: JSON.stringify({
+    // Show general error messages if any
+    if (hasError) {
+      errorContainer.classList.remove('d-none');
+      errorContainer.innerHTML = errorMessages.join('<br>');
+    } else {
+        try {
+    const response = await fetch('/users/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         firstName,
         lastName,
         email,
         password,
-        confirmPassword,
-    }),
-       })
-       let data = await response.json()
-       if(response.ok){
-        alert("user succesfully created")
-
-        window.location.href="/users/home"
-       }
-       else{
-        console.log("error occured in fetching")
-        error.innerHTML = data.message;
-
-       }
+      }),
+    });
+    console.log(response);
+    const data = await response.json();
+    //  console.log(data);
+    if (response.ok) {
+      // Redirect to OTP verification page or display a success message
+      window.location.href = '/users/otp-verify';
+    } else {
+      errorContainer.classList.remove('d-none')
+      errorContainer.innerHTML =data.message
+      
     }
-});
-
-// Simple function to show errors
-function showError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    field.classList.add('is-invalid');
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'invalid-feedback';
-    errorDiv.textContent = message;
-    
-    field.parentNode.appendChild(errorDiv);
-}
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    errorContainer.classList.remove('d-none');
+    errorContainer.innerHTML = 'An unexpected error occurred. Please try again.';
+  }
+    }
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
 
-    <%-include("partials/footer") %>
-
-  
+<%-include("partials/footer") %>

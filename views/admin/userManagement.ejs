@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            background-color: #2e2e2e;
+            
             font-family: Arial, sans-serif;
         }
 
@@ -67,21 +67,9 @@
 </head>
 
 <body>
+    <%-include("partials/sidebar")%>
     <div class="d-flex">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <a href="/admin/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="/admin/users"><i class="fas fa-users"></i> Users</a>
-            <a href="/admin/products"><i class="fas fa-box"></i> Products</a>
-            <a href="/admin/orders"><i class="fas fa-shopping-cart"></i> Orders</a>
-            <a href="/admin/offers"><i class="fas fa-tags"></i> Offers</a>
-            <a href="/admin/coupons"><i class="fas fa-percent"></i> Coupons</a>
-            <a href="/admin/deals"><i class="fas fa-gift"></i> Deals</a>
-            <a href="/admin/categories"><i class="fas fa-th-large"></i> Categories</a>
-            <a href="/admin/settings"><i class="fas fa-cog"></i> Settings</a>
-            <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
-
+     
         <!-- Main Content -->
         <div class="content">
             <div class="top-bar">
@@ -120,11 +108,16 @@
                                     <%= user.email %>
                                 </td>
                                 <td>
-                                    <form action="/admin/users/<%= user._id %>/<%= user.isBlocked ? 'unblock' : 'block' %>" method="POST" style="display: inline;">
-                                        <button type="submit" class="btn <%= user.isBlocked ? 'btn-success' : 'btn-danger' %>">
-                                            <%= user.isBlocked ? 'Unblock' : 'Block' %>
-                                        </button>
-                                    </form>
+                                   
+                                    <button
+                                    id="statusButton"
+                                    type="button"
+                                    class="btn <%= user.isBlocked ? 'btn-success' : 'btn-danger' %>"
+                                    data-user-id="<%= user._id %>"
+                                  >
+                                    <%= user.isBlocked ? 'Unblock' : 'Block' %>
+                                  </button>
+                                
 
                                 </td>
                             </tr>
@@ -143,79 +136,55 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
        
-       document.addEventListener('DOMContentLoaded', function() {
-    const actionButtons = document.querySelectorAll('[id^="action-btn-"]'); // Select buttons starting with 'action-btn-'
-    actionButtons.forEach(button => {
-        button.addEventListener('click', async function() {
-            const action = button.getAttribute('data-action');
-            const userId = button.getAttribute('data-user-id');
-            console.log(userId);
-            const confirmation = await Swal.fire({
-        title: `Are you sure?`,
-        text: `Do you want to ${action} this user?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
-        reverseButtons: true
-    });
-    
-    if (!confirmation.isConfirmed) return; 
+       document.querySelectorAll("#statusButton").forEach((button) => {
+  button.addEventListener("click", async (e) => {
+    e.preventDefault();
 
-    
-    button.disabled = true;
-    button.innerText = 'Processing...';
-            
-            
-            try {
-                const response = await fetch(`/admin/users/${userId}/${action}`, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: action }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                console.log(response)
-                const data = await response.json();
-                console.log(data)
+    const buttonElement = e.currentTarget;
 
-                if (data.success) {
-                    
-                    button.classList.toggle('btn-danger');
-                    button.classList.toggle('btn-success');
-                    button.innerText = (action === 'block') ? 'Unblock' : 'Block';
-                    window.location.reload()
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: `User has been ${action === 'block' ? 'blocked' : 'unblocked'} successfully.`,
-                        confirmButtonText: 'Okay'
-                    });
-                } else {
-                    
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Failed!',
-                        text: 'Failed to update user status.',
-                        confirmButtonText: 'Retry'
-                    });
-                }
-            } catch (error) {
-                
-                console.error('Error:', error);
+    const userId = buttonElement.dataset.userId; 
+    const isBlocked = buttonElement.classList.contains("btn-success"); 
 
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops!',
-                    text: 'There was an error while processing your request.',
-                    confirmButtonText: 'Close'
-                });
-            }
+    try {
+      const response = await fetch(`/admin/users/${userId}/status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isBlocked: !isBlocked }), 
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        
+        buttonElement.classList.toggle("btn-success");
+        buttonElement.classList.toggle("btn-danger");
+        buttonElement.textContent = isBlocked ? "Block" : "Unblock";
+
+        
+        Swal.fire({
+          icon: "success",
+          title: result.message,
+          showConfirmButton: true,
         });
-    });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: result.message,
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while processing your request.",
+      });
+    }
+  });
 });
+
 
     </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.all.min.js"></script>

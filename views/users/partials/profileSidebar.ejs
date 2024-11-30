@@ -1,0 +1,66 @@
+<div class="sidebar d-flex flex-column" style="height: 100vh;">
+    <ul class="sidebar-menu flex-grow-1">
+      <li >
+        <a href="/users/profile" class="sidebar-link">
+          <i class="bi bi-person-circle"></i> Profile
+        </a>
+      </li>
+      <li>
+        <a href="/users/orders" class="sidebar-link">
+          <i class="bi bi-bag-check"></i> Orders
+        </a>
+      </li>
+      <li >
+        <a href="/users/address" class="sidebar-link">
+          <i class="bi bi-geo-alt"></i> Address
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <style>
+    .sidebar {
+      width: 250px;
+      background-color: #343a40;
+      color: white;
+      padding: 20px;
+    }
+  
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+  
+    .sidebar-item {
+      margin-bottom: 15px;
+    }
+  
+    .sidebar-link {
+      text-decoration: none;
+      color: white;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      transition: background 0.3s, color 0.3s;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  
+    .sidebar-link i {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+  
+    .sidebar-item.active .sidebar-link {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+  
+    .sidebar-link:hover {
+      background-color: #495057;
+      text-decoration: none;
+    }
+  </style>
+  

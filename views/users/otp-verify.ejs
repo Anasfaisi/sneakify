@@ -53,65 +53,7 @@
 
 <body>
 
-
-
-    <!-- verify-otp.ejs -->
-    <!-- <div class="container">
-        <div class="verification-container">
-            <h2 class="text-center mb-4">Verify Your Email</h2>
-
-            <% if (locals.success) { %>
-                <div class="alert alert-success" role="alert">
-                    <%= success %>
-                </div>
-                <% } %>
-
-                    <div class="text-center mb-4">
-                        <p>We've sent a verification code to:</p>
-                        <p class="fw-bold">
-                            <%= locals.email %>
-                        </p>
-                    </div>
-
-                    <div class="mt-3">
-                        <p>Time remaining: <span id="timer" class="fw-bold text-primary"> 60 seconds</span></p>
-                    </div>
-
-
-
-                    <form action="/users/otp-verify" method="POST">
-                        <div class="mb-4">
-                            <label for="otp" class="form-label">Enter Verification Code</label>
-                            <input type="text"
-                                class="form-control text-center form-control-lg <%= locals.errors?.otp ? 'is-invalid' : '' %>"
-                                id="otp" name="otp" maxlength="6" placeholder="Enter 6-digit code" required autofocus>
-                            <% if (locals.errors?.otp) { %>
-                                <div class="invalid-feedback">
-                                    <%= errors.otp %>
-                                </div>
-                                <% } %>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mb-3">Verify Email</button>
-                    </form>
-
-                    <div class="text-center">
-                        <p>Didn't receive the code?</p>
-                        <form action="/users/verify-otp/resendOtp" method="POST" id="resendForm">
-                            <button type="submit" id="resendButton" class="btn btn-link" disabled>
-                                Resend Code
-                            </button>
-                        </form>
-                    </div>
-
-                    <% if (locals.errors?.general) { %>
-                        <div class="alert alert-danger mt-3" role="alert">
-                            <%= errors.general %>
-                        </div>
-                        <% } %>
-        </div>
-    </div> -->
-
+  
     <div class="container">
         <div class="verification-container">
             <h2 class="text-center mb-4">Verify Your Email</h2>
@@ -146,154 +88,7 @@
     
 
 
-    <!-- <script>
-        let timeLeft = 5;
-        const timerDisplay = document.getElementById('timer');
-        const resendButton = document.getElementById('resendButton');
-        let timerId = null;
-
-        function startTimer() {
-            resendButton.disabled = true;
-
-            if (timerId) {
-                clearInterval(timerId);
-            }
-
-            timerId = setInterval(() => {
-                timeLeft--;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timerId);
-                    timerDisplay.innerHTML = "Timer expired";
-                    resendButton.disabled = false;
-                    return;
-                }
-
-                timerDisplay.innerHTML = timeLeft + " seconds";
-            }, 1000);
-        }
-
-        document.addEventListener("DOMContentLoaded", startTimer)
-
-        document.getElementById("resendForm").addEventListener("click", async function (e) {
-            e.preventDefault()
-
-            if (!this.disabled) {
-                try {
-                    const response = await fetch("/users/otp-verify/resendOtp", {
-                        method: "POST",
-                        headers: {
-                            "content-type": "application/json"
-                        }
-                    })
-                    console.log("data is working")
-                    const data = await response.json()
-                    console.log(data)
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'OTP Resent',
-                        text: 'A new verification code has been sent to your email!',
-                        confirmButtonText: 'OK'
-                    });
-
-                } catch (error) {
-                    console.log("error in fetch", error)
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'resend otp',
-                        text: 'could not resend otp',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
-
-        })
-
-    </script> -->
-    
-    <!-- <script>
-        let timeLeft = 6;
-const timerDisplay = document.getElementById('timer');
-const resendButton = document.getElementById('resendButton');
-let timerId = null;
-
-function startTimer() {
-    resendButton.disabled = true;
-    if (timerId) clearInterval(timerId);
-
-    timerId = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-            clearInterval(timerId);
-            timerDisplay.innerHTML = "Timer expired";
-            resendButton.disabled = false;
-            return;
-        }
-        timerDisplay.innerHTML = timeLeft + " seconds";
-    }, 1000);
-}
-
-document.addEventListener("DOMContentLoaded", startTimer);
-
-document.getElementById("resendForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    if (!resendButton.disabled) {
-        try {
-            const response = await fetch("/users/otp-verify/resendOtp", {
-                method: "POST",
-                headers: { "content-type": "application/json" }
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'OTP Resent',
-                    text: 'A new verification code has been sent to your email!',
-                    confirmButtonText: 'OK'
-                });
-                timeLeft = 6;  
-                startTimer();    
-            } else {
-                console.log("fetch else case is working");
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.error || 'Failed to resend OTP',
-                    confirmButtonText: 'OK'
-                });
-            }
-        } catch (error) {
-            console.log("try catch error is working");
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An unexpected error occurred. Please try again.',
-                confirmButtonText: 'OK'
-            });
-        }
-    }
-});
-
-document.querySelector("form[action='/users/otp-verify']").addEventListener("submit", function(e) {
-    const otpInput = document.getElementById("otp");
-    const otp = otpInput.value.trim();
-
-    if (!/^\d{6}$/.test(otp)) {
-        e.preventDefault();
-        Swal.fire({
-            icon: 'error',
-            title: 'Invalid OTP',
-            text: 'Please enter a valid 6-digit OTP code.',
-            confirmButtonText: 'OK'
-        });
-        otpInput.focus();
-    }
-});
-
-    </script> -->
-    
+   
     <script>
         document.addEventListener("DOMContentLoaded", () => {
     let timeLeft = 10;  
@@ -333,11 +128,14 @@ document.querySelector("form[action='/users/otp-verify']").addEventListener("sub
         
         if (!resendButton.disabled) {
             try {
-                const response = await fetch("/users/verify-otp/resendOtp", {
+                const response = await fetch("/users/otp-verify/resendOtp", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" }
+                    headers: { "Content-Type": "application/json" },
+                  
                 });
+                console.log(response);
                 const data = await response.json();
+                console.log(data);
                 if (response.ok) {
                     Swal.fire({
                         icon: 'success',
@@ -348,6 +146,7 @@ document.querySelector("form[action='/users/otp-verify']").addEventListener("sub
                     timeLeft = 60;  
                     startTimer();  
                 } else {
+
                     throw new Error(data.errors?.general || "Could not resend OTP");
                 }
             } catch (error) {

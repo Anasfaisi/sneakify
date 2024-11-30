@@ -5,80 +5,48 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+      /* Sidebar Styles */
       .sidebar {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 100;
-        padding: 48px 0 0;
-        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        background-color: #343a40;
+        height: 100vh;
+        padding-top: 20px;
+      }
+      .sidebar a {
+        color: white;
+        padding: 10px;
+        text-decoration: none;
+        display: block;
+      }
+      .sidebar a:hover {
+        background-color: #495057;
       }
 
-      .sidebar-sticky {
-        position: relative;
-        top: 0;
-        height: calc(100vh - 48px);
-        padding-top: .5rem;
-        overflow-x: hidden;
-        overflow-y: auto;
+      /* Stats Card Icon Backgrounds */
+      .bg-primary-light {
+        background-color: rgba(0, 123, 255, 0.2);
+        border-radius: 50%;
+        padding: 10px;
+      }
+      .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.2);
+        border-radius: 50%;
+        padding: 10px;
+      }
+      .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.2);
+        border-radius: 50%;
+        padding: 10px;
+      }
+      .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.2);
+        border-radius: 50%;
+        padding: 10px;
       }
 
-      @supports ((position: -webkit-sticky) or (position: sticky)) {
-        .sidebar-sticky {
-          position: -webkit-sticky;
-          position: sticky;
-        }
-      }
-
-      .sidebar .nav-link {
-        font-weight: 500;
-        color: #333;
-        padding: 0.5rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .sidebar .nav-link.active {
-        color: #007bff;
-        background-color: #e9ecef;
-        border-radius: 0.25rem;
-      }
-
-      .sidebar .nav-link:hover {
-        background-color: #f8f9fa;
-      }
-
-      .stats-card {
-        border-radius: 0.5rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        transition: transform 0.2s;
-      }
-
-      .stats-card:hover {
-        transform: translateY(-3px);
-      }
-
-      .stats-icon {
-        width: 3rem;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0.5rem;
-      }
-
-      .top-products-table img {
-        width: 40px;
-        height: 40px;
-        object-fit: cover;
-        border-radius: 4px;
-      }
-
-      .chart-container {
-        height: 300px;
-        margin-top: 2rem;
+      /* Table Overflow */
+      .top-products-table {
+        width: 100%;
+        overflow-x: auto;
       }
     </style>
   </head>
@@ -103,8 +71,12 @@
       </div>
     </nav>
 
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <%- include("partials/sidebar") %>
 
-
+        <!-- Main Content -->
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Dashboard Overview</h1>
@@ -114,16 +86,14 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
               </div>
               <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-                <i class="fas fa-calendar"></i>
-                This week
+                <i class="fas fa-calendar"></i> This week
               </button>
             </div>
           </div>
-          <%-include("admin/partials") %>
 
           <!-- Statistics Cards -->
           <div class="row mb-4">
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
               <div class="card stats-card bg-primary text-white">
                 <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center">
@@ -139,7 +109,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
               <div class="card stats-card bg-success text-white">
                 <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center">
@@ -155,7 +125,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
               <div class="card stats-card bg-info text-white">
                 <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center">
@@ -171,7 +141,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
               <div class="card stats-card bg-warning text-white">
                 <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center">
@@ -211,7 +181,6 @@
                         <tr>
                           <td>
                             <div class="d-flex align-items-center">
-                              <img src="#" alt="Nike Jordan" class="mr-2">
                               <span>Nike Jordan Special Edition</span>
                             </div>
                           </td>
@@ -222,7 +191,6 @@
                         <tr>
                           <td>
                             <div class="d-flex align-items-center">
-                              <img src="/api/placeholder/40/40" alt="Air Max" class="mr-2">
                               <span>Nike Air Max 270</span>
                             </div>
                           </td>
@@ -233,7 +201,6 @@
                         <tr>
                           <td>
                             <div class="d-flex align-items-center">
-                              <img src="/api/placeholder/40/40" alt="Ultra Boost" class="mr-2">
                               <span>Adidas Ultra Boost</span>
                             </div>
                           </td>
@@ -255,28 +222,13 @@
                 <div class="card-body">
                   <div class="list-group">
                     <a href="#" class="list-group-item list-group-item-action">
-                      <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Order #12345</h6>
-                        <small class="text-muted">3 mins ago</small>
-                      </div>
-                      <p class="mb-1">Nike Jordan - Size 42</p>
-                      <small class="text-muted">₹3,000</small>
+                      <span>#10123</span> - ₹12,000
                     </a>
                     <a href="#" class="list-group-item list-group-item-action">
-                      <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Order #12344</h6>
-                        <small class="text-muted">34 mins ago</small>
-                      </div>
-                      <p class="mb-1">Air Max 270 - Size 41</p>
-                      <small class="text-muted">₹2,800</small>
+                      <span>#10124</span> - ₹5,400
                     </a>
                     <a href="#" class="list-group-item list-group-item-action">
-                      <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Order #12343</h6>
-                        <small class="text-muted">2 hours ago</small>
-                      </div>
-                      <p class="mb-1">Ultra Boost - Size 43</p>
-                      <small class="text-muted">₹2,500</small>
+                      <span>#10125</span> - ₹2,750
                     </a>
                   </div>
                 </div>
@@ -288,6 +240,10 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>

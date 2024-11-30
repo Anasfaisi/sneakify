@@ -1,0 +1,328 @@
+<%-include("partials/header") %>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+}
+
+.cart-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 20px auto;
+  gap: 20px;
+}
+
+.cart-items {
+  flex: 2;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.cart-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.item-details {
+  display: flex;
+  gap: 20px;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-info h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.item-info p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.item-price {
+  font-size: 16px;
+  color: #000;
+  font-weight: bold;
+}
+
+.quantity-decrease,
+.quantity-increase,
+.remove-item {
+  background: #e9ecef;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.order-summary {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.checkout-button {
+  width: 100%;
+  background: #28a745;
+  color: #fff;
+  padding: 10px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.checkout-button:hover {
+  background: #218838;
+}
+
+.savings {
+  margin-top: 10px;
+  color: #28a745;
+  font-size: 14px;
+  text-align: center;
+}
+</style>
+<main class="cart-container">
+    <div class="cart-items">
+      <h2>Your Cart</h2>
+      <p>Items in your cart are not reserved—check out now to make them yours.</p>
+
+      <!-- Loop through cart items -->
+      <% if (products.length > 0) { %>
+        <% products.forEach(item => { %>
+          <div class="cart-item">
+            <div class="item-details">
+              <img src="/<%= item.imageUrl %>" alt="<%= item.name %>">
+              <div class="item-info">
+                <h3><%= item.name %></h3>
+                <p><%= item.description %></p>
+                <p >Size: <%= item.size %></p>
+                <div>
+                  <p>Quantity:
+                        <button class="quantity-decrease" onclick="decreaseQuantity(this, '<%= item.id %>','<%=item.size %>')">-</button>
+                        <span class="quantity-display"><%= item.quantity %></span>
+                        <button class="quantity-increase" onclick="increaseQuantity(this, '<%= item.id %>','<%=item.size %>')">+</button>
+                  </div>
+                </p>
+                <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%=item.size %>')">Remove</button>
+              </div>
+            </div>
+            <div class="item-price">₹<%= item.price.toFixed(2) %></div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p>Your cart is empty.</p>
+      <% } %>
+    </div>
+
+    <div class="order-summary">
+      <h2>Order Summary</h2>
+      <div class="summary-item">
+        <p>Items (<%= products.length %>)</p>
+        <p>₹<%= totalItemsPrice.toFixed(2) %></p>
+      </div>
+     
+   
+      
+      <div class="summary-total">
+        <h3>Total</h3>
+        <h3>₹<%= grandTotal.toFixed(2) %></h3>
+      </div>
+     <a href="/users/checkout"> <button class="checkout-button" >Checkout</button></a>
+
+    </div>
+  </main>
+
+
+  <script>
+  //incrementing and decrementing the product
+async function decreaseQuantity(element, itemId,size) {
+  console.log(itemId);
+  const quantityDisplay = element.nextElementSibling; 
+  let currentQuantity = parseInt(quantityDisplay.textContent);
+
+  if (currentQuantity > 1) {
+    currentQuantity--;
+    quantityDisplay.textContent = currentQuantity; 
+
+   
+    try {
+      const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: currentQuantity ,size}),
+    })
+   console.log(response);
+     const data = response.json()
+     if(response.ok){
+      Swal.fire({
+        icon: "success",
+        title: "Quantity Updated!",
+        text: `The quantity was successfully updated to ${currentQuantity}.`,
+        confirmButtonText: "OK",
+      }).then(()=>location.reload())
+     }else{
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: data.message || "Failed to update the quantity in the database.",
+        confirmButtonText: "Try Again",
+      })
+     }
+    } catch (error) {
+      console.log("errro occured in updating quantity",error)
+      Swal.fire({
+      icon: "error",
+      title: "Something went wrong",
+      text: "Unable to update the quantity. Please try again later.",
+      confirmButtonText: "OK",
+    });
+
+    }
+      
+  }
+}
+
+
+
+async function increaseQuantity(element, itemId ,size) {
+  console.log(itemId);
+  const quantityDisplay = element.previousElementSibling; 
+  let currentQuantity = parseInt(quantityDisplay.textContent);
+
+  currentQuantity++; 
+  quantityDisplay.textContent = currentQuantity; 
+
+  try {
+    const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: currentQuantity,size}),
+    });
+
+    const data = await response.json(); 
+
+    if (response.ok) {
+
+      Swal.fire({
+        icon: "success",
+        title: "Quantity Updated!",
+        text: `The quantity was successfully updated to ${currentQuantity}.`,
+        confirmButtonText: "OK",
+      }).then(()=>location.reload())
+    } else {
+
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: data.message || "Failed to update the quantity in the database.",
+        confirmButtonText: "Try Again",
+      }).then(()=>location.reload())
+    }
+  } catch (error) {
+    console.error("Error occurred in updating quantity:", error);
+
+    Swal.fire({
+      icon: "error",
+      title: "Something went wrong",
+      text: "Unable to update the quantity. Please try again later.",
+      confirmButtonText: "OK",
+    });
+  }
+}
+
+  </script>
+
+<script>
+  //remove the product
+
+  async function removeProduct(productId,size) {
+    console.log(productId);
+  const confirmRemoval = await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to undo this action!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, remove it!",
+  });
+
+  if (confirmRemoval.isConfirmed) {
+    try {
+      const response = await fetch(`/users/cart/removeProduct/${productId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ productId ,size }), 
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await Swal.fire({
+          icon: "success",
+          title: "Done",
+          text: "The product has been removed from your cart.",
+        });
+        location.reload(); 
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed",
+          text: data.message || "Failed to remove the product.",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while removing the product.",
+      });
+    }
+  }
+}
+
+
+
+
+  
+</script>
+  <%-include("partials/footer") %>

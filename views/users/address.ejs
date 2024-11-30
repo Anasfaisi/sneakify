@@ -1,0 +1,498 @@
+<style>
+  .address-card {
+    background-color: #f8f9fa;
+  }
+
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<%-include("partials/header") %>
+
+<div class="container mt-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <%- include('partials/profileSidebar'); %>
+    </div>
+
+    <!-- Address Content -->
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-header text-center bg-primary text-white">
+          <h3>My Addresses</h3>
+        </div>
+        <div class="card-body">
+          <% if (address && address.length > 0) { %>
+          <!-- Display each address -->
+          <% address.forEach(address => { %>
+          <div class="address-card mb-4 p-3 border rounded">
+            <p><strong>First Name:</strong> <%= address.firstName %></p>
+            <p><strong>Last Name:</strong> <%= address.lastName %></p>
+            <p><strong>Address:</strong> <%= address.address %></p>
+            <p><strong>Place:</strong> <%= address.place %></p>
+            <p><strong>City:</strong> <%= address.city %></p>
+            <p><strong>District:</strong> <%= address.district %></p>
+            <p><strong>State:</strong> <%= address.state %></p>
+            <p><strong>Country:</strong> <%= address.country %></p>
+            <p><strong>Phone Number:</strong> <%= address.phone %></p>
+
+            <!-- Edit Button -->
+            <div class="text-end">
+              <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editAddressModal-<%= address._id %>">
+                Edit
+              </button>
+            
+            <button class="delete-button btn btn-danger btn-sm" data-address-id="<%= address._id %>">
+              Delete
+            </button>
+          </div>
+          </div>
+
+          <!-- Edit Address Modal -->
+          <div class="modal fade" id="editAddressModal-<%= address._id %>" tabindex="-1" aria-labelledby="editAddressModalLabel-<%= address._id %>" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title " id="editAddressModalLabel-<%= address._id %>">Edit Address</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="editAddressForm">
+                    <input type="hidden" id="addressId" name="addressId" value="<%= address._id %>">
+
+                    <div class="mb-3">
+                      <label for="firstName" class="form-label">First Name</label>
+                      <input type="text" class="form-control" id="firstName" name="firstName" value="<%= address.firstName %>">
+                      <div id="firstNameError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="lastName" class="form-label">Last Name</label>
+                      <input type="text" class="form-control" id="lastName" name="lastName" value="<%= address.lastName %>">
+                      <div id="lastNameError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="address" class="form-label">Address</label>
+                      <input type="text" class="form-control" id="address" name="address" value="<%= address.address %>">
+                    </div>
+                    <div class="mb-3">
+                      <label for="place" class="form-label">Place</label>
+                      <input type="text" class="form-control" id="place" name="place" value="<%= address.place %>">
+                      <div id="placeError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="city" class="form-label">City</label>
+                      <input type="text" class="form-control" id="city" name="city" value="<%= address.city %>">
+                      <div id="cityError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="district" class="form-label">District</label>
+                      <input type="text" class="form-control" id="district" name="district" value="<%= address.district %>">
+                      <div id="districtError" class="error-message text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="pincode" class="form-label">pincode</label>
+                      <input type="text" class="form-control" id="pincode" name="pincode" value="<%=address.pincode %>">
+                      <div id="pincodeError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="state" class="form-label">State</label>
+                      <input type="text" class="form-control" id="state" name="state" value="<%= address.state %>">
+                      <div id="stateError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="country" class="form-label">Country</label>
+                      <input type="text" class="form-control" id="country" name="country" value="<%= address.country %>">
+                      <div id="countryError" class="error-message text-danger"></div>
+
+                    </div>
+                    <div class="mb-3">
+                      <label for="phone" class="form-label">Phone</label>
+                      <input type="text" class="form-control" id="phone" name="phone" value="<%= address.phone %>">
+                      <div id="phoneError" class="error-message text-danger"></div>
+
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }); %>
+
+          <div class="text-center mt-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+              Add Address
+            </button>
+          </div>
+          <% } else { %>
+
+          <div class="text-center">
+            <p class="text-muted">No address available. Please add one.</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+              Add Address
+            </button>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Modal for Adding Address -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addAddressForm">
+          <div class="mb-3">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="firstName" name="firstName" required>
+            <div id="firstNameError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="lastName" name="lastName" required>
+            <div id="lastNameError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Address line</label>
+            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+
+          </div>
+          <div class="mb-3">
+            <label for="place" class="form-label">Place</label>
+            <input type="text" class="form-control" id="place" name="place" required>
+            <div id="placeError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="city" class="form-label">City</label>
+            <input type="text" class="form-control" id="city" name="city" required>
+            <div id="cityError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="district" class="form-label">District</label>
+            <input type="text" class="form-control" id="district" name="district" required>
+            <div id="districtError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="pincode" class="form-label">pincode</label>
+            <input type="text" class="form-control" id="pincode" name="pincode" required>
+            <div id="pincodeError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="state" class="form-label">State</label>
+            <input type="text" class="form-control" id="state" name="state" required>
+            <div id="stateError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="country" class="form-label">Country</label>
+            <input type="text" class="form-control" id="country" name="country" required>
+            <div id="countryError" class="error-message text-danger"></div>
+
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="phone" name="phone" required>
+            <div id="phoneError" class="error-message text-danger"></div>
+
+          </div>
+          <button type="submit" class="btn btn-primary">Save Address</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  //add address
+  const addAddressForm = document.getElementById("addAddressForm")
+  addAddressForm.addEventListener("submit", async (e) => {
+    e.preventDefault()
+
+    document.querySelectorAll('.error-message').forEach(errorDiv => {
+      errorDiv.textContent = "";
+    });
+
+    const formData = new FormData(addAddressForm)
+    const data = Object.fromEntries(formData.entries());
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const numberRegex = /^[0-9]+$/;
+
+    if (!nameRegex.test(data.firstName)) {
+      document.getElementById("firstNameError").textContent = "Alphabets only";
+      return;
+
+    }
+    if (!nameRegex.test(data.lastName)) {
+      document.getElementById("lastNameError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.place)) {
+      document.getElementById("placeError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.city)) {
+      document.getElementById("cityError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.district)) {
+      document.getElementById("districtError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.state)) {
+      document.getElementById("stateError").textContent = "Alphabets only";
+      return;
+    }
+
+    if (!nameRegex.test(data.country)) {
+      document.getElementById("countryError").textContent = "Alphabets only";
+      return;
+    }
+
+    if (!numberRegex.test(data.pincode)) {
+      document.getElementById("pincodeError").textContent = "Numbers only";
+      return;
+    }
+    if (data.pincode.length !== 6) {
+      document.getElementById("pincodeError").textContent = "pincode must be exactly 6 digits";
+      return;
+    }
+
+    if (!numberRegex.test(data.phone)) {
+      document.getElementById("stateError").textContent = "Numbers only";
+      return;
+    }
+    if (data.phone.length !== 10) {
+      document.getElementById("phoneError").textContent = "phone number must be exactly 10 digits";
+      return;
+    }
+
+
+    try {
+      const response = await fetch("/users/address/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Address saved successfully!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to save the address. Please try again.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    } catch (error) {
+      console.error("Error saving address:", error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'An error occurred. Please try again later.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
+
+
+  })
+</script>
+
+<script>
+  //edit addresss
+  const editAddressForm = document.getElementById("editAddressForm")
+  editAddressForm.addEventListener("submit", async (e) => {
+    e.preventDefault()
+    console.log('lkjhgfdsdfghjklkjh');
+
+    document.querySelectorAll('.error-message').forEach(errorDiv => {
+      errorDiv.textContent = "";
+    });
+    const addressId = document.getElementById("addressId").value
+    console.log(addressId);
+    const formData = new FormData(editAddressForm)
+    const data = Object.fromEntries(formData.entries());
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const numberRegex = /^[0-9]+$/;
+
+    if (!nameRegex.test(data.firstName)) {
+      document.getElementById("firstNameError").textContent = "Alphabets only";
+      return;
+
+    }
+    if (!nameRegex.test(data.lastName)) {
+      document.getElementById("lastNameError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.place)) {
+      document.getElementById("placeError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.city)) {
+      document.getElementById("cityError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.district)) {
+      document.getElementById("districtError").textContent = "Alphabets only";
+      return;
+    }
+    if (!nameRegex.test(data.state)) {
+      document.getElementById("stateError").textContent = "Alphabets only";
+      return;
+    }
+
+    if (!nameRegex.test(data.country)) {
+      document.getElementById("countryError").textContent = "Alphabets only";
+      return;
+    }
+
+    if (!numberRegex.test(data.pincode)) {
+      document.getElementById("pincodeError").textContent = "Numbers only";
+      return;
+    }
+    if (data.pincode.length !== 6) {
+      document.getElementById("pincodeError").textContent = "pincode must be exactly 6 digits";
+      return;
+    }
+
+    if (!numberRegex.test(data.phone)) {
+      document.getElementById("phoneError").textContent = "Numbers only";
+      return;
+    }
+    if (data.phone.length !== 10) {
+      document.getElementById("phoneError").textContent = "phone number must be exactly 10 digits";
+      return;
+    }
+
+    try {
+      const response = await fetch(`/users/address/edit/${addressId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      console.log(response);
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Address upated successfully!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to save the address. Please try again.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    } catch (error) {
+      console.error("Error in updating address:", error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'An error occurred. Please try again later.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
+  })
+</script>
+
+<script>
+  document.querySelectorAll(".delete-button").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const addressId = button.getAttribute("data-address-id");
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this address?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/users/address/delete/${addressId}`, {
+            method: "DELETE",
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'Address has been deleted successfully.',
+              icon: 'success',
+              confirmButtonText: 'OK',
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              text: result.message || 'Failed to delete the address. Please try again.',
+              icon: 'error',
+              confirmButtonText: 'OK',
+            });
+          }
+        } catch (error) {
+          console.error("Error deleting address:", error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while deleting the address. Please try again later.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+          });
+        }
+      }
+    });
+  });
+});
+
+</script>
+
+
+
+
+
+<%-include("partials/footer") %>
