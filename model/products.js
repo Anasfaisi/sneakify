@@ -38,8 +38,17 @@ const productSchema = new mongoose.Schema(
       default: true,
     },
     sizes: { type: [sizeStockSchema], required: true },
+    popularity: {
+      type: Number,
+      default: 0, // Incremented each time the product is viewed
+    },
+    featured: {
+      type: Boolean,
+      default: false, // Manually mark products as featured
+    },
 
   },
+  
   {
     timestamps: true,
   }

@@ -449,6 +449,8 @@ async function addToCart(productId, size, quantity) {
 
 
 <script>
+  document.addEventListener("DOMContentLoaded",()=>{
+
   const sizeSelect = document.getElementById("size");
   const sizeInfoDiv = document.getElementById("size-info");
   const selectedSizeElement = document.getElementById("selected-size");
@@ -484,6 +486,9 @@ async function addToCart(productId, size, quantity) {
   if (sizeSelect.options.length === 1) {
     updateStockInfo();
   }
+  updateStockInfo();
+
+})
 </script>
 
 

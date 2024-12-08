@@ -1,240 +1,310 @@
-<%- include("partials/header") %>
-
-<style>
-.container-fluid {
-  display: flex;
-  gap: 1px;
-  flex-wrap: nowrap;
-  padding: 30px;
-}
-
-aside {
-  flex: 0 0 280px;
-  border-right: 1px solid #ddd;
-  padding-right: 15px;
-}
-
-aside h5, aside h6 {
-  color: #333;
-}
-
-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.sort-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sort-container select {
-  margin-left: 10px;
-}
-
-.product-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: space-between;
-}
-
-.product-card {
-  width: calc(33.333% - 20px);
-  margin-bottom: 30px;
-}
-
-.card {
-  transition: transform 0.2s ease-in-out;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.card:hover {
-  transform: scale(1.05);
-}
-
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.card-text {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-@media (max-width: 768px) {
-  .product-card {
-    width: 48%;
-  }
-
-  .product-list {
-    justify-content: flex-start;
-  }
-
-  aside {
-    max-width: 100%;
-    flex: 0 0 100%;
-  }
-
-  main {
-    flex: 0 0 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .product-card {
-    width: 100%;
-  }
-}
-
-</style>
-
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item"><a href="/users/shop">Shop</a></li>
-  </ol>
-</nav>
+<%-include("partials/header") %>
+<link rel="stylesheet" href="/stylesheets/shop.css">
 <div class="container-fluid">
-    <aside class="col-md-3">
-      <h5 class="fw-bold mb-3">Filters</h5>
-      <form id="filter-form">
-        <div class="mb-4">
-          <h6 class="fw-bold">Size</h6>
-          <div>
-            <input type="checkbox" id="size-7" name="size" value="7">
-            <label for="size-7">7</label>
-          </div>
-          <div>
-            <input type="checkbox" id="size-8" name="size" value="8">
-            <label for="size-8">8</label>
-          </div>
-          <div>
-            <input type="checkbox" id="size-9" name="size" value="9">
-            <label for="size-9">9</label>
-          </div>
-        </div>
-        <div class="mb-4">
-          <h6 class="fw-bold">Color</h6>
-          <div>
-            <input type="checkbox" id="color-red" name="color" value="Red">
-            <label for="color-red">Red</label>
-          </div>
-          <div>
-            <input type="checkbox" id="color-blue" name="color" value="Blue">
-            <label for="color-blue">Blue</label>
-          </div>
-          <div>
-            <input type="checkbox" id="color-black" name="color" value="Black">
-            <label for="color-black">Black</label>
-          </div>
-        </div>
-        <div class="mb-4">
-          <h6 class="fw-bold">Brand</h6>
-          <div>
-            <input type="checkbox" id="brand-nike" name="brand" value="Nike">
-            <label for="brand-nike">Nike</label>
-          </div>
-          <div>
-            <input type="checkbox" id="brand-adidas" name="brand" value="Adidas">
-            <label for="brand-adidas">Adidas</label>
-          </div>
-        </div>
-        <div class="mb-4">
-          <h6 class="fw-bold">Gender</h6>
-          <div>
-            <input type="checkbox" id="gender-male" name="gender" value="Male">
-            <label for="gender-male">Male</label>
-          </div>
-          <div>
-            <input type="checkbox" id="gender-female" name="gender" value="Female">
-            <label for="gender-female">Female</label>
-          </div>
-        </div>
-        <div class="mb-4">
-          <h6 class="fw-bold">Category</h6>
-          <div>
-            <input type="checkbox" id="category-sneakers" name="category" value="Sneakers">
-            <label for="category-sneakers">Sneakers</label>
-          </div>
-          <div>
-            <input type="checkbox" id="category-sports" name="category" value="Sports">
-            <label for="category-sports">Sports</label>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-      </form>
-    </aside>
-    <main class="col-md-9">
-      <div class="sort-container">
-        <h6 class="fw-bold">Sort By</h6>
-        <select id="sort" name="sort" class="form-select">
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
-          <option value="rating">Average Rating</option>
-          <option value="featured">Featured</option>
-          <option value="new-arrivals">New Arrivals</option>
-          <option value="a-z">A - Z</option>
-          <option value="z-a">Z - A</option>
-        </select>
+  <div class="row">
+      <div class="col-12 text-center my-4">
+          <h1>Our Shoe Collection</h1>
       </div>
-      <div class="product-list d-flex flex-wrap gap-4">
-        <% if (products.length > 0) { %>
-          <% products.forEach(product => { %>
-            <div class="product-card card shadow-sm">
-              <a href="/users/productDetails/<%= product._id %>" class="text-decoration-none text-dark">
-                <img src="/<%= product.images[0] %>" alt="<%= product.name %>" class="card-img-top product-image">
-                <div class="card-body">
-                  <h2 class="card-title product-name"><%= product.name %></h2>
-                  <p class="card-text product-description"><%= product.description %></p>
-                  <p class="card-text product-price">$<%= product.price.toFixed(2) %></p>
-                  <div class="product-sizes">
-                   
-                  </div>
-                </div>
-              </a>
-            </div>
-          <% }); %>
-        <% } else { %>
-          <p>No products available at the moment. Please check back later!</p>
-        <% } %>
-      </div>
-    </main>
   </div>
-  <script>
-    document.getElementById('filter-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-  
-      const form = e.target;
-      const formData = new FormData(form);
-  
-      
-      const queryParams = new URLSearchParams();
-      formData.forEach((value, key) => {
-        if (key === 'size') {
-          
-          queryParams.append(key, value);
-        } else {
-          queryParams.append(key, value);
-        }
-      });
-  
-      
-      const sortValue = document.getElementById('sort').value;
-      queryParams.append('sort', sortValue);
-  
-      
-      window.location.href = `/users/shop?${queryParams.toString()}`;
-    });
-  </script>
-  <%- include("partials/footer") %>
+  <div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 col-md-4 sidebar-filters">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Size Filter -->
+                    <div class="mb-3">
+                      <h6>Size</h6>
+                      <div class="size-filter d-flex flex-wrap">
+                          <% const globalSizes = [ 6, 7, 8, 9, 10, 11, 12]; %>
+                          <% globalSizes.forEach((size) => { %>
+                              <div 
+                                  class="size-box" 
+                                  data-size="<%= size %>" 
+                                  id="size-<%= size %>"
+                              >
+                                  <%= size %>
+                              </div>
+                          <% }); %>
+                      </div>
+                  </div>
 
+                    <!-- Category Filter -->
+                    <div class="mb-3">
+                        <h6>Category</h6>
+                        <div class="category-filter">
+                            <% categories.forEach(function(category) { %>
+                                <div class="form-check">
+                                    <input class="form-check-input filter-checkbox" 
+                                           type="checkbox" 
+                                           value="<%= category.name %>" 
+                                           id="category-<%= category %>"
+                                           name="category">
+                                    <label class="form-check-label" for="category-<%= category %>">
+                                        <%= category.name %>
+                                    </label>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+
+                    <!-- Price Range Filter -->
+                    <div class="mb-3">
+                        <h6>Price Range</h6>
+                        <div class="price-filter">
+                            <div class="input-group">
+                                <input type="number" 
+                                       class="form-control price-min" 
+                                       placeholder="Min" 
+                                       min="0">
+                                <input type="number" 
+                                       class="form-control price-max" 
+                                       placeholder="Max" 
+                                       min="0">
+                                <button class="btn btn-outline-secondary apply-price-filter" type="button">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Sorting Bar -->
+            <div class="sorting-bar mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <span class="me-3 results-count">Showing <%= products.length %> products</span>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" 
+                                    type="button" 
+                                    id="sortDropdown" 
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false">
+                                Sort By
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="popularity">Popularity</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="price-asc">Price: Low to High</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="price-desc">Price: High to Low</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="rating">Average Ratings</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="featured">Featured</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="new">New Arrivals</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="name-asc">A-Z</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="name-desc">Z-A</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+  <div class="row product-grid">
+      <% products.forEach(function(product) { %>
+          <div class="col-md-4 col-sm-6 mb-4">
+              <div class="card product-card" href="/users/productDetails/<%= product._id %>">
+                  <div class="card-image-container">
+                      <img src="/<%= product.images[0] %>" class="card-img-top product-image" alt="<%= product.name %>">
+                      <div class="product-overlay">
+                          <a href="/users/productDetails/<%= product._id %>" class="btn btn-primary view-details-btn">View Details</a>
+                      </div>
+                  </div>
+                  <div class="card-body">
+                      <h5 class="card-title"><%= product.name %></h5>
+                      <p class="card-text text-muted"><%= product.category %></p>
+                      <div class="d-flex justify-content-between align-items-center">
+                          <span class="product-price">$<%= product.price.toFixed(2) %></span>
+                          <div class="product-sizes">
+                              <% product.sizes.forEach(function(sizeStock) { %>
+                                  <span class="badge bg-secondary me-1"><%= sizeStock.size %></span>
+                              <% }); %>
+                          </div>
+                      </div>
+                     
+                  </div>
+              </div>
+          </div>
+      <% }); %>
+  </div>
+</div>
+
+<div class="pagination">
+    <ul class="pagination-list">
+      <!-- Previous Page Link -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
   
+      <!-- Page Number Links -->
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= i %>&limit=5"><%= i %></a>
+        </li>
+      <% } %>
   
+      <!-- Next Page Link -->
+      <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+        <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const sizeBoxes = document.querySelectorAll(".size-box");
+    const categoryCheckboxes = document.querySelectorAll(".form-check-input");
+    const applyPriceFilterButton = document.querySelector(".apply-price-filter");
+    const priceMinInput = document.querySelector(".price-min");
+    const priceMaxInput = document.querySelector(".price-max");
+
+    let selectedSizes = [];
+    let selectedCategories = [];
+
+    // Initialize filters from query parameters
+    const initializeFilters = () => {
+        const params = new URLSearchParams(window.location.search);
+
+        // Initialize sizes
+        if (params.has("sizes")) {
+            selectedSizes = params.get("sizes").split(",");
+            selectedSizes.forEach((size) => {
+                const sizeBox = document.querySelector(`.size-box[data-size="${size}"]`);
+                if (sizeBox) sizeBox.classList.add("selected");
+            });
+        }
+
+        // Initialize categories
+        if (params.has("category")) {
+            selectedCategories = params.get("category").split(",");
+            selectedCategories.forEach((category) => {
+                const categoryCheckbox = document.querySelector(`.form-check-input[value="${category}"]`);
+                if (categoryCheckbox) categoryCheckbox.checked = true;
+            });
+        }
+
+        // Initialize price range
+        if (params.has("minPrice")) {
+            priceMinInput.value = params.get("minPrice");
+        }
+        if (params.has("maxPrice")) {
+            priceMaxInput.value = params.get("maxPrice");
+        }
+    };
+
+    // Helper function to update query string and reload
+    const updateProducts = () => {
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+
+        // Update sizes
+        if (selectedSizes.length > 0) {
+            params.set("sizes", selectedSizes.join(","));
+        } else {
+            params.delete("sizes");
+        }
+
+        // Update categories
+        if (selectedCategories.length > 0) {
+            params.set("category", selectedCategories.join(","));
+        } else {
+            params.delete("category");
+        }
+
+        // Update price range
+        const minPrice = priceMinInput.value.trim();
+        const maxPrice = priceMaxInput.value.trim();
+
+        if (minPrice) {
+            params.set("minPrice", minPrice);
+        } else {
+            params.delete("minPrice");
+        }
+
+        if (maxPrice) {
+            params.set("maxPrice", maxPrice);
+        } else {
+            params.delete("maxPrice");
+        }
+
+        // Reload the page with updated query parameters
+        window.location.href = `${url.pathname}?${params.toString()}`;
+    };
+
+    // Size filter logic
+    sizeBoxes.forEach((box) => {
+        box.addEventListener("click", () => {
+            const size = box.dataset.size;
+
+            if (selectedSizes.includes(size)) {
+                // Deselect size
+                selectedSizes = selectedSizes.filter((s) => s !== size);
+                box.classList.remove("selected");
+            } else {
+                // Select size
+                selectedSizes.push(size);
+                box.classList.add("selected");
+            }
+
+            updateProducts(); // Update products on size selection
+        });
+    });
+
+    // Category filter logic
+    categoryCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+            const category = checkbox.value;
+
+            if (checkbox.checked) {
+                // Add category
+                if (!selectedCategories.includes(category)) {
+                    selectedCategories.push(category);
+                }
+            } else {
+                // Remove category
+                selectedCategories = selectedCategories.filter((c) => c !== category);
+            }
+
+            updateProducts(); // Update products on category selection
+        });
+    });
+
+    // Price filter logic
+    applyPriceFilterButton.addEventListener("click", () => {
+        updateProducts(); // Apply price filter
+    });
+
+    // Initialize filters based on the existing query parameters
+    initializeFilters();
+});
+
+
+</script>
+
+
+<script>
+    // Attach click event listener to sort options in the dropdown
+    document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sortValue = this.getAttribute('data-sort'); // Get the selected sorting value
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('sort', sortValue); // Update the URL with the selected sort option
+            window.location.href = currentUrl.toString(); // Reload the page with the new sort query
+        });
+    });
+</script>
+
+
+<%-include("partials/footer") %>

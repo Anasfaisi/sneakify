@@ -17,13 +17,18 @@ router.post("/otp-verify/resendOtp", controller.resendOtp);
 router.get("/login", controller.getLoginPage);
 router.post("/login",controller.login);
 
-router.get("/forgetPassword",controller.getForgetPassword)
+router.get("/getForgetPassword",controller.getForgetPassword)
 router.post("/forgetPassword",controller.forgetPassword)
+router.get("/resetPassword",controller.showResetPasswordForm)
+router.post("/resetPasswordForm",controller.resetPassword)
 
 router.get("/home",controller.home);
 
 
 router.get("/shop",controller.listingProducts)
+router.get("/products",controller.filter)
+
+
 router.get("/productDetails/:id",controller.productDetails)
 router.get('/product/:id/size/:size',controller.getStock)
 router.get("/shop/sort", controller.sortProducts)

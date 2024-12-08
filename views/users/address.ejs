@@ -38,88 +38,81 @@
             <p><strong>State:</strong> <%= address.state %></p>
             <p><strong>Country:</strong> <%= address.country %></p>
             <p><strong>Phone Number:</strong> <%= address.phone %></p>
-
-            <!-- Edit Button -->
+    
+            <!-- Action Buttons -->
             <div class="text-end">
               <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editAddressModal-<%= address._id %>">
                 Edit
               </button>
-            
-            <button class="delete-button btn btn-danger btn-sm" data-address-id="<%= address._id %>">
-              Delete
-            </button>
+              <button class="delete-button btn btn-danger btn-sm" data-address-id="<%= address._id %>">
+                Delete
+              </button>
+            </div>
           </div>
-          </div>
-
+    
           <!-- Edit Address Modal -->
           <div class="modal fade" id="editAddressModal-<%= address._id %>" tabindex="-1" aria-labelledby="editAddressModalLabel-<%= address._id %>" aria-hidden="true">
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title " id="editAddressModalLabel-<%= address._id %>">Edit Address</h5>
+                  <h5 class="modal-title" id="editAddressModalLabel-<%= address._id %>">Edit Address</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <form id="editAddressForm">
-                    <input type="hidden" id="addressId" name="addressId" value="<%= address._id %>">
-
+                  <form class="editAddressForm" data-id="<%= address._id %>">
+                    <input type="hidden" class="addressId" name="addressId" value="<%= address._id %>">
+    
                     <div class="mb-3">
-                      <label for="firstName" class="form-label">First Name</label>
-                      <input type="text" class="form-control" id="firstName" name="firstName" value="<%= address.firstName %>">
-                      <div id="firstNameError" class="error-message text-danger"></div>
-
+                      <label class="form-label">First Name</label>
+                      <input type="text" class="form-control firstName" name="firstName" value="<%= address.firstName %>">
+                      <div class="error-message firstNameError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="lastName" class="form-label">Last Name</label>
-                      <input type="text" class="form-control" id="lastName" name="lastName" value="<%= address.lastName %>">
-                      <div id="lastNameError" class="error-message text-danger"></div>
-
+                      <label class="form-label">Last Name</label>
+                      <input type="text" class="form-control lastName" name="lastName" value="<%= address.lastName %>">
+                      <div class="error-message lastNameError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="address" class="form-label">Address</label>
-                      <input type="text" class="form-control" id="address" name="address" value="<%= address.address %>">
+                      <label class="form-label">Address</label>
+                      <input type="text" class="form-control address" name="address" value="<%= address.address %>">
+                      <div class="error-message addressError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="place" class="form-label">Place</label>
-                      <input type="text" class="form-control" id="place" name="place" value="<%= address.place %>">
-                      <div id="placeError" class="error-message text-danger"></div>
-
+                      <label class="form-label">Place</label>
+                      <input type="text" class="form-control place" name="place" value="<%= address.place %>">
+                      <div class="error-message placeError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="city" class="form-label">City</label>
-                      <input type="text" class="form-control" id="city" name="city" value="<%= address.city %>">
-                      <div id="cityError" class="error-message text-danger"></div>
-
+                      <label class="form-label">City</label>
+                      <input type="text" class="form-control city" name="city" value="<%= address.city %>">
+                      <div class="error-message cityError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="district" class="form-label">District</label>
-                      <input type="text" class="form-control" id="district" name="district" value="<%= address.district %>">
-                      <div id="districtError" class="error-message text-danger"></div>
+                      <label class="form-label">District</label>
+                      <input type="text" class="form-control district" name="district" value="<%= address.district %>">
+                      <div class="error-message districtError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="pincode" class="form-label">pincode</label>
-                      <input type="text" class="form-control" id="pincode" name="pincode" value="<%=address.pincode %>">
-                      <div id="pincodeError" class="error-message text-danger"></div>
-
+                      <label class="form-label">Pincode</label>
+                      <input type="text" class="form-control pincode" name="pincode" value="<%= address.pincode %>">
+                      <div class="error-message pincodeError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="state" class="form-label">State</label>
-                      <input type="text" class="form-control" id="state" name="state" value="<%= address.state %>">
-                      <div id="stateError" class="error-message text-danger"></div>
-
+                      <label class="form-label">State</label>
+                      <input type="text" class="form-control state" name="state" value="<%= address.state %>">
+                      <div class="error-message stateError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="country" class="form-label">Country</label>
-                      <input type="text" class="form-control" id="country" name="country" value="<%= address.country %>">
-                      <div id="countryError" class="error-message text-danger"></div>
-
+                      <label class="form-label">Country</label>
+                      <input type="text" class="form-control country" name="country" value="<%= address.country %>">
+                      <div class="error-message countryError text-danger"></div>
                     </div>
                     <div class="mb-3">
-                      <label for="phone" class="form-label">Phone</label>
-                      <input type="text" class="form-control" id="phone" name="phone" value="<%= address.phone %>">
-                      <div id="phoneError" class="error-message text-danger"></div>
-
+                      <label class="form-label">Phone</label>
+                      <input type="text" class="form-control phone" name="phone" value="<%= address.phone %>">
+                      <div class="error-message phoneError text-danger"></div>
                     </div>
+    
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                   </form>
                 </div>
@@ -127,14 +120,13 @@
             </div>
           </div>
           <% }); %>
-
+    
           <div class="text-center mt-3">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
               Add Address
             </button>
           </div>
           <% } else { %>
-
           <div class="text-center">
             <p class="text-muted">No address available. Please add one.</p>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
@@ -145,9 +137,7 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
-
+    
 
 
 <!-- Modal for Adding Address -->
@@ -334,71 +324,84 @@
 </script>
 
 <script>
-  //edit addresss
-  const editAddressForm = document.getElementById("editAddressForm")
-  editAddressForm.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    console.log('lkjhgfdsdfghjklkjh');
+ // Dynamically handle multiple edit address forms
 
-    document.querySelectorAll('.error-message').forEach(errorDiv => {
+document.querySelectorAll('.editAddressForm').forEach(form => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formElement = e.target; // Current form being submitted
+    const addressId = formElement.querySelector('.addressId').value;
+
+    // Clear previous error messages
+    formElement.querySelectorAll('.error-message').forEach(errorDiv => {
       errorDiv.textContent = "";
     });
-    const addressId = document.getElementById("addressId").value
-    console.log(addressId);
-    const formData = new FormData(editAddressForm)
+
+    // Collect form data
+    const formData = new FormData(formElement);
     const data = Object.fromEntries(formData.entries());
+
     const nameRegex = /^[A-Za-z\s]+$/;
     const numberRegex = /^[0-9]+$/;
 
+    // Perform field-specific validations
     if (!nameRegex.test(data.firstName)) {
-      document.getElementById("firstNameError").textContent = "Alphabets only";
+      formElement.querySelector('.firstNameError').textContent = "Alphabets only";
       return;
+    }
 
-    }
     if (!nameRegex.test(data.lastName)) {
-      document.getElementById("lastNameError").textContent = "Alphabets only";
+      formElement.querySelector('.lastNameError').textContent = "Alphabets only";
       return;
     }
+
     if (!nameRegex.test(data.place)) {
-      document.getElementById("placeError").textContent = "Alphabets only";
+      formElement.querySelector('.placeError').textContent = "Alphabets only";
       return;
     }
+
     if (!nameRegex.test(data.city)) {
-      document.getElementById("cityError").textContent = "Alphabets only";
+      formElement.querySelector('.cityError').textContent = "Alphabets only";
       return;
     }
+
     if (!nameRegex.test(data.district)) {
-      document.getElementById("districtError").textContent = "Alphabets only";
+      formElement.querySelector('.districtError').textContent = "Alphabets only";
       return;
     }
+
     if (!nameRegex.test(data.state)) {
-      document.getElementById("stateError").textContent = "Alphabets only";
+      formElement.querySelector('.stateError').textContent = "Alphabets only";
       return;
     }
 
     if (!nameRegex.test(data.country)) {
-      document.getElementById("countryError").textContent = "Alphabets only";
+      formElement.querySelector('.countryError').textContent = "Alphabets only";
       return;
     }
 
     if (!numberRegex.test(data.pincode)) {
-      document.getElementById("pincodeError").textContent = "Numbers only";
+      formElement.querySelector('.pincodeError').textContent = "Numbers only";
       return;
     }
+
     if (data.pincode.length !== 6) {
-      document.getElementById("pincodeError").textContent = "pincode must be exactly 6 digits";
+      formElement.querySelector('.pincodeError').textContent = "Pincode must be exactly 6 digits";
       return;
     }
 
     if (!numberRegex.test(data.phone)) {
-      document.getElementById("phoneError").textContent = "Numbers only";
-      return;
-    }
-    if (data.phone.length !== 10) {
-      document.getElementById("phoneError").textContent = "phone number must be exactly 10 digits";
+      formElement.querySelector('.phoneError').textContent = "Numbers only";
       return;
     }
 
+    if (data.phone.length !== 10) {
+      formElement.querySelector('.phoneError').textContent = "Phone number must be exactly 10 digits";
+      return;
+    }
+
+    // Submit the updated address to the server
     try {
       const response = await fetch(`/users/address/edit/${addressId}`, {
         method: "PUT",
@@ -407,11 +410,11 @@
         },
         body: JSON.stringify(data),
       });
-      console.log(response);
+
       if (response.ok) {
         Swal.fire({
           title: 'Success!',
-          text: 'Address upated successfully!',
+          text: 'Address updated successfully!',
           icon: 'success',
           confirmButtonText: 'OK',
         }).then(() => {
@@ -434,7 +437,9 @@
         confirmButtonText: 'OK',
       });
     }
-  })
+  });
+});
+
 </script>
 
 <script>

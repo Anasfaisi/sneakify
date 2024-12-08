@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+
+</head>
+
+<body class="bg-gray-100">
+  <%-include("partials/sidebar") %>
+
+  <div class="container mt-5 w-50">
+    <header class="bg-white shadow-sm ">
+      <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom text-center">
+        <h1 class="fw-semibold text-center">Edit Product</h1>
+      </div>
+    </header>
+    <form id="editProductForm" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
+      </div>
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" required><%= product.description %></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="price" class="form-label">Price</label>
+        <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" step="0.01" min="0" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="sizeStockContainer" class="form-label">Sizes and Stock</label>
+        <div id="sizeStockContainer" class="size-stock-wrapper">
+          <!-- Existing Size-Stock Pairs -->
+          <% product.sizes.forEach((sizeStock, index) => { %>
+          <div class="row align-items-center size-stock-row mb-3">
+            <div class="col-5">
+              <input type="text" class="form-control size-input" name="size[]" value="<%= sizeStock.size %>" placeholder="Enter size" required />
+            </div>
+            <div class="col-5">
+              <input type="number" class="form-control stock-input" name="stock[]" value="<%= sizeStock.stock %>" placeholder="Enter stock" min="0" required />
+            </div>
+            <div class="col-2">
+              <button type="button" class="btn btn-danger remove-stock-btn">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <% }); %>
+
+          <!-- Template for Adding New Size-Stock Pair -->
+          <div class="row align-items-center size-stock-row mb-3 d-none" id="sizeStockTemplate">
+            <div class="col-5">
+              <input type="text" class="form-control size-input" name="size[]" placeholder="Enter size" />
+            </div>
+            <div class="col-5">
+              <input type="number" class="form-control stock-input" name="stock[]" placeholder="Enter stock" min="0" />
+            </div>
+            <div class="col-2">
+              <button type="button" class="btn btn-danger remove-stock-btn">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Button to Add New Size-Stock Pair -->
+        <button type="button" class="btn btn-success add-stock-btn">
+          <i class="fas fa-plus"></i> Add Size-Stock
+        </button>
+      </div>
+
+
+
+      <div class="mb-3">
+        <label for="existingImages" class="form-label">Product Images (Max: 3)</label>
+        <div class="row">
+          <% product.images.forEach((image, index) => { %>
+          <div class="col-3 text-center mb-3" id="imageContainer<%= index %>">
+            <!-- Display Existing Image -->
+            <img src="/<%= image %>" alt="Product Image" class="img-thumbnail" id="imagePreview<%= index %>" />
+
+            <!-- Change Image Button -->
+            <div class="mt-2">
+              <button type="button" class="btn btn-warning btn-sm change-image-btn" data-target="#fileInput<%= index %>">
+                Change
+              </button>
+            </div>
+
+            <!-- Hidden File Input -->
+            <input type="file" class="form-control mt-2 d-none file-input" id="fileInput<%= index %>" name="replacedImages[<%= index %>]" accept="image/*" data-preview="#imagePreview<%= index %>" onchange="previewImage(event, '<%= index %>')">
+
+            <!-- Hidden Input for Original Image Reference -->
+            <input type="hidden" name="originalImages[<%= index %>]" varlue="<%= image %>">
+
+            <!-- Image Cropping Section (Visible on Image Change) -->
+            <div id="cropContainer<%= index %>" style="display: none;">
+              <img id="cropImage<%= index %>" style="max-width: 100%; max-height: 400px;" />
+              <button type="button" id="cropButton<%= index %>">Crop</button>
+              <button type="button" id="skipButton<%= index %>">Skip</button>
+              <button type="button" id="closeCropperButton<%= index %>">Close Cropper</button>
+            </div>
+
+            <!-- Input for Cropped Image Files (Hidden) -->
+            <input type="file" name="croppedImages[<%= index %>]" id="croppedImages<%= index %>" multiple hidden >
+            <div id="croppedImageContainer<%= index %>"></div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Update Product</button>
+    </form>
+  </div>
+
+
+  <script>
+    //size stock
+    document.addEventListener('DOMContentLoaded', () => {
+      const sizeStockContainer = document.getElementById('sizeStockContainer');
+      const sizeStockTemplate = document.getElementById('sizeStockTemplate');
+      const addStockBtn = document.querySelector('.add-stock-btn');
+
+      // Function to Add a New Size-Stock Row
+      addStockBtn.addEventListener('click', () => {
+        const newSizeStockRow = sizeStockTemplate.cloneNode(true);
+        newSizeStockRow.classList.remove('d-none'); // Make it visible
+        newSizeStockRow.removeAttribute('id'); // Remove template ID
+        sizeStockContainer.appendChild(newSizeStockRow);
+      });
+
+      // Delegate Event Listener for Removing Size-Stock Rows
+      sizeStockContainer.addEventListener('click', (event) => {
+        if (event.target.closest('.remove-stock-btn')) {
+          const rowToRemove = event.target.closest('.size-stock-row');
+          sizeStockContainer.removeChild(rowToRemove);
+        }
+      });
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+  <script>
+    let cropper;
+
+    // Replace image functionality (for existing images)
+    document.querySelectorAll('.change-image-btn').forEach((button, index) => {
+      button.addEventListener('click', function() {
+        const fileInput = document.getElementById(`fileInput${index}`);
+        fileInput.click(); // Trigger file input click when the button is pressed
+      });
+    });
+
+    function previewImage(event, index) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // Display the selected image in the preview
+          const imagePreview = document.getElementById(`imagePreview${index}`);
+          const cropImage = document.getElementById(`cropImage${index}`);
+          const cropContainer = document.getElementById(`cropContainer${index}`);
+          const cropButton = document.getElementById(`cropButton${index}`);
+          const skipButton = document.getElementById(`skipButton${index}`);
+          const closeCropperButton = document.getElementById(`closeCropperButton${index}`);
+
+          // Set the image source for the preview and cropper image
+          imagePreview.src = e.target.result;
+          cropImage.src = e.target.result;
+
+          // Ensure the cropper container is visible
+          cropContainer.style.display = 'block'; // Show cropper UI
+
+          // Wait for the image to load before initializing the cropper
+          cropImage.onload = function() {
+            // Initialize or reset Cropper.js for the image
+            if (cropper) {
+              cropper.destroy(); // Destroy any existing cropper instance
+            }
+
+            // Initialize the new Cropper instance
+            cropper = new Cropper(cropImage, {
+              aspectRatio: 1, // Adjust aspect ratio if needed
+              viewMode: 2,
+            });
+
+            // Crop button functionality
+            cropButton.addEventListener('click', () => {
+              const croppedCanvas = cropper.getCroppedCanvas();
+              if (croppedCanvas) {
+                const croppedImageDataURL = croppedCanvas.toDataURL('image/png');
+
+                // Replace the original image preview with the cropped image
+                imagePreview.src = croppedImageDataURL;
+
+
+                // Convert the cropped image to a file and update the hidden input field
+                const croppedFile = dataURLtoFile(croppedImageDataURL, `cropped-image-${index}.png`);
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                document.getElementById(`croppedImages${index}`).files = dataTransfer.files;
+
+
+                // Destroy the cropper after image is added to the preview
+                cropper.destroy(); // Destroy cropper to clean up resources
+                cropContainer.style.display = 'none'; // Hide cropper container
+              } else {
+                console.log("No cropped canvas available.");
+              }
+            });
+
+            // Skip button functionality (to skip cropping)
+            skipButton.addEventListener('click', () => {
+              cropContainer.style.display = 'none';
+            });
+
+            // Close cropper and discard changes
+            closeCropperButton.addEventListener('click', () => {
+              cropContainer.style.display = 'none';
+              cropper.destroy();
+            });
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Function to convert dataURL to File object
+    function dataURLtoFile(dataurl, filename) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, {
+        type: mime
+      });
+    }
+  </script>
+
+
+
+
+  <script>
+    //form submitting
+    editProductForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Create a FormData object
+      const formData = new FormData(editProductForm);
+      console.log(formData, "formadata");
+
+      // Collect sizes and stocks into an array of objects
+      const sizes = [];
+      const sizeInputs = document.querySelectorAll("input[name='size[]']");
+      const stockInputs = document.querySelectorAll("input[name='stock[]']");
+      const productId = "<%= product._id %>";
+
+      sizeInputs.forEach((sizeInput, index) => {
+        const sizeValue = sizeInput.value.trim();
+        const stockValue = stockInputs[index].value.trim();
+
+        if (sizeValue && stockValue) {
+          sizes.push({
+            size: sizeValue,
+            stock: parseInt(stockValue, 10)
+          });
+        }
+      });
+
+      if (sizes.length === 0) {
+        alert('Please add at least one valid size-stock pair.');
+        return;
+      }
+
+      // Append sizes array as a JSON string to FormData
+      formData.append('sizes', JSON.stringify(sizes));
+
+      // Append cropped images from all hidden inputs
+      const croppedImageInputs = document.querySelectorAll('input[id^="croppedImages"]');
+      croppedImageInputs.forEach((input) => {
+    const indexMatch = input.id.match(/croppedImages(\d+)/); // Get the index from the input's ID
+    if (indexMatch && input.files.length > 0) {
+      const index = indexMatch[1];
+      for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+
+        // Ensure the file has been replaced (only keep cropped images)
+        if (file.name.startsWith("cropped-image-")) {
+          console.log(`Adding cropped image for index ${index}:`, file);
+          formData.append(`croppedImages[${index}]`, file); // Append file with index
+        }
+      }
+    }
+  });
+
+
+
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
+
+
+
+      // Send the form data via fetch
+      fetch(`/admin/products/edit/${productId}`, {
+          method: 'POST',
+          body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              title: 'Success!',
+              text: data.message || 'Product updated successfully!',
+              icon: 'success',
+              confirmButtonText: 'OK',
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              title: 'Error',
+              text: data.message || 'Failed to update product.',
+              icon: 'error',
+              confirmButtonText: 'Try Again',
+            });
+          }
+        })
+        .catch((error) => {
+          Swal.fire({
+            title: 'Oops!',
+            text: 'Something went wrong. Please try again later.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+          });
+          console.error('Error:', error);
+        });
+    });
+  </script>
+
+<script>
+    // limiting images
+    const maxImages = 3;
+    const existingImagesCount = <%= product.images.length %>;
+    const newImagesContainer = document.getElementById("newImagesContainer");
+    const addNewImageBtn = document.getElementById("addNewImageBtn");
+
+    let newImageCount = 0;
+
+    if (addNewImageBtn) {
+      addNewImageBtn.addEventListener("click", () => {
+        const totalImages = existingImagesCount + newImageCount;
+        if (totalImages < maxImages) {
+          const newImageInput = document.createElement("div");
+          newImageInput.classList.add("mb-3");
+
+          newImageInput.innerHTML = `
+            <div class="row align-items-center">
+              <div class="col-8">
+                <input type="file" class="form-control" name="newImages[]" accept="image/*" required>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-danger btn-sm remove-new-image-btn">Remove</button>
+              </div>
+            </div>
+          `;
+
+          newImagesContainer.insertBefore(newImageInput, addNewImageBtn);
+          newImageCount++;
+
+          // Attach event listener to "Remove" button
+          newImageInput.querySelector(".remove-new-image-btn").addEventListener("click", () => {
+            newImageInput.remove();
+            newImageCount--;
+          });
+
+          // Disable "Add New Image" button if limit is reached
+          if (existingImagesCount + newImageCount >= maxImages) {
+            addNewImageBtn.disabled = true;
+          }
+        }
+      });
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
+
+</html>

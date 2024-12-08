@@ -1,171 +1,187 @@
-<%-include("partials/header") %>
-<link rel="stylesheet" href="signup.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/stylesheets/signup.css">
+
+  
+</head>
+<body>
 
 <div class="container">
   <div class="signup-container">
     <h2 class="text-center mb-4">Create an Account</h2>
 
-    <!-- General Error Message -->
-    <div id="errorContainer" class="alert alert-danger d-none" role="alert"></div>
+    <!-- General Success Message -->
+    <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
 
-    <form id="signupForm" method="POST" action="/users/signup">
+    <form id="signupForm">
+      <!-- First Name -->
       <div class="mb-3">
         <label for="firstName" class="form-label">First Name</label>
-        <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your First Name " required>
+        <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your First Name" autofocus required>
+        <div id="errorFirstName" class="text-danger"></div>
       </div>
 
+      <!-- Last Name -->
       <div class="mb-3">
         <label for="lastName" class="form-label">Last Name</label>
-        <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your Last Name " required>
+        <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your Last Name" required>
+        <div id="errorLastName" class="text-danger"></div>
       </div>
 
+      <!-- Email -->
       <div class="mb-3">
         <label for="email" class="form-label">Email address</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="Enter your Email" required>
+        <div id="errorEmail" class="text-danger"></div>
       </div>
 
+      <!-- Password -->
       <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Password must be at least 6 characters long." required>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Enter a strong password" required>
+        <div id="errorPassword" class="text-danger"></div>
       </div>
 
+      <!-- Confirm Password -->
       <div class="mb-3">
         <label for="confirmPassword" class="form-label">Confirm Password</label>
-        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Password must be at least 6 characters long." required>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required >
+        <div id="errorConfirmPassword" class="text-danger"></div>
       </div>
 
       <button type="submit" class="btn btn-primary w-100">Sign Up</button>
     </form>
 
-    <div>
-      <a href="/users/auth/google" id="googleSignup">signup with google</a>
-    </div>
-
     <div class="text-center mt-3">
       <p>Already have an account? <a href="/users/login">Login here</a></p>
+    </div>
+    <div class ="text-center mt-3">
+      <button><a  class ="text-center mt-3" href="/users/auth/google" id="googleSignup">signup with google</a></button>  
     </div>
   </div>
 </div>
 
+
+ 
+
 <script>
-  document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+  document.getElementById('signupForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-    const errorContainer = document.getElementById("errorContainer");
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Form fields
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
 
-    // Reset previous errors
-    errorContainer.classList.add('d-none');
-    errorContainer.innerHTML = '';
-    const errorElements = document.querySelectorAll('.is-invalid');
-    errorElements.forEach(element => element.classList.remove('is-invalid'));
+  // Error elements
+  const errorFirstName = document.getElementById('errorFirstName');
+  const errorLastName = document.getElementById('errorLastName');
+  const errorEmail = document.getElementById('errorEmail');
+  const errorPassword = document.getElementById('errorPassword');
+  const errorConfirmPassword = document.getElementById('errorConfirmPassword');
+  const successMessage = document.getElementById('successMessage');
 
-    let hasError = false;
-    let errorMessages = [];
+  // Clear previous errors
+  errorFirstName.textContent = '';
+  errorLastName.textContent = '';
+  errorEmail.textContent = '';
+  errorPassword.textContent = '';
+  errorConfirmPassword.textContent = '';
+  successMessage.textContent = '';
+  successMessage.classList.add('d-none');
 
-    // First Name Validation
-    if (!firstName) {
-      errorMessages.push('First name is required');
-      document.getElementById('firstName').classList.add('is-invalid');
-      hasError = true;
-    } else if (firstName.length < 2) {
-      errorMessages.push('First name must be at least 2 characters');
-      document.getElementById('firstName').classList.add('is-invalid');
-      hasError = true;
-    }
+  let hasError = false;
 
-    // Last Name Validation
-    if (!lastName) {
-      errorMessages.push('Last name is required');
-      document.getElementById('lastName').classList.add('is-invalid');
-      hasError = true;
-    } else if (lastName.length < 1) {
-      errorMessages.push('Last name must be at least 1 character');
-      document.getElementById('lastName').classList.add('is-invalid');
-      hasError = true;
-    }
+  // Validation logic
+  if (!firstName || firstName.length < 4) {
+    errorFirstName.textContent = 'First name must be at least 4 characters long.';
+    hasError = true;
+  }
 
-    // Email Validation
-    if (!email) {
-      errorMessages.push('Email is required');
-      document.getElementById('email').classList.add('is-invalid');
-      hasError = true;
-    } else if (!emailPattern.test(email)) {
-      errorMessages.push('Please enter a valid email address');
-      document.getElementById('email').classList.add('is-invalid');
-      hasError = true;
-    }
+  if (!lastName || lastName.length < 1) {
+    errorLastName.textContent = 'Last name is required.';
+    hasError = true;
+  }
 
-    // Password Validation
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isLongEnough = password.length >= 6;
-    // if (!password) {
-    //   errorMessages.push('Password is required');
-    //   document.getElementById('password').classList.add('is-invalid');
-    //   hasError = true;
-    // } else if (!hasUpperCase||!hasLowerCase||!hasNumbers||!hasSpecialChar||!isLongEnough) {
-    //   errorMessages.push('password must be a combination of uppercase,lowecase,number,special character and atleast 6 digit');
-    //   document.getElementById('password').classList.add('is-invalid');
-    //   hasError = true;
-    // }
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailPattern.test(email)) {
+    errorEmail.textContent = 'Please enter a valid email address.';
+    hasError = true;
+  }
 
-    // Confirm Password Validation
-    if (!confirmPassword) {
-      errorMessages.push('Please confirm your password');
-      document.getElementById('confirmPassword').classList.add('is-invalid');
-      hasError = true;
-    } else if (password !== confirmPassword) {
-      errorMessages.push('Passwords do not match');
-      document.getElementById('confirmPassword').classList.add('is-invalid');
-      hasError = true;
-    }
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    // Show general error messages if any
-    if (hasError) {
-      errorContainer.classList.remove('d-none');
-      errorContainer.innerHTML = errorMessages.join('<br>');
-    } else {
-        try {
+  if (
+    !password ||
+    password.length < 6 
+    // ||
+    // !hasUpperCase ||
+    // !hasLowerCase ||
+    // !hasNumber ||
+    // !hasSpecialChar
+  ) {
+    errorPassword.textContent =
+      'Password must be at least 6 characters long and include uppercase, lowercase, a number, and a special character.';
+    hasError = true;
+  }
+
+  if (password !== confirmPassword) {
+    errorConfirmPassword.textContent = 'Passwords do not match.';
+    hasError = true;
+  }
+
+  if (hasError) {
+    return;
+  }
+
+  // Proceed with the POST request
+  try {
     const response = await fetch('/users/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        firstName,
-        lastName,
-        email,
-        password,
-      }),
+      body: JSON.stringify({ firstName, lastName, email, password }),
     });
-    console.log(response);
+
     const data = await response.json();
-    //  console.log(data);
+
     if (response.ok) {
-      // Redirect to OTP verification page or display a success message
-      window.location.href = '/users/otp-verify';
+      successMessage.textContent =data.message || 'Account created successfully! Redirecting to OTP verification...';
+      successMessage.classList.remove('d-none');
+      setTimeout(() => {
+        window.location.href = '/users/otp-verify';
+      }, 1500);
     } else {
-      errorContainer.classList.remove('d-none')
-      errorContainer.innerHTML =data.message
-      
+      successMessage.textContent = data.message || 'An error occurred. Please try again.';
+      successMessage.classList.remove('alert-success');
+      successMessage.classList.add('alert-danger');
+      successMessage.classList.remove('d-none');
     }
   } catch (error) {
-    console.error('Unexpected error:', error);
-    errorContainer.classList.remove('d-none');
-    errorContainer.innerHTML = 'An unexpected error occurred. Please try again.';
+    successMessage.textContent = 'An unexpected error occurred. Please try again.';
+    successMessage.classList.add('alert-danger');
+    successMessage.classList.remove('d-none');
   }
-    }
-  });
-</script>
+});
+
+</script> 
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>

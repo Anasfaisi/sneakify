@@ -2,6 +2,7 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../model/user");
 const path = require("path")
+const bcrypt =require("bcrypt")
 const env = require("dotenv").config();
 
 
@@ -28,11 +29,13 @@ passport.use(
         } else {
           const firstName = profile.name.givenName || "Google";
           const lastName = profile.name.familyName || "User";
+          const hashedPassword = await bcrypt.hash("123456", 10);
 
           user = await new User({
             firstName: firstName,
             lastName: lastName,
             email: profile.emails[0].value,
+            password: hashedPassword,
             googleId: profile.id,
           }).save();
           return done(null, user);

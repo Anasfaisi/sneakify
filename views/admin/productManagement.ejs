@@ -60,6 +60,58 @@
       flex-grow: 1;
       padding: 20px;
     }
+    .pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.page-item {
+  margin: 0 5px;
+}
+
+.page-link {
+  display: inline-block;
+  padding: 10px 15px;
+  color: #007bff;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.page-link:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.page-item.active .page-link {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.page-item.disabled .page-link {
+  color: #ddd;
+  pointer-events: none;
+}
+
+.page-item a {
+  text-align: center;
+  line-height: 1;
+}
+
+/* Add spacing between the items */
+.page-item:not(.disabled):not(.active) .page-link {
+  cursor: pointer;
+}
+
+.page-item a:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
   </style>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
@@ -79,7 +131,11 @@
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
       <i class="fas fa-plus"></i> Add New Product
     </button>
-
+    <header class="bg-white shadow-sm">
+      <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+        <h1 class="fs-5 fw-semibold">Orders</h1>
+      </div>
+    </header>
     <!-- Products Table -->
     <div class="table-responsive">
       <table class="table table-bordered">
@@ -131,10 +187,9 @@
 
             </td>
             <td>
-              <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editProductModal" onclick="loadProductData('<%= product._id %>')">
-                <i class="fas fa-edit"></i>
-              </button>
-
+           <a class="btn btn-sm btn-primary me-1" href="/admin/editProduct/<%= product._id %>">
+  <i class="fas fa-edit"></i>
+</a>
             
             </td>
           </tr>
@@ -225,70 +280,36 @@
       </div>
     </div>
   </div>
-
-  <!-- Edit Product Modal -->
-  <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form id="editProductForm" enctype="multipart/form-data" action="#" onsubmit="handleEditProduct">
-          <div class="modal-body">
-            <input type="hidden" id="productId" name="productId">
-            <div class="mb-3">
-              <label for="editName" class="form-label">Name</label>
-              <input type="text" class="form-control" id="editName" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="editDescription" class="form-label">Description</label>
-              <textarea class="form-control" id="editDescription" name="description" required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="editStock" class="form-label">Stock</label>
-              <input type="number" class="form-control" id="editStock" name="stock" min="0" required>
-            </div>
-            <div class="mb-3">
-              <label for="editPrice" class="form-label">Price</label>
-              <input type="number" class="form-control" id="editPrice" name="price" step="0.01" min="0" required>
-            </div>
-            <div class="mb-3">
-              <label for="editCategory" class="form-label">Category</label>
-              <select class="form-control" id="editCategory" name="category">
-                <option value="">Select Category</option>
-                <% categories.forEach(category=> { %>
-                <option value="<%= category.name %>">
-                  <%= category.name %>
-                </option>
-                <% }) %>
-              </select>
-            </div>
-            <div class="mb-3">
-                  <label for="editImageInput" class="form-label">Add New Product Images</label>
-                  <input type="file" multiple class="form-control" id="editImageInput" name="croppedImages">
-                  <div id="currentImagesContainer">
-                    <p>Current Images:</p>
-                  </div>
-                </div>
-
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">update Product</button>
-          </div>
-        </form>
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <div class="page-item">
+        <a href="/admin/products?page=<%= currentPage - 1 %>" class="page-link">Previous</a>
       </div>
-    </div>
+    <% } else { %>
+      <div class="page-item disabled">
+        <span class="page-link">Previous</span>
+      </div>
+    <% } %>
+  
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <div class="page-item <%= currentPage === i ? 'active' : '' %>">
+        <a href="/admin/products?page=<%= i %>" class="page-link"><%= i %></a>
+      </div>
+    <% } %>
+  
+    <% if (currentPage < totalPages) { %>
+      <div class="page-item">
+        <a href="/admin/products?page=<%= currentPage + 1 %>" class="page-link">Next</a>
+      </div>
+    <% } else { %>
+      <div class="page-item disabled">
+        <span class="page-link">Next</span>
+      </div>
+    <% } %>
   </div>
+  
 
-  <script>
-    const handleEditProduct = (e) => {
-      e.preventDefault()
-      console.log("hi edit");
-    }
-  </script>
+ 
 
   <script>
     //add image
@@ -519,159 +540,6 @@ addProductForm.addEventListener('submit', (e) => {
     });
 });
 
-  </script>
-
-
-  <script>
-    //edit product
-    async function loadProductData(productId) {
-      try {
-        let response = await fetch(`/admin/products/${productId}`)
-        let data = await response.json()
-        console.log(data);
-
-        document.getElementById('productId').value = data._id;
-        document.getElementById('editName').value = data.name;
-        document.getElementById('editDescription').value = data.description;
-        document.getElementById('editStock').value = data.stock;
-        document.getElementById('editPrice').value = data.price;
-        document.getElementById('editCategory').value = data.category;
-        let newImages = [];
-
-
-        const imagesContainer = document.getElementById('currentImagesContainer');
-        imagesContainer.innerHTML = "";
-        data.images.forEach(image => {
-          const imageWrapper = document.createElement('div');
-          imageWrapper.classList.add('image-wrapper', 'position-relative', 'me-2');
-          const imgElement = document.createElement('img');
-          imgElement.src = "/" + image
-          imgElement.classList.add('img-thumbnail', 'me-2');
-          imgElement.style.width = '100px';
-
-          const deleteButton = document.createElement('button');
-          deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute', 'top-0', 'end-0');
-          deleteButton.innerHTML = "&times;";
-          deleteButton.style.zIndex = 1;
-
-          imageWrapper.appendChild(imgElement);
-          imageWrapper.appendChild(deleteButton);
-
-          imagesContainer.appendChild(imageWrapper);
-
-          deleteButton.addEventListener('click', function() {
-            imageWrapper.remove();
-
-          });
-
-
-        });
-
-        const imageInput = document.getElementById('editImageInput');
-        imageInput.addEventListener('change', function(event) {
-          // Get selected files from the input
-          const files = event.target.files;
-          if (files.length > 0) {
-            Array.from(files).forEach(file => {
-              const reader = new FileReader();
-
-              reader.onload = function(e) {
-                const imageWrapper = document.createElement('div');
-                imageWrapper.classList.add('image-wrapper', 'position-relative', 'me-2');
-
-                const imgElement = document.createElement('img');
-                imgElement.src = e.target.result;
-                imgElement.classList.add('img-thumbnail');
-                imgElement.style.width = '100px';
-                console.log("the image element is " + imgElement);
-
-
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute', 'top-0', 'end-0', 'delete-btn');
-                deleteButton.innerHTML = "&times;";
-
-                imageWrapper.appendChild(imgElement);
-                imageWrapper.appendChild(deleteButton);
-                imagesContainer.appendChild(imageWrapper);
-
-
-                deleteButton.addEventListener('click', function() {
-                  imageWrapper.remove();
-                });
-
-
-                newImages.push(file);
-              };
-
-              reader.readAsDataURL(file);
-
-            });
-          }
-        });
-
-        console.log(imagesContainer);
-      } catch (error) {
-        console.error('Error loading product data:', error)
-      }
-    }
-  </script>
-
-  <script>
-      //edit image cropper
-      document.getElementById("editImageInput").addEventListener("change",(e)=>{
-            e.preventDefault()
-            console.log('it is working in the image input');
-      })
-      
-  </script>
-
-  <script>
-    //updating edited product
-    let editProductForm = document.getElementById("editProductForm")
-    editProductForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      console.log("edit product form reached");
-      const productId = document.getElementById('productId').value;
-      const formData = new FormData(editProductForm);
-
-      // Collect existing images
-      const existingImages = [];
-      const imageElements = document.getElementById('currentImagesContainer').getElementsByTagName('img');
-      for (let img of imageElements) {
-        existingImages.push(img.src.split('/').pop()); // Extract filename from src
-      }
-      formData.append('existingImages', JSON.stringify(existingImages));
-
-      // Collect deleted images
-      const deletedImages = []; // Add logic to track deleted images (if implemented in your UI)
-      formData.append('deletedImages', JSON.stringify(deletedImages));
-
-      // Add new images from file input
-      const newImages = document.getElementById('editImageInput').files;
-      for (let i = 0; i < newImages.length; i++) {
-        formData.append('croppedImages', newImages[i]);
-      }
-
-      // Send updated data to the server
-      try {
-        const response = await fetch(`/admin/products/edit/${productId}`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (response.ok) {
-          alert('Product updated successfully!');F
-          location.reload();
-        } else {
-          const errorData = await response.json();
-          console.error('Error updating product:', errorData);
-          alert('Failed to update product');
-        }
-      } catch (error) {
-        console.error('Error submitting form:', error);
-      }
-
-    });
   </script>
 
   <script>

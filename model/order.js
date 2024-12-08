@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const orderProductSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // Reference to Product model
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, 
   name: { type: String, required: true }, 
   price: { type: Number, required: true }, 
   size: { type: String, },  
@@ -12,6 +12,7 @@ const orderProductSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
 {
+  orderId: { type: String, unique: true, required: true }, 
     userId: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'User', // Reference to User model
@@ -42,7 +43,7 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending', 'shipped', 'delivered', 'cancelled'], 
       default: 'pending',
     },
-    orderDate: { type: Date, default: Date.now }, 
+    orderDate: { type: Date, default: new Date().toISOString() }, 
     paymentStatus: {
       type: String,
       enum: ['pending', 'completed', 'failed'],

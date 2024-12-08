@@ -325,12 +325,12 @@
       });
 
       const result = await response.json();
-
+     console.log(response);
       if (response.ok) {
         Swal.fire({
           icon: "success",
           title: "Order Placed!",
-          text: `Your order ID is ${result.orderId}`,
+          text: `Your order ID is ${result.displayOrderId}`,
           showConfirmButton: true,
         }).then(() => {
 
@@ -340,7 +340,7 @@
         Swal.fire({
           icon: "error",
           title: "Please try again.",
-          text: "please add the address.",
+          text: result.message||"please add the address.",
           showConfirmButton: true,
         });
       }
@@ -349,8 +349,8 @@
 
       Swal.fire({
         icon: "error",
-        title: "An Error Occurred",
-        text: "Something went wrong. Please try again later.",
+        title: "Please try again",
+        text: "please add the address.",
         showConfirmButton: true,
       });
     }

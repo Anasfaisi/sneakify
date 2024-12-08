@@ -57,12 +57,16 @@ app.use((req, res, next) => {
   console.log(`${req.method}  and the url is ${req.url}`);
   next();
 });
-
+app.use((req, res, next) => {
+  res.locals.isAuthenticate = req.session.passport?.user ? true : false;
+  next();
+});
+app.get("/",(req,res)=>res.redirect("/users/home"))
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
 
 app.listen(PORT, () =>
-  console.log("server listening at http://localhost:3000")
+  console.log(`server listening at http://localhost:${PORT}`)
 );

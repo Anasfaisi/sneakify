@@ -4,6 +4,8 @@ const Product = require("../model/products");
 const User = require("../model/user");
 const Category = require("../model/category");
 const Order = require("../model/order")
+const { v4: uuidv4 } = require('uuid');
+
 
 exports.getLogin = async (req, res) => {
   if (req.session.admin) {
@@ -62,18 +64,38 @@ exports.logout = async (req, res) => {
 // =========================================================================
 
 exports.getProducts = async (req, res) => {
-  console.log("the admin is ",req.session.admin);
   try {
-    const products = await Product.find(); 
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if no page is specified
+    const limit = 5; // Number of products per page
+    const skip = (page - 1) * limit;
+
+    // Get the total count of products
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Fetch the products for the current page
+    const products = await Product.find()
+      .skip(skip)
+      .limit(limit)
+      .populate('category'); // If you want to populate the category (optional)
+
     const categories = await Category.find({ isActive: true });
- 
+
+    if (!products || !categories) {
+      return res.status(404).json({ message: "Product or category not found" });
+    }
+
     res.render("admin/productManagement", {
-      products,categories
+      products,
+      categories,
+      currentPage: page,
+      totalPages,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch product details.' });
   }
 };
+
 
 exports.addProducts = async (req, res) => {
   try {
@@ -119,9 +141,13 @@ exports.addProducts = async (req, res) => {
         .status(400)
         .json({ message: "Price must be a non-negative number." });
     }
+    const productId = `PROD-${uuidv4().replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+    console.log(productId);
 
     // Create the new product with the validated data
+
     const newProduct = new Product({
+      productId,
       name,
       description,
       price,
@@ -216,23 +242,40 @@ exports.listProducts = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    console.log("Fetching orders...");
+    // Get the current page and set a default if not present
+    const currentPage = parseInt(req.query.page) || 1;
+    const itemsPerPage = 10; // Number of orders per page
+
+    // Calculate the number of orders to skip for pagination
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Fetch orders with pagination
     const orders = await Order.find()
-      .populate('userId', ) 
-      .populate('products.productId'); 
-    console.log(orders);
-    res.render("admin/orderManagement", { orders });
+      .populate("userId")
+      .skip(skip)
+      .limit(itemsPerPage);
+
+    // Get the total number of orders for pagination
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / itemsPerPage);
+
+    res.render("admin/orderManagement", {
+      orders,
+      currentPage,
+      totalPages,
+    });
   } catch (error) {
     console.log("Error in fetching orders:", error);
     res.status(500).send("Internal Server Error");
   }
 };
 
+
 exports.getOrderDetails = async (req,res)=>{
   console.log("it is reaching in order details")
   try {
     const orderId = req.params.id;
-    const userId = req.session.passport.user;
+
     const order = await Order.findById(orderId).populate("userId")
     .populate("products.productId")
     console.log(order);
@@ -292,7 +335,11 @@ exports.cancelOrder = async (req, res) => {
 exports.getEditProducts= async (req,res)=>{
   try {
     const product = await Product.findById(req.params.id);
-    res.json(product);
+    const categories = await Category.find({ isActive: true });
+    if(!product||!categories){
+      return res.status(404).json({message:"Product or category not found"});
+    }
+    res.render("admin/editProduct", { product, categories });
 } catch (err) {
     res.status(500).json({ error: 'Failed to fetch product details.' });
 }
@@ -303,49 +350,62 @@ exports.getEditProducts= async (req,res)=>{
 
 exports.editProducts = async (req, res) => {
   try {
-    const productId = req.params.id;
-    const { name, description, price, category, existingImages, deletedImages } = req.body;
+    const productId = req.params.productId; // Get the product ID from the URL
+    const { name, description, price, sizes } = req.body;
 
-    console.log("Body Data:", req.body);
-    console.log("Uploaded Files:", req.files);
+    const sizesArray = JSON.parse(req.body.sizes); // Parse the sizes array from the request
 
-    // Parse JSON data from the frontend
-    const existingImagesList = JSON.parse(existingImages || '[]');
-    const deletedImagesList = JSON.parse(deletedImages || '[]');
+    // Find the existing product by ID
+    const product = await Product.findById(productId);
 
-    // Handle new images
-    const newImages = req.files.map(file => file.filename);
-
-    // Remove deleted images from the server
-    if (deletedImagesList.length > 0) {
-      deletedImagesList.forEach(image => {
-        const imagePath = path.join(__dirname, '../uploads', image);
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath); // Delete the file from the server
-        }
-      });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
     }
 
-    // Final list of images: Existing (minus deleted) + Newly added
-    const updatedImages = [
-      ...existingImagesList.filter(img => !deletedImagesList.includes(img)),
-      ...newImages,
-    ];
+    // Filter only cropped images
+    const croppedImages = req.files.filter((file) => file.fieldname.startsWith('croppedImages'));
 
-    // Update the product in the database
-    await Product.findByIdAndUpdate(productId, {
-      name,
-      description,
-      stock,
-      price,
-      category,
-      images: updatedImages, // Update with combined images
+    // Step 2: Group by index and retain unique cropped images
+    const uniqueCroppedImages = {};
+    croppedImages.forEach((file) => {
+      const match = file.fieldname.match(/\[(\d+)\]/); // Extract index from `croppedImages[index]`
+      if (match) {
+        const index = parseInt(match[1], 10); // Extracted index
+        // Retain only the first file for each index
+        if (!uniqueCroppedImages[index]) {
+          uniqueCroppedImages[index] = file;
+        }
+      }
     });
 
-    res.status(200).json({ message: 'Product updated successfully!', images: updatedImages });
+    // Update existing images with new cropped images by index
+    Object.keys(uniqueCroppedImages).forEach((index) => {
+      const croppedImage = uniqueCroppedImages[index];
+      if (product.images[index]) {
+        // Replace the existing image at this index
+        product.images[index] = croppedImage.filename; // Use file path or URL (if Cloudinary)
+      }
+    });
+
+    // Update the product fields
+    product.name = name;
+    product.description = description;
+    product.price = price;
+    product.sizes = sizesArray;
+
+    // Save the updated product
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully!',
+    });
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product' });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update product. Please try again later.',
+    });
   }
 };
 

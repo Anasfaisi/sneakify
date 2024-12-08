@@ -22,10 +22,12 @@ router.post("/category/:id/deactivate", controller.deactivateCategory);
 
 router.get("/products", isAdmin, controller.getProducts);
 router.post("/products/add",upload.array("croppedImages"),controller.addProducts);
-router.get("/products/:id", controller.getEditProducts);
-router.post("/products/edit/:id",upload.array("croppedImages"),controller.editProducts);
+
 router.patch("/products/:id/:action", controller.listProducts);
 router.patch("/products/:id/:action", controller.unListProducts);
+
+router.get('/editProduct/:id',controller.getEditProducts)
+router.post('/products/edit/:productId', upload.any(),controller.editProducts)
 
 
 router.get("/orders",isAdmin,controller.getOrders)

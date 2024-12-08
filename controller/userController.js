@@ -1,14 +1,14 @@
 // controllers/userController.js
 const User = require("../model/user");
+const unverifiedUser = require("../model/unverifiedUser");
 const bcrypt = require("bcrypt");
 const emailService = require("../config/emailService");
 const { resolveContent } = require("nodemailer/lib/shared");
 const Product = require("../model/products");
-const Address = require("../model/address")
-const Cart    = require("../model/cart")
-const Order = require("../model/order")
-
-
+const Address = require("../model/address");
+const Cart = require("../model/cart");
+const Order = require("../model/order");
+const Category = require("../model/category")
 
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -20,10 +20,9 @@ exports.getSignuppage = async (req, res) => {
 
     return res.redirect("/users/home");
   }
-  console.log("it is rendering the page");
+  console.log("it is rendering the signup page");
   res.render("users/signup", {
-    title: "Sign ups ",
-    user: req.session.passport.user || null,
+    title: "Sign up ",
   });
 };
 
@@ -34,48 +33,26 @@ exports.signup = async (req, res) => {
     const existingUser = await User.findOne({ email });
     console.log("the existing user : ", existingUser);
     if (existingUser) {
-      console.log("it is checking existing user");
-      return res.status(400).json({ message: "This email is already registered" });
-  
+      return res
+        .status(400)
+        .json({ message: "This email is already registered" });
     }
 
     //generate otp
     const otp = generateOtp();
     console.log(otp);
-    const otpExpiry = new Date(Date.now() + 2 * 60 * 1000);
+
+    const otpExpiry = new Date(Date.now() + 15 * 1000);
     console.log(otpExpiry);
 
-    if (existingUser && !existingUser.isVerified) {
-      existingUser.firstName = firstName;
-      existingUser.lastName = lastName;
-      existingUser.password = password;
-      existingUser.otp.code = otp;
-      existingUser.otp.expiresAt = otpExpiry;
-      await existingUser.save();
-    } else {
-      console.log("after existing user checking");
-      console.log(req.body.firstName)
-      console.log(req.body.email)
-      console.log(req.body.password)
-      console.log(otp)
-      console.log(otpExpiry)
-      
-     const hashedpassword= await bcrypt.hash(password,10)
-     console.log(hashedpassword);
-     let user= await User.create({
-        firstName,
-        lastName,
-        email,
-        password:hashedpassword,
-        otp: {
-          code: otp,
-          expiresAt: otpExpiry,
-        },
-      });
-      
-      console.log("it is creating user");
-      console.log(user);
-    }
+    await unverifiedUser.create({
+      firstName,
+      lastName,
+      email,
+      password,
+      otp: otp,
+      otpExpiry: otpExpiry,
+    });
 
     // send otp email
     const emailSent = await emailService.sendOtp(email, otp);
@@ -83,31 +60,32 @@ exports.signup = async (req, res) => {
 
     if (!emailSent) {
       console.error("error in sending email");
-      res.status(500).json({ errors: { general: "failed to send email" } });
+      res.status(500).json({ message: "failed to send email" });
     }
-
     req.session.pendingEmail = email;
-    console.log(email);
-    res.status(200).json({message:"ready to send the email"})
+
+    res.status(200).json({ message: "redirecting to otp verification" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({message: "unexpected error occured" ,
-    });
+    res.status(500).json({ message: "unexpected error occur" });
   }
 };
 
-exports.showVerifyOTP = (req, res) => {
+exports.showVerifyOTP = async (req, res) => {
   console.log("Rendering OTP verification page");
 
-  const email = req.session.pendingEmail;
-  console.log(email);
-  if (!email) {
-    return res.redirect("/users/signup");
-  }
   try {
+    const email = req.session.pendingEmail;
+    if (!email) {
+      return res.redirect("/users/signup");
+    }
+    const unVerifiedUser = await unverifiedUser.findOne({ email });
+    const otpExpiry = unVerifiedUser.otpExpiry.toISOString();
+
     res.render("users/otp-verify", {
       email,
       title: "Verify Email",
+      otpExpiry,
     });
   } catch (error) {
     console.log("the render error is " + error);
@@ -119,49 +97,59 @@ exports.otpVerify = async (req, res) => {
 
   try {
     const { otp } = req.body;
-    const email = req.session.pendingEmail;
 
+    const email = req.session.pendingEmail;
     if (!email) {
-      return res.status(500).json({
-        errors: { general: "Please sign up first" },
-      });
+      return res.status(500).json({ message: "Please sign up first" });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email is already registered ." });
     }
 
-    const user = await User.findOne({ email });
+    let user = await unverifiedUser.findOne({ email });
     if (!user) {
-      return res.status(500).json({
-        errors: { general: "User not found! Please try again" },
-      });
+      return res
+        .status(500)
+        .json({ message: "User not found! Please try again" });
     }
 
     console.log("current otp :", otp);
-    console.log("database otp :", user.otp.code);
-    if (user.otp.code != otp) {
+    console.log("database otp :", user.otp);
+
+    if (user.otp != otp) {
       console.log("OTP invalid or expired");
-
-      return res.status(500).json({
-        errors: { otp: "OTP expired or invalid" },
-      });
+      return res.status(500).json({ message: "invalid OTP" });
     }
+    if (user.otpExpiry < Date.now()) {
+      return res.status(500).json({ message: "OTP expired try with new one " });
+    }
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+    console.log(hashedPassword);
 
-    user.isVerified = true;
-    user.otp.code = undefined;
-    await user.save();
+    orgUser = await User.create({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: hashedPassword,
+    });
+
+    orgUser.isVerified = true;
+    await orgUser.save();
 
     req.session.passport = {};
-    req.session.passport.user = user._id;
+    req.session.passport.user = orgUser._id;
+    console.log(req.session.passport.user)
 
     console.log("User successfully verified:", req.session.passport);
 
     delete req.session.pendingEmail;
+    await unverifiedUser.deleteOne({ email });
 
     res.status(200).json({ success: true, message: "Successfully signed in" });
   } catch (error) {
-    console.error(error);
-    console.log("error in catch of backend");
-    res.status(500).json({
-      errors: { general: "Something went wrong! Please try again" },
-    });
+    console.error(error, "error in catch of backend");
+    res.status(500).json({ message: "Something went wrong! Please try again" });
   }
 };
 
@@ -173,14 +161,16 @@ exports.resendOtp = async (req, res) => {
       return res.status(400).json({ error: "Please sign up first" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await unverifiedUser.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const otp = generateOtp();
-    const otpExpiry = new Date(Date.now() + 2 * 60 * 1000);
-    user.otp = { code: otp, expiresAt: otpExpiry };
+    const otpExpiry = new Date(Date.now() + 15 * 1000);
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    console.log(otp, "the resend otp");
     await user.save();
 
     const emailSent = emailService.sendOtp(email, otp);
@@ -198,17 +188,14 @@ exports.resendOtp = async (req, res) => {
 };
 
 //==========================================================
-  exports.getLoginPage = async(req, res) => {
-    if (req.session?.passport?.user) {
-      return res.redirect("/users/home");
-    } else {
-      return res.render("users/login", {
-        title: "Login Page",
-      });
-    }
-  
-
-
+exports.getLoginPage = async (req, res) => {
+  if (req.session?.passport?.user) {
+    return res.redirect("/users/home");
+  } else {
+    return res.render("users/login", {
+      title: "Login Page",
+    });
+  }
 };
 
 exports.login = async (req, res) => {
@@ -256,52 +243,120 @@ exports.logout = async (req, res) => {
         message: "Could not log out",
       });
     }
-    // res.clearCookie("connect.sid"); // Clear session cookie
+    // res.clearCookie("connect.sid");
     console.log("session destroyed succesfully");
     // return res.status(200).json({message:"logged out"})
     res.redirect("/users/login");
   });
 };
 
-
 //===========================================================
-exports.getForgetPassword = async(req, res) => {
+exports.getForgetPassword = async (req, res) => {
   res.render("users/forgetPassword");
 };
 
-exports.forgetPassword = async(req, res) => {
-  console.log("it is reaching in post forget password ");
+exports.forgetPassword = async (req, res) => {
+  console.log("=========reached in post forget password");
   try {
     const email = req.body.email;
-    const user = await User.findOne({email})
-    if(!user){
-      return res.status(404).json({message:"user not found"})
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-    const otp = generateOtp()
-    user.otp.code =otp
-    await user.save()
 
+    // Encode the email (use any secure encoding mechanism)
+    const encodedEmail = Buffer.from(email).toString("base64");
 
-    const emailSent = await emailService.sendOtp(email, otp);
+    // Generate the reset password URL
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/users/resetPassword?email=${encodedEmail}`;
+    console.log(resetUrl);
+
+    const expiryTime = Date.now() + 10 * 60 * 1000; // 15 minutes
+    user.resetPasswordExpiry = expiryTime;
+
+    // Send the email (mock email sending)
+    const emailSent = await emailService.sendPasswordResetEmail(
+      email,
+      resetUrl
+    );
     console.log(emailSent);
-    req.session.pendingEmail = email;
+    if (!emailSent) {
+      return res.status(500).json({ message: "Error sending reset link" });
+    }
+    console.log("1");
+    return res.status(200).json({ message: "Password reset link sent" });
+    console.log("2");
+  } catch (error) {
+    console.error("Error in forget password:", error);
+    return res
+      .status(500)
+      .json({ message: "Error occurred in forget password" });
+  }
+};
 
-    if(!emailSent){
-      return res.status(500).json({message:"error in sending the otp "})
-    }else{
-      return res.status(200).json({message:"otp sent successfully"})
+exports.showResetPasswordForm = (req, res) => {
+  console.log("it is reaching in show reset form");
+  try {
+    const { email } = req.query;
+    console.log(email);
+
+    // Decode the email
+    const decodedEmail = Buffer.from(email, "base64").toString("utf-8");
+    console.log(decodedEmail);
+
+    return res.render("users/resetPasswordForm", {
+      email: decodedEmail,
+      title: "Reset Password",
+    });
+  } catch (error) {
+    console.error("Error rendering reset password form:", error);
+    return res.redirect("/users/forgetPassword");
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  console.log("it reached in post reset password ");
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "email is required" });
     }
 
+    if (password !== confirmPassword || !password || !confirmPassword) {
+      return res.status(400).json({ message: "password does not match" });
+    }
+
+    const newPassword = await bcrypt.hash(password, 10);
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
+    if (Date.now() > user.resetPasswordExpiry) {
+      return res.status(400).json({ message: "Reset link has expired" });
+    }
+    user.password = newPassword;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: "password updated succesfully" });
   } catch (error) {
-    console.log(error,"error occuring in forget password controller")
-    return res.status(500).json({message:"error occured in forget password"})
+    console.log(error, "error occured in password reseting block");
+    return res
+      .status(500)
+      .json({ message: "something went wrong in reseting password" });
   }
 };
 
 //==============================================================
 
 exports.home = async (req, res) => {
-  console.log(req.session);
+  
+
 
   try {
     const products = await Product.find({ isActive: true });
@@ -313,29 +368,105 @@ exports.home = async (req, res) => {
   }
 };
 
-
 //=============================================================
 
 exports.listingProducts = async (req, res) => {
+  console.log("It is reached in listing products");
   try {
-    // Fetch all active products
-    const products = await Product.find({ isActive: true });
+    const { sizes, category, minPrice, maxPrice, sort, featured , page = 1, limit = 5,search } = req.query; 
+    let filter = { isActive: true }; 
 
-    // Filter out products where all sizes are out of stock
-    const inStockProducts = products.filter((product) => {
-      return product.sizes.some((size) => size.stock > 0); // If any size has stock > 0
-    });
+    if (search) {
+      const searchRegex = new RegExp(search, "i"); // "i" for case-insensitive
+      filter.$or = [
+        { name: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } }
+      ];
+    }
 
-    // Add stock information for each product's size to manage disabled state
+    // Size filter
+    if (sizes) {
+      const sizeArray = sizes.split(",").map((size) => size.trim());
+      filter.sizes = { $elemMatch: { size: { $in: sizeArray } } };
+    }
+
+    // Category filter
+    if (category) {
+      const categories = category.split(",").map((cat) => cat.trim());
+      filter.category = { $in: categories };
+    }
+
+    // Price filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Featured filter
+    if (featured === "true") {
+      filter.featured = true;
+    }
+
+    // Initialize the query
+    let sortOptions = {};
+    if (sort) {
+      switch (sort) {
+        case 'price-asc':
+          sortOptions.price = 1; // Ascending price
+          break;
+        case 'price-desc':
+          sortOptions.price = -1; // Descending price
+          break;
+        case 'popularity':
+          sortOptions.popularity = -1; // Descending popularity
+          break;
+        case 'newArrivals':
+          sortOptions.createdAt = -1; // New arrivals (desc)
+          break;
+        case 'name-asc':
+          sortOptions.name = 1; // Alphabetical order (ascending)
+          break;
+        case 'name-desc':
+          sortOptions.name = -1; // Alphabetical order (descending)
+          break;
+        default:
+          break;
+      }
+    }
+
+    
+    
+    const skip = (page - 1) * limit;
+    const totalProducts = await Product.countDocuments(filter); // Total number of products matching the filter
+    const totalPages = Math.ceil(totalProducts / limit); // Total number of pages
+
+    let productsQuery = Product.find(filter).sort(sortOptions).skip(skip).limit(limit);
+
+    const products = await productsQuery;
+
+    const inStockProducts = products.filter((product) =>
+      product.sizes.some((size) => size.stock > 0)
+    );
+
+    // Mark out of stock sizes
     inStockProducts.forEach((product) => {
       product.sizes.forEach((size) => {
-        size.isOutOfStock = size.stock === 0; // Mark sizes as out of stock if stock is 0
+        size.isOutOfStock = size.stock === 0;
       });
     });
 
-    console.log(inStockProducts);
+    // Fetch categories
+    const categoriesList = await Category.find({ isActive: true });
+
+    // Render the view
     res.render("users/shop", {
-      products: inStockProducts, // Send filtered products to the view
+      products: inStockProducts,
+      categories: categoriesList,
+      currentPage: Number(page),
+      totalPages: totalPages,
+      totalProducts: totalProducts,
+      search: search || '',
     });
   } catch (error) {
     console.error(error);
@@ -343,11 +474,39 @@ exports.listingProducts = async (req, res) => {
   }
 };
 
+
+
+exports.filter = async (req, res) => {
+  console.log("it is reached in filter");
+  const { sizes } = req.query; // sizes=5,6,7
+  console.log("sizes are :",sizes);
+  let filter = {};
+
+  if (sizes) {
+    const sizeArray = sizes.split(",").map(String); // Convert to ["5", "6", "7"]
+    filter["sizes"] = { $elemMatch: { size: { $in: sizeArray } } }; // Check if any size matches
+}
+
+  try {
+    console.log("filter :", filter);
+      const products = await Product.find(filter);
+      console.log(products);
+      res.json(products); // Return filtered products
+  } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).send("Server error");
+  }
+}
+
 exports.productDetails = async (req, res) => {
   try {
+
     const relatedProducts = await Product.find();
     const productId = req.params.id;
+   
     const product = await Product.findById(productId);
+    product.popularity += 1;
+    await product.save();
     res.render("users/productDetails", { product, relatedProducts });
   } catch (error) {
     console.error("this is hapening " + error);
@@ -357,62 +516,58 @@ exports.productDetails = async (req, res) => {
   }
 };
 
-exports.getStock =async (req, res) => {
+exports.getStock = async (req, res) => {
   const { id, size } = req.params;
   try {
-      const product = await Product.findById(id);
-      if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
-      }
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
-      // Find the specific size in the sizes array
-      const sizeData = product.sizes.find(s => s.size === size);
+    // Find the specific size in the sizes array
+    const sizeData = product.sizes.find((s) => s.size === size);
 
-      if (!sizeData) {
-          return res.status(404).json({ message: 'Size not found' });
-      }
+    if (!sizeData) {
+      return res.status(404).json({ message: "Size not found" });
+    }
 
-      res.json({ stock: sizeData.stock });
+    res.json({ stock: sizeData.stock });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error fetching product stock' });
+    console.error(error);
+    res.status(500).json({ message: "Error fetching product stock" });
   }
-}
+};
 
-
-exports.sortProducts =async (req, res) => {
-  const { sort, size, color, brand, gender, category } = req.query;  // Extract query parameters
+exports.sortProducts = async (req, res) => {
+  const { sort, size, color, brand, gender, category } = req.query; // Extract query parameters
 
   const filters = {};
 
   if (size && size.length > 0) {
-    filters["sizes.size"] = { $in: size.map(s => parseInt(s)) };  // Match products where 'sizes.size' is one of the selected sizes
+    filters["sizes.size"] = { $in: size.map((s) => parseInt(s)) }; // Match products where 'sizes.size' is one of the selected sizes
   }
-
-  
-
 
   let sortOption = {};
   switch (sort) {
-    case 'price-asc':
+    case "price-asc":
       sortOption = { price: 1 };
       break;
-    case 'price-desc':
+    case "price-desc":
       sortOption = { price: -1 };
       break;
-    case 'rating':
+    case "rating":
       sortOption = { averageRating: -1 };
       break;
-    case 'featured':
+    case "featured":
       sortOption = { featured: -1 };
       break;
-    case 'new-arrivals':
+    case "new-arrivals":
       sortOption = { createdAt: -1 };
       break;
-    case 'a-z':
+    case "a-z":
       sortOption = { name: 1 };
       break;
-    case 'z-a':
+    case "z-a":
       sortOption = { name: -1 };
       break;
     default:
@@ -420,64 +575,56 @@ exports.sortProducts =async (req, res) => {
   }
 
   try {
-    const products = await Product.find(filters)
-      .sort(sortOption)
-      .exec();
+    const products = await Product.find(filters).sort(sortOption).exec();
 
     res.render("shop", { products });
   } catch (err) {
     console.error(err);
     res.status(500).send("Error fetching products");
   }
-}
+};
 //==========================================================
 
-exports.profile = async(req,res)=>{
-  try{
-    console.log("reached profile route");
-   
-    const currentUser = req.session.passport.user
- 
-    const user = await User.findById(currentUser)
-    console.log(user);
-    res.render("users/profile",{user})
-   
-    }
-  catch(error){
-    console.log("error in rendering the profile* :",error)
-    res.status(500).json({message:"rendering failed"})
-
-  }
-
-
-}
-
-
-exports.updateUserDetails = async(req,res)=>{
+exports.profile = async (req, res) => {
   try {
-    const user = req.session.passport.user
-    const {firstName,lastName,email}=req.body
-    await User.findByIdAndUpdate(user,{
+    console.log("reached profile route");
+
+    const currentUser = req.session.passport.user;
+
+    const user = await User.findById(currentUser);
+    console.log(user);
+    res.render("users/profile", { user });
+  } catch (error) {
+    console.log("error in rendering the profile* :", error);
+    res.status(500).json({ message: "rendering failed" });
+  }
+};
+
+exports.updateUserDetails = async (req, res) => {
+  try {
+    const user = req.session.passport.user;
+    const { firstName, lastName, email } = req.body;
+    await User.findByIdAndUpdate(user, {
       firstName,
       lastName,
       email,
-    })
-    res.status(200).json({message:"user details updated succesfully"})
+    });
+    res.status(200).json({ message: "user details updated succesfully" });
   } catch (error) {
-    console.log("error in updating the user details  ",error);
-    res.status(500).json({message:"error in updating user"})
-}
-
-}
-
+    console.log("error in updating the user details  ", error);
+    res.status(500).json({ message: "error in updating user" });
+  }
+};
 
 exports.updatePassword = async (req, res) => {
   try {
-    console.log(req.session ,"req.session");
-    const userId = req.session.passport?.user; 
+    console.log(req.session, "req.session");
+    const userId = req.session.passport?.user;
     console.log(userId);
     if (!userId) {
-      return res.status(404).json({ message: "User not found or not logged in" });
+      return res
+        .status(404)
+        .json({ message: "User not found or not logged in" });
     }
 
     const user = await User.findById(userId);
@@ -486,7 +633,7 @@ exports.updatePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { currentPassword, newPassword, confirmPassword } = req.body;
+    let { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
@@ -495,16 +642,15 @@ exports.updatePassword = async (req, res) => {
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "New passwords do not match" });
     }
-  console.log(currentPassword);
-  console.log(user.password,"====");
-    
+    console.log(currentPassword);
+    console.log(user.password, "====");
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     console.log(isMatch);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
-  
-   
+    confirmPassword = await bcrypt.hash(confirmPassword, 10);
     user.password = confirmPassword;
     await user.save();
 
@@ -515,40 +661,43 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
-
-
 //===========================================================
-exports.getAddress = async(req,res)=>{
-
+exports.getAddress = async (req, res) => {
   console.log("it is reached in get address");
   try {
-    const userId = req.session.passport.user
+    const userId = req.session.passport.user;
 
-    const user = await User.findById(userId)
-    if(!user){
+    const user = await User.findById(userId);
+    if (!user) {
       return res.status(404).send("User not found");
     }
-    const address = await Address.find({ userId: user._id }); 
+    const address = await Address.find({ userId: user._id });
 
-    res.render("users/address",{
-      address
-    })
+    res.render("users/address", {
+      address,
+    });
+  } catch (error) {}
+};
 
-  } catch (error) {
-    
-  }
-}
-
-exports.addAddress = async (req,res)=>{
+exports.addAddress = async (req, res) => {
   try {
-    const userId = req.session.passport.user
+    const userId = req.session.passport.user;
 
-    const {firstName,lastName,address,place,city,district,pincode,state,phone,country}= req.body;
-  
-
+    const {
+      firstName,
+      lastName,
+      address,
+      place,
+      city,
+      district,
+      pincode,
+      state,
+      phone,
+      country,
+    } = req.body;
 
     const newAddress = new Address({
-      userId : userId,
+      userId: userId,
       firstName,
       lastName,
       address,
@@ -559,55 +708,59 @@ exports.addAddress = async (req,res)=>{
       pincode,
       state,
       country,
-      phone
-    })
-    await newAddress.save()
-    res.status(200).json({message:"succesfully added the new address"})
+      phone,
+    });
+    await newAddress.save();
+    res.status(200).json({ message: "succesfully added the new address" });
+  } catch (error) {
+    console.log(error, "the error occured in adding address");
+    res.status(500).json({ message: "adding new address failed" });
   }
-   catch (error) {
-    console.log(error,"the error occured in adding address")
-    res.status(500).json({message:"adding new address failed"})
+};
+
+exports.editAddress = async (req, res) => {
+  try {
+    console.log("it is reaching in edit address");
+
+    const addressId = req.params.id;
+
+    const {
+      firstName,
+      lastName,
+      address,
+      place,
+      city,
+      district,
+      pincode,
+      state,
+      phone,
+      country,
+    } = req.body;
+    const userAddress = await Address.findByIdAndUpdate(addressId, {
+      firstName,
+      lastName,
+      address,
+      city,
+      place,
+      district,
+      state,
+      country,
+      pincode,
+      phone,
+    });
+    console.log("this is user address ", userAddress);
+
+    userAddress.save();
+    res.status(200).json({ message: "user address updated succesfully" });
+  } catch (error) {
+    console.log(error, "error occured in updating user");
+    return res.status(500).json({ message: "error in updating user Address" });
   }
-}
-
-
-exports.editAddress =async (req,res)=>{
- try{
-  console.log("it is reaching in edit address");
-  
-  const addressId = req.params.id
-
-  const {firstName,lastName,address,place,city,district,pincode,state,phone,country}= req.body;
-  const userAddress = await Address.findByIdAndUpdate(addressId,{
-
-    firstName,
-    lastName,
-    address,
-    city,
-    place,
-    district,
-    state,
-    country,
-    pincode,
-    phone
-    
-  })
-  console.log("this is user address ",userAddress);
-  
-  userAddress.save()
-  res.status(200).json({message:"user address updated succesfully"})
-
- }
- catch(error){
-  console.log(error,"error occured in updating user")
-  return res.status(500).json({message:"error in updating user Address"})
- }
-}
-
+};
 
 exports.deleteAddress = async (req, res) => {
   try {
-    const addressId = req.params.id; 
+    const addressId = req.params.id;
 
     const deletedAddress = await Address.findByIdAndDelete(addressId);
 
@@ -622,66 +775,81 @@ exports.deleteAddress = async (req, res) => {
   }
 };
 
-
 //================================================================================
 
-
-exports.getorderHistory =async (req,res)=>{
-  console.log("it is reached in get order history")
+exports.getorderHistory = async (req, res) => {
+  console.log("it is reached in get order history");
   try {
-     const userId =req.session.passport.user;
-     const user = await User.findById(userId);
-     const orders = await Order.find({userId:user._id})
-     console.log(orders);
+    const userId = req.session.passport.user;
+    const user = await User.findById(userId);
+    const orders = await Order.find({ userId: user._id });
+    console.log(orders);
 
-     res.render("users/orderHistory",{orders})
+    res.render("users/orderHistory", { orders });
   } catch (error) {
-    console.log(error,"error occured in getting order history")
+    console.log(error, "error occured in getting order history");
   }
-}
+};
 
-exports.getOrderDetails = async(req,res)=>{
+exports.getOrderDetails = async (req, res) => {
   console.log("it is reaching in order details");
-  
+
   try {
-    const orderId =req.params.id;
+    const orderId = req.params.id;
     console.log(orderId);
     const order = await Order.findById(orderId);
-    console.log(order)
-    res.render("users/orderDetails",{order})
+    console.log(order);
+    res.render("users/orderDetails", { order });
   } catch (error) {
-    console.log(error,"error occured in getting order details")
-    
+    console.log(error, "error occured in getting order details");
   }
-}
+};
 
-exports.cancelOrder =async (req, res) => {
+exports.cancelOrder = async (req, res) => {
   console.log("it is reached in cancel order");
   try {
     const orderId = req.params.id;
-    const userId = req.session.passport.user; 
+    console.log(orderId);
+    const userId = req.session.passport.user;
 
-    
-    const order = await Order.findOne({ _id: orderId, userId: userId });
+    const order = await Order.findOne({
+      _id: orderId,
+      userId: userId,
+    }).populate("products.productId");
     console.log(order);
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: "Order not found" });
     }
-     console.log(order.status);
-    if (order.status !== 'pending') {
-       return res.status(400).json({ message: 'Order cannot be cancelled' });
+    console.log(order.status);
+    if (order.status !== "pending") {
+      return res.status(400).json({ message: "Order cannot be cancelled" });
     }
-
-    
-    order.status = 'cancelled'; 
-    await order.save();
+    order.status = "cancelled";
     console.log(order.status);
 
-    res.status(200).json({message:"cancelled the product"})
 
+    for (const item of order.products) {
+      const product = item.productId;
+      const sizeStock = product.sizes.find((size) => size.size === item.size);
+      if (sizeStock) {
+    
+
+
+        await Product.findOneAndUpdate(
+          { _id: product._id, "sizes.size": item.size },
+          { $inc: { "sizes.$.stock": item.quantity } }, 
+          { new: true } 
+        );
+      }
+    }
+    await order.save();
+
+    res.status(200).json({ message: "cancelled the product" });
   } catch (error) {
-    console.log(error,"errror in canceling the product");
-    res.status(500).json({ message: 'An error occurred while cancelling the order' });
+    console.log(error, "error in canceling the product");
+    res
+      .status(500)
+      .json({ message: "An error occurred while cancelling the order" });
   }
-}
+};

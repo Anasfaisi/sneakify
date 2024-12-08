@@ -34,8 +34,10 @@
                     </li>
                 </ul>
                 <form class="d-flex">
-                    <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search">
-                    <button type="submit" class="btn btn-outline-dark">Search</button>
+                    <form method="GET" action="/users/shop" class="search-form">
+                        <input type="text"  class="form-control rounded" name="search" placeholder="Search for products..." value="<%= locals.search %>" aria-label="Search"/>
+                        <button type="submit">Search</button>
+                      </form>
                 </form>
                 <div class="d-flex ms-3">
                     <a href="/users/wishlist" class="btn btn-outline-dark me-2">
@@ -47,12 +49,13 @@
                     <a href="/users/profile" class="btn btn-outline-dark">
                         <i class="fas fa-user"></i>
                     </a>
-                    <!-- <a href="/users/login" class="btn ">
-                        <button>login</button>
-                    </a>
-                    <a href="/users/signup" class="btn">
-                        <button>signup</button>
-                    </a> -->
+                    <% if (isAuthenticate) { %>
+                        <a href="/users/logout" class="btn btn-outline-dark">Logout</a>
+                      <% } else { %>
+                        <a href="/users/login" class="btn btn-outline-dark">Login</a>
+                        <a href="/users/signup" class="btn btn-outline-dark">Signup</a>
+                      <% } %>
+
 
                 </div>
             </div>

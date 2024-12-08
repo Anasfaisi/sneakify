@@ -59,7 +59,8 @@ exports.getCart = async (req, res) => {
   exports.addToCart = async (req, res) => {
     console.log("reached in add to cart");
     try {
-      const userId = req.session.passport.user;
+      const userId = req.session.passport?.user;
+      if(!userId){return res.status(404).json({message:"user not found please signup or signin"})}
   
       const { productId, size, quantity } = req.body;
   
@@ -125,7 +126,7 @@ exports.getCart = async (req, res) => {
       }
   
       // Deduct stock from the product
-      sizeDetails.stock -= quantity;
+      // sizeDetails.stock -= quantity;
       await product.save();
   
       // Save the updated cart
@@ -194,7 +195,7 @@ exports.getCart = async (req, res) => {
       }
   
       cart.products[productIndex].quantity = newQuantity;
-      sizeDetails.stock -= quantityChange; 
+      // sizeDetails.stock -= quantityChange; 
   
       await product.save(); 
       await cart.save(); 
