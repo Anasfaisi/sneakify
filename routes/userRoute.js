@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controller/userController");
 const cartController = require("../controller/cartController")
+const wishlistController = require("../controller/wishListController")
 const checkoutController = require("../controller/checkoutController")
 const { isAuthenticated,checkIfBlocked} = require("../middlewares/auth");
 const passport = require("passport")
@@ -58,10 +59,12 @@ router.post("/orderCancel/:id",controller.cancelOrder)
 
 router.get("/cart",isAuthenticated,cartController.getCart)
 router.post("/cart/add",cartController.addToCart)
-
 router.put("/cart/quantityUpdate/:id",cartController.quantityUpdate)
 router.delete("/cart/removeProduct/:id",cartController.removeProduct)
 
+router.get("/wishlist",isAuthenticated,wishlistController.getWishList)
+router.post("/addToWishlist",isAuthenticated,wishlistController.addToWishlist)
+router.delete("/removeItem",wishlistController.removeItem)
 
 router.get("/checkout",isAuthenticated,checkoutController.getCheckout)
 

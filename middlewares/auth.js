@@ -3,10 +3,8 @@ const User = require("../model/user")
 exports.isAuthenticated =async (req, res, next) => {
   console.log("reaching in is authenticated middle ware");
   if (req.session.passport?.user) {
-    console.log(req.session.passport.user,"checking passport .user");
       try {
         const userId = req.session.passport.user;
-        console.log(userId);
         const user = await User.findById(userId);
   
         if (user && user.isBlocked) {

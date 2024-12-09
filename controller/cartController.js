@@ -63,7 +63,7 @@ exports.getCart = async (req, res) => {
       if(!userId){return res.status(404).json({message:"user not found please signup or signin"})}
   
       const { productId, size, quantity } = req.body;
-  
+    
       if (!productId || !size || !quantity) {
         return res.status(400).json({ message: 'Product ID, size, and quantity are required' });
       }
@@ -77,9 +77,7 @@ exports.getCart = async (req, res) => {
       if (!sizeDetails) {
         return res.status(404).json({ message: `Size ${size} not found for this product` });
       }
-  
-      if (quantity > sizeDetails.stock) {
-        console.log("it is checking the quantity > stock");
+      if (quantity >= sizeDetails.stock) {
         return res.status(400).json({
           message: `Only ${sizeDetails.stock} items left for size ${size}`,
         });
@@ -141,9 +139,11 @@ exports.getCart = async (req, res) => {
   
 
   exports.quantityUpdate = async (req, res) => {
-    const userId = req.session.passport.user;
+    `reached in quantity update`
+    const userId = req.session.passport?.user;
     const productId = req.params.id;
     const { quantity, size } = req.body;
+    
   
     try {
       const cart = await Cart.findOne({ userId });
@@ -152,8 +152,7 @@ exports.getCart = async (req, res) => {
       }
   
       const productIndex = cart.products.findIndex(
-        (item) => item.productId.toString() === productId && item.size === size
-      );
+        (item) => item.productId.toString() === productId && item.size === size);
   
       if (productIndex === -1) {
         return res.status(404).json({ success: false, message: "Product not found in cart" });
@@ -165,6 +164,7 @@ exports.getCart = async (req, res) => {
       }
   
       const sizeDetails = product.sizes.find((s) => s.size === size);
+      console.log(sizeDetails);
       if (!sizeDetails) {
         return res.status(404).json({ success: false, message: `Size ${size} not found for this product` });
       }
@@ -185,9 +185,9 @@ exports.getCart = async (req, res) => {
   
 
       const currentCartQuantity = cart.products[productIndex].quantity;
-      const quantityChange = newQuantity - currentCartQuantity;
+     
   
-      if (quantityChange > 0 && quantityChange > sizeDetails.stock) {
+      if (newQuantity > sizeDetails.stock) {
         return res.status(400).json({
           success: false,
           message: `Only ${sizeDetails.stock} items left for size ${size}`,
@@ -195,7 +195,6 @@ exports.getCart = async (req, res) => {
       }
   
       cart.products[productIndex].quantity = newQuantity;
-      // sizeDetails.stock -= quantityChange; 
   
       await product.save(); 
       await cart.save(); 
