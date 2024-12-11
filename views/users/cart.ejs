@@ -197,7 +197,8 @@ async function decreaseQuantity(element, itemId,size) {
       body: JSON.stringify({ quantity: currentQuantity ,size}),
     })
    console.log(response);
-     const data = response.json()
+     const data = await response.json()
+     console.log(data)
      if(response.ok){
       Swal.fire({
         icon: "success",

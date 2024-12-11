@@ -1,4 +1,126 @@
 <%- include("partials/header") %>
+<style>
+  .breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    margin-left: 20px;
+  }
+
+  .breadcrumb-item a {
+    text-decoration: none;
+    color: #007bff;
+  }
+
+  .breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: bold;
+  }
+
+
+  .stars i {
+    font-size: 1.2rem;
+  }
+
+  .rating-count {
+    font-size: 0.9rem;
+  }
+
+  .rating-reviews {
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+  }
+
+
+  .related-products h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .product-card {
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .product-card:hover {
+    transform: scale(1.05);
+  }
+
+  .product-card img {
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .card-body {
+    text-align: center;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .card-text {
+    font-size: 1rem;
+    color: #333;
+  }
+
+  .btn-primary {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+
+
+  .zoom-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  #mainImage {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    /* Centered and uniform size */
+    height: auto;
+    cursor: zoom-in;
+  }
+
+  .zoom-lens {
+    position: absolute;
+    border: 2px solid #000;
+    width: 100px;
+    height: 100px;
+    opacity: 0.4;
+    background: #fff;
+    display: none;
+    pointer-events: none;
+  }
+
+  .zoom-result {
+    position: absolute;
+    top: 0;
+    left: 110%;
+    width: 500px;
+    /* Larger width for zoom result */
+    height: 500px;
+    /* Larger height for zoom result */
+    display: none;
+    background-repeat: no-repeat;
+    background-size: 400%;
+    /* Increase for higher zoom */
+  }
+
+  .product-details {
+    text-align: left;
+  }
+
+  .wishlist-icon {
+    cursor: pointer;
+    padding: 5px;
+  }
+</style>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -195,128 +317,6 @@
   <% }); %>
 </div>
 </div>
-<style>
-  .breadcrumb {
-    background: none;
-    padding: 0;
-    margin-bottom: 20px;
-    font-size: 0.9rem;
-    margin-left: 20px;
-  }
-
-  .breadcrumb-item a {
-    text-decoration: none;
-    color: #007bff;
-  }
-
-  .breadcrumb-item.active {
-    color: #6c757d;
-    font-weight: bold;
-  }
-
-
-  .stars i {
-    font-size: 1.2rem;
-  }
-
-  .rating-count {
-    font-size: 0.9rem;
-  }
-
-  .rating-reviews {
-    border-top: 1px solid #ddd;
-    padding-top: 10px;
-  }
-
-
-  .related-products h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-
-  .product-card {
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .product-card:hover {
-    transform: scale(1.05);
-  }
-
-  .product-card img {
-    height: 200px;
-    object-fit: cover;
-  }
-
-  .card-body {
-    text-align: center;
-  }
-
-  .card-title {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  .card-text {
-    font-size: 1rem;
-    color: #333;
-  }
-
-  .btn-primary {
-    font-size: 0.9rem;
-    padding: 8px 16px;
-  }
-
-
-  .zoom-container {
-    position: relative;
-    width: 100%;
-    height: auto;
-  }
-
-  #mainImage {
-    display: block;
-    width: 100%;
-    max-width: 500px;
-    /* Centered and uniform size */
-    height: auto;
-    cursor: zoom-in;
-  }
-
-  .zoom-lens {
-    position: absolute;
-    border: 2px solid #000;
-    width: 100px;
-    height: 100px;
-    opacity: 0.4;
-    background: #fff;
-    display: none;
-    pointer-events: none;
-  }
-
-  .zoom-result {
-    position: absolute;
-    top: 0;
-    left: 110%;
-    width: 500px;
-    /* Larger width for zoom result */
-    height: 500px;
-    /* Larger height for zoom result */
-    display: none;
-    background-repeat: no-repeat;
-    background-size: 400%;
-    /* Increase for higher zoom */
-  }
-
-  .product-details {
-    text-align: left;
-  }
-
-  .wishlist-icon {
-    cursor: pointer;
-    padding: 5px;
-  }
-</style>
 
 
 <script>
@@ -497,53 +497,7 @@ async function addToCart(productId, size, quantity) {
 
 
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const sizeSelect = document.getElementById('size');
-    const actionButton = document.getElementById('actionButton');
-    const productId = actionButton.getAttribute('data-product-id');
 
-    const updateButton = (size) => {
-        fetch(`/users/product/${productId}/size/${size}`)
-            .then(response =>{ 
-                console.log(response)
-                return response.json()
-                 })
-            .then(data => 
-            {
-                console.log(data)
-                if (data.stock > 0) {
-                    actionButton.textContent = 'Buy Now';
-                    actionButton.classList.add('btn-primary');
-                    actionButton.classList.remove('btn-secondary');
-                    actionButton.disabled = false;
-                } else {
-                    actionButton.textContent = 'Notify Me';
-                    actionButton.classList.add("btn-warning");
-                    actionButton.classList.add('btn-secondary');
-                    actionButton.classList.remove('btn-primary');
-                    actionButton.disabled = false;
-                }
-            })
-            
-            .catch(err => {
-                console.error('Error fetching stock:', err);
-                actionButton.textContent = 'Error';
-                actionButton.disabled = true;
-            });
-            
-
-    };
-
-    updateButton(sizeSelect.value);
-
-    sizeSelect.addEventListener('change', (e) => {
-        updateButton(e.target.value);
-    });
-});
-
-
-</script>
 
 <script>
 //add to wishlist button

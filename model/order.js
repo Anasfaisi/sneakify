@@ -31,7 +31,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['cashOnDelivery', 'creditCard', 'debitCard', 'netBanking'], 
+      enum: ['cashOnDelivery', 'creditCard', 'debitCard', 'netBanking','razorPay'], 
       required: true,
     },
     products: [orderProductSchema], 
@@ -43,10 +43,10 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending', 'shipped', 'delivered', 'cancelled'], 
       default: 'pending',
     },
-    orderDate: { type: Date, default: new Date().toISOString() }, 
+    orderDate: { type: Date, default: Date.now  }, 
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'completed'],
       default: 'pending', 
     },
   },

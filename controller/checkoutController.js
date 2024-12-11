@@ -5,6 +5,10 @@ const Address = require("../model/address");
 const Cart = require("../model/cart");
 const Order = require("../model/order");
 const { v4: uuidv4 } = require("uuid");
+require("dotenv").config();
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
 
 exports.getCheckout = async (req, res) => {
   console.log("Reached in getCheckout");
@@ -27,7 +31,7 @@ exports.getCheckout = async (req, res) => {
     }
 
     const addresses = await Address.find({ userId });
-    console.log(addresses);
+  
 
     // Map products from the cart
     const products = cart.products.map((item) => ({
@@ -43,7 +47,7 @@ exports.getCheckout = async (req, res) => {
 
     // Calculate totals
     const totalItemsPrice = cart.totalPrice;
-    const shippingCharge = totalItemsPrice > 3000 ? 0 : 300;
+    const shippingCharge = totalItemsPrice > 3000 ? 0 : 100;
     const grandTotal = totalItemsPrice + shippingCharge;
 
     // Render the checkout page
@@ -85,17 +89,17 @@ exports.placeOrder = async (req, res) => {
 
     let totalAmount = 0;
     const products = [];
-    console.log(cart,"ahaaau gaie");
     // Step 1: Check stock and map products
     for (const item of cart.products) {
       const product = await Product.findOne({ _id: item.productId });
       const sizeStock = product.sizes.find((size) => size.size === item.size);
       if (!sizeStock || sizeStock.stock < item.quantity) {
         return res.status(400).json({
-          message: `Insufficient stock for ${product.name} in size ${item.size}. Only ${sizeStock ? sizeStock.stock : 0} available.`,
+          message: `Insufficient stock for ${product.name} in size ${
+            item.size
+          }. Only ${sizeStock ? sizeStock.stock : 0} available.`,
         });
       }
-      console.log("jhgfghjhgfghjhg");
 
       // Add the item to the products array after checking the stock
       const total = item.quantity * item.price;
@@ -117,10 +121,14 @@ exports.placeOrder = async (req, res) => {
       );
     }
 
-    const shippingCharge = totalAmount > 500 ? 0 : 50;
+    const shippingCharge = totalAmount > 3000 ? 0 : 100;
     const grandTotal = totalAmount + shippingCharge;
+    console.log(grandTotal,"---grandTotal")
 
-    const orderId = `ORD-${uuidv4().replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+    const orderId = `ORD-${uuidv4()
+      .replace(/-/g, "")
+      .slice(0, 6)
+      .toUpperCase()}`;
     console.log(orderId);
 
     const newOrder = new Order({
@@ -141,7 +149,11 @@ exports.placeOrder = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Order placed successfully!", orderId: newOrder._id,displayOrderId:newOrder.orderId });
+      .json({
+        message: "Order placed successfully!",
+        orderId: newOrder._id,
+        displayOrderId: newOrder.orderId,
+      });
   } catch (error) {
     console.error("Error placing order:", error);
     res
@@ -149,7 +161,6 @@ exports.placeOrder = async (req, res) => {
       .json({ message: "An error occurred while placing the order." });
   }
 };
-
 
 exports.orderPlaced = async (req, res) => {
   console.log("reached in thankyou page");
@@ -170,3 +181,33 @@ exports.orderPlaced = async (req, res) => {
     res.status(500).send("An error occurred.");
   }
 };
+
+//==============================================================
+
+
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZOR_PAY_ID,
+    key_secret: process.env.RAZOR_PAY_KEY,
+});
+
+// Endpoint to create Razorpay order
+exports.createOrder = async (req, res) => {
+  console.log("it is reaching in razor pay create order")
+    const { amount, currency = "INR" } = req.body;
+    console.log(amount,currency);
+    try {
+        const order = await razorpay.orders.create({
+            amount: amount * 100, 
+            currency,
+            receipt: `receipt_${new Date().getTime()}`,
+        });
+        console.log(order,"order")
+        res.status(200).json({ success: true, order,RAZOR_PAY_ID:process.env.RAZOR_PAY_ID });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+
+   

@@ -70,6 +70,7 @@ router.get("/checkout",isAuthenticated,checkoutController.getCheckout)
 
 router.post("/placeOrder",checkoutController.placeOrder)
 router.get("/orderPlaced",checkoutController.orderPlaced)
+router.post("/razorPay/createOrder",checkoutController.createOrder)
 
 
 module.exports = router;

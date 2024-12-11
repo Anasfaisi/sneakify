@@ -63,7 +63,7 @@ exports.getCart = async (req, res) => {
       if(!userId){return res.status(404).json({message:"user not found please signup or signin"})}
   
       const { productId, size, quantity } = req.body;
-    
+      console.log(quantity)
       if (!productId || !size || !quantity) {
         return res.status(400).json({ message: 'Product ID, size, and quantity are required' });
       }
@@ -74,10 +74,12 @@ exports.getCart = async (req, res) => {
       }
   
       const sizeDetails = product.sizes.find((s) => s.size === size);
+      console.log(sizeDetails);
       if (!sizeDetails) {
         return res.status(404).json({ message: `Size ${size} not found for this product` });
       }
-      if (quantity >= sizeDetails.stock) {
+      console.log(quantity>sizeDetails.stock);
+      if (quantity > sizeDetails.stock) {
         return res.status(400).json({
           message: `Only ${sizeDetails.stock} items left for size ${size}`,
         });
@@ -102,6 +104,9 @@ exports.getCart = async (req, res) => {
           return res.status(400).json({
             message: `You can only add up to 5 items of size ${size} for this product.`,
           });
+        }
+        if(totalQuantity>sizeDetails.stock){
+          return res.status(500).json({ message: `Only ${sizeDetails.stock} items left for size ${size}`})
         }
   
         // Update the quantity if within the limit
@@ -139,6 +144,7 @@ exports.getCart = async (req, res) => {
   
 
   exports.quantityUpdate = async (req, res) => {
+    
     `reached in quantity update`
     const userId = req.session.passport?.user;
     const productId = req.params.id;
@@ -201,6 +207,7 @@ exports.getCart = async (req, res) => {
   
       res.status(200).json({ success: true, message: "Cart updated successfully", cart });
     } catch (error) {
+      console.log("not a success");
       console.error("Error updating cart:", error);
       res.status(500).json({ success: false, message: "Internal server error" });
     }
