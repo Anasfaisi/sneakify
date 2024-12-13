@@ -62,6 +62,11 @@ router.post("/cart/add",cartController.addToCart)
 router.put("/cart/quantityUpdate/:id",cartController.quantityUpdate)
 router.delete("/cart/removeProduct/:id",cartController.removeProduct)
 
+router.post("/applyCoupon",cartController.applyCoupon)
+router.post("/removeCoupon",cartController.removeCoupon)
+
+
+
 router.get("/wishlist",isAuthenticated,wishlistController.getWishList)
 router.post("/addToWishlist",isAuthenticated,wishlistController.addToWishlist)
 router.delete("/removeItem",wishlistController.removeItem)
@@ -71,6 +76,5 @@ router.get("/checkout",isAuthenticated,checkoutController.getCheckout)
 router.post("/placeOrder",checkoutController.placeOrder)
 router.get("/orderPlaced",checkoutController.orderPlaced)
 router.post("/razorPay/createOrder",checkoutController.createOrder)
-
 
 module.exports = router;

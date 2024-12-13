@@ -3,9 +3,9 @@ const bcrypt = require("bcrypt");
 const Product = require("../model/products");
 const User = require("../model/user");
 const Category = require("../model/category");
-const Order = require("../model/order")
-const { v4: uuidv4 } = require('uuid');
-
+const Order = require("../model/order");
+const Coupon = require("../model/coupon");
+const { v4: uuidv4 } = require("uuid");
 
 exports.getLogin = async (req, res) => {
   if (req.session.admin) {
@@ -44,7 +44,6 @@ exports.postLogin = async (req, res) => {
 };
 
 exports.getDashboard = async (req, res) => {
-  
   res.render("admin/dashboard");
 };
 
@@ -77,7 +76,7 @@ exports.getProducts = async (req, res) => {
     const products = await Product.find()
       .skip(skip)
       .limit(limit)
-      .populate('category'); // If you want to populate the category (optional)
+      .populate("category"); // If you want to populate the category (optional)
 
     const categories = await Category.find({ isActive: true });
 
@@ -92,10 +91,9 @@ exports.getProducts = async (req, res) => {
       totalPages,
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch product details.' });
+    res.status(500).json({ error: "Failed to fetch product details." });
   }
 };
-
 
 exports.addProducts = async (req, res) => {
   try {
@@ -124,7 +122,10 @@ exports.addProducts = async (req, res) => {
     if (!isValidSizes) {
       return res
         .status(400)
-        .json({ message: "Invalid sizes format. Each size must include size and stock." });
+        .json({
+          message:
+            "Invalid sizes format. Each size must include size and stock.",
+        });
     }
 
     // Parse and validate other fields
@@ -141,7 +142,10 @@ exports.addProducts = async (req, res) => {
         .status(400)
         .json({ message: "Price must be a non-negative number." });
     }
-    const productId = `PROD-${uuidv4().replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+    const productId = `PROD-${uuidv4()
+      .replace(/-/g, "")
+      .slice(0, 6)
+      .toUpperCase()}`;
     console.log(productId);
 
     // Create the new product with the validated data
@@ -160,47 +164,48 @@ exports.addProducts = async (req, res) => {
     const savedProduct = await newProduct.save();
     res
       .status(201)
-      .json({ success: true, message: "Product added successfully", savedProduct });
+      .json({
+        success: true,
+        message: "Product added successfully",
+        savedProduct,
+      });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-
-
 exports.unListProducts = async (req, res) => {
   console.log("addddd");
   try {
-      const productId = req.params.id;
-      const action = req.params.action; 
-      console.log(productId);
-      console.log(action);
-      console.log("sdfghjkl");
+    const productId = req.params.id;
+    const action = req.params.action;
+    console.log(productId);
+    console.log(action);
+    console.log("sdfghjkl");
 
-      // Find the product by ID
-      const product = await Product.findById(productId);
-      console.log(product);
+    // Find the product by ID
+    const product = await Product.findById(productId);
+    console.log(product);
 
-      if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
-      }
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
-      // Switch the active status
-      if (action === 'list') {
-          product.isActive = true;
-      } else if (action === 'unList') {
-          product.isActive = false;
-      }
+    // Switch the active status
+    if (action === "list") {
+      product.isActive = true;
+    } else if (action === "unList") {
+      product.isActive = false;
+    }
 
-      // Save the updated product
-      await product.save();
+    // Save the updated product
+    await product.save();
 
-      res.status(200).json({ message: 'Product status updated successfully' });
+    res.status(200).json({ message: "Product status updated successfully" });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error updating product status' });
+    console.error(error);
+    res.status(500).json({ message: "Error updating product status" });
   }
 };
 
@@ -209,36 +214,32 @@ exports.listProducts = async (req, res) => {
   console.log("aaaaaa");
   try {
     console.log(req.params);
-      const productId = req.params.id;
-      const action = req.params.action; 
-      console.log(productId);
-      console.log(action);
+    const productId = req.params.id;
+    const action = req.params.action;
+    console.log(productId);
+    console.log(action);
 
+    const product = await Product.findById(productId);
+    console.log(product);
 
-      const product = await Product.findById(productId);
-      console.log(product);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
-      if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
-      }
+    if (action === "list") {
+      product.isActive = true;
+    } else if (action === "unList") {
+      product.isActive = false;
+    }
 
-      if (action === 'list') {
-          product.isActive = true;
-      } else if (action === 'unList') {
-          product.isActive = false;
-      }
+    await product.save();
 
-      await product.save();
-
-      res.status(200).json({ message: 'Product status updated successfully' });
+    res.status(200).json({ message: "Product status updated successfully" });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error updating product status' });
+    console.error(error);
+    res.status(500).json({ message: "Error updating product status" });
   }
 };
-
-
-
 
 exports.getOrders = async (req, res) => {
   try {
@@ -270,83 +271,85 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-
-exports.getOrderDetails = async (req,res)=>{
-  console.log("it is reaching in order details")
+exports.getOrderDetails = async (req, res) => {
+  console.log("it is reaching in order details");
   try {
     const orderId = req.params.id;
 
-    const order = await Order.findById(orderId).populate("userId")
-    .populate("products.productId")
+    const order = await Order.findById(orderId)
+      .populate("userId")
+      .populate("products.productId");
     console.log(order);
 
-    res.status(200).json(order)
+    res.status(200).json(order);
   } catch (error) {
-    console.log(error,"error occured in getting order details")
+    console.log(error, "error occured in getting order details");
   }
-}
-
-
+};
 
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['pending', 'shipped', 'delivered', 'cancelled'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+    if (!["pending", "shipped", "delivered", "cancelled"].includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status" });
     }
-    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
-    res.json({ success: true, message: 'Order status updated successfully', order });
+    res.json({
+      success: true,
+      message: "Order status updated successfully",
+      order,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to update order status' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update order status" });
   }
 };
-
 
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' }, { new: true });
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status: "cancelled" },
+      { new: true }
+    );
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
-    res.json({ success: true, message: 'Order has been cancelled', order });
+    res.json({ success: true, message: "Order has been cancelled", order });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to cancel order' });
+    res.status(500).json({ success: false, message: "Failed to cancel order" });
   }
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-exports.getEditProducts= async (req,res)=>{
+exports.getEditProducts = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     const categories = await Category.find({ isActive: true });
-    if(!product||!categories){
-      return res.status(404).json({message:"Product or category not found"});
+    if (!product || !categories) {
+      return res.status(404).json({ message: "Product or category not found" });
     }
     res.render("admin/editProduct", { product, categories });
-} catch (err) {
-    res.status(500).json({ error: 'Failed to fetch product details.' });
-}
-}
-
-
-
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product details." });
+  }
+};
 
 exports.editProducts = async (req, res) => {
   try {
@@ -359,11 +362,15 @@ exports.editProducts = async (req, res) => {
     const product = await Product.findById(productId);
 
     if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found." });
     }
 
     // Filter only cropped images
-    const croppedImages = req.files.filter((file) => file.fieldname.startsWith('croppedImages'));
+    const croppedImages = req.files.filter((file) =>
+      file.fieldname.startsWith("croppedImages")
+    );
 
     // Step 2: Group by index and retain unique cropped images
     const uniqueCroppedImages = {};
@@ -398,13 +405,13 @@ exports.editProducts = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Product updated successfully!',
+      message: "Product updated successfully!",
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update product. Please try again later.',
+      message: "Failed to update product. Please try again later.",
     });
   }
 };
@@ -413,7 +420,7 @@ exports.editProducts = async (req, res) => {
 exports.listUsers = async (req, res) => {
   try {
     const users = await User.find({});
-    console.log(users)
+    console.log(users);
 
     res.render("admin/userManagement", { users });
   } catch (error) {
@@ -427,9 +434,12 @@ exports.updateUserStatus = async (req, res) => {
     console.log(userId);
     const { isBlocked } = req.body;
     console.log(isBlocked);
-    
 
-    const updatedUser = await User.findByIdAndUpdate(userId, { isBlocked }, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isBlocked },
+      { new: true }
+    );
     console.log(updatedUser);
     if (isBlocked && req.session.user && req.session.user._id === userId) {
       console.log("in the session destroying");
@@ -437,21 +447,24 @@ exports.updateUserStatus = async (req, res) => {
         if (err) {
           console.error("Error destroying session:", err);
         }
-        res.clearCookie("connect.sid")
-        return res.redirect("/users/login")
+        res.clearCookie("connect.sid");
+        return res.redirect("/users/login");
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `User has been ${isBlocked ? "blocked" : "unblocked"} successfully`,
+      message: `User has been ${
+        isBlocked ? "blocked" : "unblocked"
+      } successfully`,
     });
   } catch (error) {
     console.error("Error updating user status:", error);
-    res.status(500).json({ success: false, message: "Error updating user status" });
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating user status" });
   }
 };
-
 
 // =============================================================================
 exports.getAllCategories = async (req, res) => {
@@ -468,27 +481,27 @@ exports.addCategory = async (req, res) => {
   name = name.toLowerCase();
   console.log(name);
   try {
-    
-    const category = new Category({ name, isActive: true })
+    const category = new Category({ name, isActive: true });
     console.log(category);
 
     //checking for existing category
-   
 
-let existingCategories = await Category.find({ name: { $regex: name, $options: 'i' } });
-if (existingCategories.length > 0) {
-  console.log("Matching categories found:", existingCategories);
-  return res.status(400).json({ success: false, message: "Category already exists" });
-}else{
-  const savedCategory = await category.save();
-  console.log(savedCategory); 
-  res.status(200).json({success:true,message:"succesfully updated"})
-}
-
-
+    let existingCategories = await Category.find({
+      name: { $regex: name, $options: "i" },
+    });
+    if (existingCategories.length > 0) {
+      console.log("Matching categories found:", existingCategories);
+      return res
+        .status(400)
+        .json({ success: false, message: "Category already exists" });
+    } else {
+      const savedCategory = await category.save();
+      console.log(savedCategory);
+      res.status(200).json({ success: true, message: "succesfully updated" });
+    }
   } catch (error) {
-    console.log('error',error);
-    
+    console.log("error", error);
+
     res.status(500).send("Error adding category");
   }
 };
@@ -530,11 +543,152 @@ exports.updateCategory = async (req, res) => {
   try {
     let category = await Category.findByIdAndUpdate(req.params.id, { name });
     console.log(category);
-    res.status(200).json({"success":true,message:"succesfully updated"})
+    res.status(200).json({ success: true, message: "succesfully updated" });
   } catch (error) {
     res.status(500).send("Error updating category");
   }
 };
 
-
 // =================================================================================
+
+
+
+exports.getCoupons = async (req, res) => {
+  console.log("it is reaaching in get coupon ");
+  try {
+    const coupons = await Coupon.find();
+    if (!coupons) {
+      res.status(500).json({ message: "no coupons found" });
+    }
+    res.render("admin/couponManagement", {
+      coupons,
+    });
+  } catch (error) {}
+};
+
+exports.addCoupon = async (req, res) => {
+  console.log("it is reaching in add coupon");
+  try {
+    const {
+      code,
+      discountType,
+      discountValue,
+      maximumDiscount,
+      minimumPurchase,
+      startDate,
+      expiryDate,
+    } = req.body;
+    console.log(req.body)
+    
+    if(!code||
+      !discountType||
+      !minimumPurchase||
+      !startDate||
+      !expiryDate){
+      return res.status(500).json({message:"please fill all the fields"})
+      }
+     
+    const newCoupon = new Coupon({
+      code,
+      discountType,
+      discountValue,
+      maximumDiscount,
+      minimumPurchase,
+      startDate,
+      expiryDate,
+    })
+    console.log(newCoupon,"new coupon")
+    await newCoupon.save()
+    res.status(200).json({message:"coupon added succesfully"})
+
+    
+  } catch (error) {
+    console.log("error happened in adding coupon",error)
+    res.status(500).json({message:"something went wrong"})
+  }
+};
+
+
+exports.deleteCoupon = async (req,res)=>{
+  console.log("it is reached in delete coupon")
+  try {
+    const couponId = req.params.id;
+
+    if(!couponId){
+      return res.status(500).json({message:"coupon id not found"})
+    }
+    const coupon =await Coupon.findById(couponId)
+    if(!coupon){
+      return res.status(500).json({message:'coupon not found'})
+    }
+    coupon.isActive = false;
+    await coupon.save()
+    res.redirect("/admin/coupons")
+  } catch (error) {
+    console.log("error happened in deleting coupon",error)
+    return res.status(500).json({message:"something happened wrong"})
+  }
+}
+
+exports.reuseCoupon = async (req,res)=>{
+  console.log("it is reached in reuse coupon")
+  try {
+    const couponId = req.params.id;
+    if(!couponId){
+      res.status(500).json({message:"coupon not found"})
+    }
+    const coupon = await Coupon.findById(couponId)
+    if(!coupon){
+      res.status(500).json({message:"coupon not found"})
+    }
+    coupon.isActive = true;
+    await coupon.save()
+    res.redirect("/admin/coupons")
+  } catch (error) {
+    console.log("error happened in reuse coupon")
+    res.status(500).json({message:"something went wrong"})
+  }
+}
+
+exports.getSingleCoupon = async (req,res)=>{
+  console.log("it is reaching in get single coupon")
+  try {
+    const couponId = req.params.id;
+    if(!couponId){
+      return res.status(500).json({message:"coupon id does not found"})
+    }
+    const couponData = await Coupon.findById(couponId)
+    res.status(200).json({message:"success",couponData})
+  } catch (error) {
+    
+  }
+}
+
+exports.editCoupon = async (req,res)=>{
+  console.log("it is reaching in edit coupon");
+    try {
+      const couponId = req.params.id
+      if(!couponId){ return res.status(404).json({message:"coupon id not found"})}
+
+      console.log(req.body)
+       const editData = req.body;
+       if (!editData || Object.keys(editData).length === 0) {
+        return res.status(400).json({ message: "No data provided for updating" });
+      }
+       const coupon = await Coupon.findById(couponId)
+       if(!coupon){
+        return res.status(404).json({message:"coupon is not found"})
+       }
+       const updatedCoupon = await Coupon.findByIdAndUpdate(
+        couponId,
+        { $set: editData }, 
+        { new: true, runValidators: true } 
+      );
+  
+      
+      res.status(200).json({ message: "Coupon updated successfully"});
+       
+    } catch (error) {
+      console.log(error)
+    }
+}

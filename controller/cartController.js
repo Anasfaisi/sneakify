@@ -2,58 +2,65 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const Product = require("../model/products");
 const Address = require("../model/address")
-const Cart    = require("../model/cart")
+const Cart    = require("../model/cart");
+const Coupon = require("../model/coupon")
 
 exports.getCart = async (req, res) => {
-    console.log("it is reached in getCart");
-    try {
-      const userId = req.session.passport.user;
-   console.log(userId);
-      const cart = await Cart.findOne({ userId }).populate("products.productId");
-      console.log(cart);
-      
+  console.log("it is reached in getCart");
+  try {
+    const userId = req.session.passport.user;
+    console.log(userId);
+    const cart = await Cart.findOne({ userId }).populate("products.productId");
+    console.log(cart);
 
-     
-      if (!cart) {
-        return res.render("users/cart", {
-            products: [],
-            totalItemsPrice: 0,
-            grandTotal: 0,
-
-        });
-      }
-  
-      await cart.calculateTotals();
-      
-  
-      const products = cart.products.map((item) => ({
-        id: item.productId._id,
-        name: item.productId.name,
-        description: item.productId.description,
-        size: item.size,
-        imageUrl: item.productId.images[0],
-        price: item.price,
-        quantity: item.quantity,
-        
-      }));
-
-      
-  
-      const totalItemsPrice = cart.totalPrice;
-      const grandTotal = totalItemsPrice ;
-  
-  
-      res.render("users/cart", {
-        products,
-        totalItemsPrice,
-        grandTotal,
-        
-      });
-    } catch (error) {
-      console.error("error rendering cart page:", error);
-      res.status(500).send("An error occurred while rendering your cart.");
+    const activeCoupon = await Coupon.find({ isActive: true });
+    if (!activeCoupon) {
+      return res.status(404).json({ message: 'coupon not found' });
     }
-  };
+    console.log(activeCoupon, "coupons");
+
+    if (!cart) {
+      return res.render("users/cart", {
+        products: [],
+        activeCoupon: [],
+        totalItemsPrice: 0,
+        grandTotal: 0,
+        gst: 0,
+        discount: 0,
+      });
+    }
+
+    await cart.calculateTotals();
+
+    const products = cart.products.map((item) => ({
+      id: item.productId._id,
+      name: item.productId.name,
+      description: item.productId.description,
+      size: item.size,
+      imageUrl: item.productId.images[0],
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
+    const totalItemsPrice = cart.totalPrice;
+    const grandTotal = totalItemsPrice + cart.gst - cart.discount; // Include GST and discount in total calculation
+    const gst = cart.gst;
+    const discount = cart.discount;
+
+    res.render("users/cart", {
+      products,
+      totalItemsPrice,
+      grandTotal,
+      activeCoupon,
+      gst,
+      discount,
+    });
+  } catch (error) {
+    console.error("error rendering cart page:", error);
+    res.status(500).json({ message: "An error occurred while rendering your cart." });
+  }
+};
+
   
 
   exports.addToCart = async (req, res) => {
@@ -96,10 +103,8 @@ exports.getCart = async (req, res) => {
       );
   
       if (existingItemIndex !== -1) {
-        // Calculate the total quantity if more is added
         const totalQuantity = cart.products[existingItemIndex].quantity + quantity;
   
-        // Check if the total exceeds the maximum allowed quantity (5)
         if (totalQuantity > 5) {
           return res.status(400).json({
             message: `You can only add up to 5 items of size ${size} for this product.`,
@@ -109,17 +114,14 @@ exports.getCart = async (req, res) => {
           return res.status(500).json({ message: `Only ${sizeDetails.stock} items left for size ${size}`})
         }
   
-        // Update the quantity if within the limit
         cart.products[existingItemIndex].quantity = totalQuantity;
       } else {
-        // Check if adding the new item exceeds the maximum limit
         if (quantity > 5) {
           return res.status(400).json({
             message: `You can only add up to 5 items of size ${size} for this product.`,
           });
         }
   
-        // Add the new item to the cart
         cart.products.push({
           productId,
           size,
@@ -128,11 +130,8 @@ exports.getCart = async (req, res) => {
         });
       }
   
-      // Deduct stock from the product
-      // sizeDetails.stock -= quantity;
       await product.save();
   
-      // Save the updated cart
       await cart.save();
   
       res.status(200).json({ message: 'Product added to cart successfully', cart });
@@ -242,4 +241,83 @@ exports.getCart = async (req, res) => {
     }
   }
 
+
+
+  // /coupons
+  exports.applyCoupon =  async (req, res) => {
+  try {
+    const { couponCode } = req.body;
+  const cart = await Cart.findOne({ userId: req.session.passport.user });
+  console.log("carrrt",cart);
+  if (!cart) {
+    return res.status(400).json({message:"Cart not found."});
+  }
+
+  const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
+  console.log("coupon",coupon);
+  if (!coupon) {
+    return res.status(400).json({message:"Invalid or inactive coupon."})
+  }
+
+  // Validate the coupon with cart total
+  if (cart.totalPrice < coupon.minimumPurchase) {
+    return res.status(400).json({message:`Minimum cart value should be ₹${coupon.minimumPurchase}`});
+  }
+   console.log(cart.totalPrice,coupon.minimumPurchase);
+  if (coupon.expiryDate < Date.now()) {
+    return res.status(400).json({message:"Coupon has expired."})
+  }
+
+  if (coupon.usageLimit <= coupon.usageCount) {
+    return res.status(400).json({message:"Coupon usage limit exceeded."})
+  }
+
+  // Now apply the coupon and calculate totals
+  const updatedCart = await cart.calculateTotals(coupon);
+  console.log("updated cart   ",updatedCart);;
+
+  console.log("everything working properly")
+  return res.status(200).json({
+    message: "Coupon applied successfully.",
+    cart: updatedCart ,
+  });
+  } catch (error) {
+    console.log("error happened in applying coupon")
+    res.status(500).json({message:"somethig happened wrong"})
+  }
+}
+
+exports.removeCoupon = async (req, res) => {
+  try {
+    const userId = req.session.passport.user;
+    const {couponCode} = req.body
+    console.log(couponCode)
+    
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+    const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
+    console.log("coupon",coupon);
+    if (!coupon) {
+      return res.status(400).json({message:"Invalid or inactive coupon."})
+    }
+    
+    cart.discount = 0;  
+    cart.gst = 0;       
+
+    
+    const updatedCart = await cart.calculateTotals();
+
+    
+
+    res.status(200).json({
+      message: "Coupon successfully removed",
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error("Error removing coupon:", error);
+    res.status(500).json({ message: "An error occurred while removing the coupon" });
+  }
+};
 

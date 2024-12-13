@@ -36,4 +36,11 @@ router.post('/orders/:id/status', isAdmin, controller.updateOrderStatus);
 router.post('/orders/:id/cancel', isAdmin, controller.cancelOrder);
 
 
+router.get("/coupons",isAdmin,controller.getCoupons)
+router.post("/addCoupon",isAdmin,controller.addCoupon)
+router.post("/:id/delete",isAdmin,controller.deleteCoupon)
+router.post("/:id/deleted",isAdmin,controller.reuseCoupon)
+router.get("/getCoupon/:id",isAdmin,controller.getSingleCoupon)
+router.put("/editCoupon/:id",isAdmin,controller.editCoupon)
+
 module.exports = router;

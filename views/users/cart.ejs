@@ -1,336 +1,591 @@
 <%-include("partials/header") %>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
-}
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+  }
 
-.cart-container {
-  display: flex;
-  max-width: 1200px;
-  margin: 20px auto;
-  gap: 20px;
-}
+  .cart-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 20px auto;
+    gap: 20px;
+  }
 
-.cart-items {
-  flex: 2;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+  .cart-items {
+    flex: 2;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
 
-.cart-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
 
-.cart-item img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 5px;
-}
+  .cart-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
 
-.item-details {
-  display: flex;
-  gap: 20px;
-}
+  .item-details {
+    display: flex;
+    gap: 20px;
+  }
 
-.item-info {
-  display: flex;
-  flex-direction: column;
-}
+  .item-info {
+    display: flex;
+    flex-direction: column;
+  }
 
-.item-info h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
+  .item-info h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
 
-.item-info p {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #666;
-}
+  .item-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
+  }
 
-.item-price {
-  font-size: 16px;
-  color: #000;
-  font-weight: bold;
-}
+  .item-price {
+    font-size: 16px;
+    color: #000;
+    font-weight: bold;
+  }
 
-.quantity-decrease,
-.quantity-increase,
-.remove-item {
-  background: #e9ecef;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin: 5px 0;
-}
+  .quantity-decrease,
+  .quantity-increase,
+  .remove-item {
+    background: #e9ecef;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px 0;
+  }
 
-.order-summary {
-  flex: 1;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+  .order-summary {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
 
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
 
-.summary-total {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
 
-.checkout-button {
-  width: 100%;
-  background: #28a745;
-  color: #fff;
-  padding: 10px 0;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
+  .checkout-button {
+    width: 100%;
+    background: #28a745;
+    color: #fff;
+    padding: 10px 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 
-.checkout-button:hover {
-  background: #218838;
-}
+  .checkout-button:hover {
+    background: #218838;
+  }
 
-.savings {
-  margin-top: 10px;
-  color: #28a745;
-  font-size: 14px;
-  text-align: center;
-}
+  .savings {
+    margin-top: 10px;
+    color: #28a745;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .coupon-container {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .coupon-input {
+    width: 70%;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .coupon-button {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .coupon-button:hover {
+    background: #0056b3;
+  }
+
+  .active-coupon {
+    margin-top: 20px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  .active-coupon span {
+    font-weight: bold;
+    color: #28a745;
+  }
 </style>
 <main class="cart-container">
-    <div class="cart-items">
-      <h2>Your Cart</h2>
-      <p>Items in your cart are not reserved—check out now to make them yours.</p>
+  <div class="cart-items">
+    <h2>Your Cart</h2>
+    <p>Items in your cart are not reserved—check out now to make them yours.</p>
 
-      <!-- Loop through cart items -->
-      <% if (products.length > 0) { %>
-        <% products.forEach(item => { %>
-          <div class="cart-item">
-            <div class="item-details">
-              <img src="/<%= item.imageUrl %>" alt="<%= item.name %>">
-              <div class="item-info">
-                <h3><%= item.name %></h3>
-                <p><%= item.description %></p>
-                <p >Size: <%= item.size %></p>
-                <div>
-                  <p>Quantity:
-                        <button class="quantity-decrease" onclick="decreaseQuantity(this, '<%= item.id %>','<%=item.size %>')">-</button>
-                        <span class="quantity-display"><%= item.quantity %></span>
-                        <button class="quantity-increase" onclick="increaseQuantity(this, '<%= item.id %>','<%=item.size %>')">+</button>
-                  </div>
-                </p>
-                <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%=item.size %>')">Remove</button>
-              </div>
-            </div>
-            <div class="item-price">₹<%= item.price.toFixed(2) %></div>
+    <!-- Loop through cart items -->
+    <% if (products.length > 0) { %>
+    <% products.forEach(item => { %>
+    <div class="cart-item">
+      <div class="item-details">
+        <img src="/<%= item.imageUrl %>" alt="<%= item.name %>">
+        <div class="item-info">
+          <h3><%= item.name %></h3>
+          <p><%= item.description %></p>
+          <p>Size: <%= item.size %></p>
+          <div>
+            <p>Quantity:
+              <button class="quantity-decrease" onclick="decreaseQuantity(this, '<%= item.id %>','<%= item.size %>')">-</button>
+              <span class="quantity-display"><%= item.quantity %></span>
+              <button class="quantity-increase" onclick="increaseQuantity(this, '<%= item.id %>','<%= item.size %>')">+</button>
           </div>
-        <% }); %>
-
-
-
-        <div class="order-summary">
-          <h2>Order Summary</h2>
-          <div class="summary-item">
-            <p>Items (<%= products.length %>)</p>
-            <p>₹<%= totalItemsPrice.toFixed(2) %></p>
-          </div>
-         
-       
-          
-          <div class="summary-total">
-            <h3>Total</h3>
-            <h3>₹<%= grandTotal.toFixed(2) %></h3>
-          </div>
-         <a href="/users/checkout"> <button class="checkout-button" >Checkout</button></a>
-    
+          </p>
+          <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%= item.size %>')">Remove</button>
         </div>
-      <% } else { %>
+      </div>
+      <div class="item-price">₹<%= item.price.toFixed(2) %></div>
+    </div>
+    <% }); %>
 
-
-
-        <p>Your cart is empty.</p>
-      <% } %>
+    <!-- Coupon Input Section -->
+    <div class="coupon-container">
+      <h3>Apply Coupon</h3>
+      <input type="text" id="couponCode" class="coupon-input" placeholder="Enter coupon code" />
+      <button class="coupon-button " onclick="applyCoupon()">Apply Coupon</button>
+      <button class="coupon-button" id="removeCouponButton" style="display: none;color:white;background-color: red;" onclick="removeCoupon()">Remove Coupon</button>
     </div>
 
-  
-  </main>
+    <!-- Active Coupon Section -->
+    <% if (activeCoupon && activeCoupon.length > 0) { %>
+    <div class="active-coupon">
+      <label for="couponSelect">Select Active Coupon:</label>
+      <select id="couponSelect" name="couponSelect" class="form-select" onchange="populateCouponCode()">
+        <option value="" disabled selected>Select a coupon</option>
+        <% activeCoupon.forEach(coupon => { %>
+        <option value="<%= coupon.code %>">
+          <%= coupon.code %> -
+          <% if (coupon.discountType === 'percentage') { %>
+          <%= coupon.maximumDiscount %>% off on minimum ₹<%= coupon.minimumPurchase %> cart value
+          <% } else if (coupon.discountType === 'fixed') { %>
+          Flat ₹<%= coupon.discountValue %> off on minimum ₹<%= coupon.minimumPurchase %> cart value
+          <% } %>
+        </option>
+        <% }) %>
+      </select>
+      <p class="coupon-info">
+        <em>Select a coupon to see details or apply.</em>
+      </p>
+    </div>
+    <% } else { %>
+    <p>No active coupons available at the moment.</p>
+    <% } %>
+
+    <!-- Order Summary Section -->
+    <div class="order-summary">
+      <h2>Order Summary</h2>
+      <div class="summary-item">
+        <p>Items (<%= products.length %>)</p>
+        <p>₹<%= totalItemsPrice.toFixed(2) %></p>
+      </div>
+
+      <!-- Display GST if available -->
+      <% if (gst > 0) { %>
+      <div class="summary-item">
+        <p>GST (Tax):</p>
+        <p>+ ₹<%= gst.toFixed(2) %></p>
+      </div>
+      <% } %>
+
+      <!-- Display discount if available -->
+      <% if (discount > 0) { %>
+      <div class="summary-item">
+        <p>Discount Applied (Coupon):</p>
+        <p>- ₹<%= discount.toFixed(2) %></p>
+      </div>
+      <% } %>
+
+      <div class="summary-total">
+        <h3>Total</h3>
+        <h3 id="grandTotal">₹<%= grandTotal.toFixed(2) %></h3>
+      </div>
+
+      <a href="/users/checkout">
+        <button class="checkout-button">Checkout</button>
+      </a>
+    </div>
+
+    <% } else { %>
+    <p>Your cart is empty.</p>
+    <% } %>
+  </div>
 
 
-  <script>
-  //incrementing and decrementing the product
-async function decreaseQuantity(element, itemId,size) {
-  console.log(itemId);
-  const quantityDisplay = element.nextElementSibling; 
-  let currentQuantity = parseInt(quantityDisplay.textContent);
+</main>
 
-  if (currentQuantity > 1) {
-    currentQuantity--;
-    quantityDisplay.textContent = currentQuantity; 
-
-   
-    try {
-      const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity: currentQuantity ,size}),
-    })
-   console.log(response);
-     const data = await response.json()
-     console.log(data)
-     if(response.ok){
-      Swal.fire({
-        icon: "success",
-        title: "Quantity Updated!",
-        text: `The quantity was successfully updated to ${currentQuantity}.`,
-        confirmButtonText: "OK",
-      }).then(()=>location.reload())
-     }else{
-      Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: data.message || "Failed to update the quantity in the database.",
-        confirmButtonText: "Try Again",
-      })
-     }
-    } catch (error) {
-      console.log("errro occured in updating quantity",error)
-      Swal.fire({
-      icon: "error",
-      title: "Something went wrong",
-      text: "Unable to update the quantity. Please try again later.",
-      confirmButtonText: "OK",
-    });
-
-    }
-      
-  }
-}
-
-
-
-async function increaseQuantity(element, itemId ,size) {
-  console.log(itemId);
-  const quantityDisplay = element.previousElementSibling; 
-  let currentQuantity = parseInt(quantityDisplay.textContent);
-
-  currentQuantity++; 
-  quantityDisplay.textContent = currentQuantity; 
-
-  try {
-    const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity: currentQuantity,size}),
-    });
-
-    const data = await response.json(); 
-
-    if (response.ok) {
-
-      Swal.fire({
-        icon: "success",
-        title: "Quantity Updated!",
-        text: `The quantity was successfully updated to ${currentQuantity}.`,
-        confirmButtonText: "OK",
-      }).then(()=>location.reload())
-    } else {
-
-      Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: data.message || "Failed to update the quantity in the database.",
-        confirmButtonText: "Try Again",
-      }).then(()=>location.reload())
-    }
-  } catch (error) {
-    console.error("Error occurred in updating quantity:", error);
-
-    Swal.fire({
-      icon: "error",
-      title: "Something went wrong",
-      text: "Unable to update the quantity. Please try again later.",
-      confirmButtonText: "OK",
-    });
-  }
-}
-
-  </script>
 
 <script>
-  //remove the product
+  //incrementing and decrementing the product
+  async function decreaseQuantity(element, itemId, size) {
+    console.log(itemId);
+    const quantityDisplay = element.nextElementSibling;
+    let currentQuantity = parseInt(quantityDisplay.textContent);
 
-  async function removeProduct(productId,size) {
-    console.log(productId);
-  const confirmRemoval = await Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to undo this action!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, remove it!",
-  });
+    if (currentQuantity > 1) {
+      currentQuantity--;
+      quantityDisplay.textContent = currentQuantity;
 
-  if (confirmRemoval.isConfirmed) {
+
+      try {
+        const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            quantity: currentQuantity,
+            size
+          }),
+        })
+        console.log(response);
+        const data = await response.json()
+        console.log(data)
+        if (response.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Quantity Updated!",
+            text: `The quantity was successfully updated to ${currentQuantity}.`,
+            confirmButtonText: "OK",
+          }).then(() => location.reload())
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Update Failed",
+            text: data.message || "Failed to update the quantity in the database.",
+            confirmButtonText: "Try Again",
+          })
+        }
+      } catch (error) {
+        console.log("errro occured in updating quantity", error)
+        Swal.fire({
+          icon: "error",
+          title: "Something went wrong",
+          text: "Unable to update the quantity. Please try again later.",
+          confirmButtonText: "OK",
+        });
+
+      }
+
+    }
+  }
+
+
+
+  async function increaseQuantity(element, itemId, size) {
+    console.log(itemId);
+    const quantityDisplay = element.previousElementSibling;
+    let currentQuantity = parseInt(quantityDisplay.textContent);
+
+    currentQuantity++;
+    quantityDisplay.textContent = currentQuantity;
+
     try {
-      const response = await fetch(`/users/cart/removeProduct/${productId}`, {
-        method: "DELETE",
+      const response = await fetch(`/users/cart/quantityUpdate/${itemId}`, {
+        method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ productId ,size }), 
+        body: JSON.stringify({
+          quantity: currentQuantity,
+          size
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        await Swal.fire({
+
+        Swal.fire({
           icon: "success",
-          title: "Done",
-          text: "The product has been removed from your cart.",
-        });
-        location.reload(); 
+          title: "Quantity Updated!",
+          text: `The quantity was successfully updated to ${currentQuantity}.`,
+          confirmButtonText: "OK",
+        }).then(() => location.reload())
       } else {
+
         Swal.fire({
           icon: "error",
-          title: "Failed",
-          text: data.message || "Failed to remove the product.",
-        });
+          title: "Update Failed",
+          text: data.message || "Failed to update the quantity in the database.",
+          confirmButtonText: "Try Again",
+        }).then(() => location.reload())
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error occurred in updating quantity:", error);
+
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "An error occurred while removing the product.",
+        title: "Something went wrong",
+        text: "Unable to update the quantity. Please try again later.",
+        confirmButtonText: "OK",
       });
     }
+  }
+</script>
+
+<script>
+  //remove the product
+
+  async function removeProduct(productId, size) {
+    console.log(productId);
+    const confirmRemoval = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to undo this action!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, remove it!",
+    });
+
+    if (confirmRemoval.isConfirmed) {
+      try {
+        const response = await fetch(`/users/cart/removeProduct/${productId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productId,
+            size
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          await Swal.fire({
+            icon: "success",
+            title: "Done",
+            text: "The product has been removed from your cart.",
+          });
+          location.reload();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Failed",
+            text: data.message || "Failed to remove the product.",
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "An error occurred while removing the product.",
+        });
+      }
+    }
+  }
+</script>
+
+<script>
+  function populateCouponCode() {
+    const selectedCoupon = document.getElementById('couponSelect').value;
+    const couponInput = document.getElementById('couponCode');
+    couponInput.value = selectedCoupon;
+  }
+
+  let appliedCoupon = false; // Flag to check if a coupon is applied
+
+async function applyCoupon() {
+  const couponCode = document.getElementById("couponCode").value;
+  console.log(couponCode,"------")
+  
+  if (!couponCode) {
+    Swal.fire({
+      icon: "error",
+      title: "Coupon Code Missing",
+      text: "Please enter a coupon code.",
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch("/users/applyCoupon", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ couponCode }),
+    });
+
+    const data = await response.json();
+    console.log("Response Data:", data);
+
+    if (response.ok) {
+      // Update the UI with the new cart details (coupon applied, new total)
+      document.getElementById("grandTotal").textContent = `₹${data.cart.grandTotal.toFixed(2)}`;
+
+      // Display the discount if applied
+      if (data.cart.discount > 0) {
+        const discountSection = document.querySelector('.summary-item');
+        const discountElement = document.createElement('div');
+        discountElement.classList.add('summary-item');
+        discountElement.innerHTML = `
+          <p>Discount Applied (Coupon):</p>
+          <p>- ₹${data.cart.discount.toFixed(2)}</p>
+        `;
+        discountSection.insertAdjacentElement('afterend', discountElement);
+      }
+
+      // Disable the apply coupon button, input field, and coupon select dropdown after use
+      document.getElementById("couponCode").disabled = true;
+      document.querySelector(".coupon-button").disabled = true;
+      const couponSelect = document.getElementById("couponSelect");
+      couponSelect.disabled = true;
+
+      const removeButton = document.getElementById("removeCouponButton");
+      removeButton.style.display = 'inline-block'; // Make the button visible
+
+      appliedCoupon = true;
+
+      Swal.fire({
+        icon: "success",
+        title: "Coupon Applied!",
+        text: data.message,
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Coupon Error",
+        text: data.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error during coupon application:", error);
+
+    // Show generic error alert using Swal
+    Swal.fire({
+      icon: "error",
+      title: "An Error Occurred",
+      text: "Unable to apply the coupon. Please try again later.",
+    });
+  }
+}
+
+// Function to remove the coupon
+async function removeCoupon() {
+  try {
+    const couponInput = document.getElementById('couponCode');
+  
+  const couponCode = document.getElementById("couponCode").value;
+  console.log("===",couponCode);
+
+    // Call the backend to remove the coupon from the user's cart
+    const response = await fetch("/users/removeCoupon", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body:JSON.stringify({couponCode})
+    });
+
+    const data = await response.json();
+    console.log("Response Data:", data);
+
+    if (response.ok) {
+      // Update the UI after removing the coupon
+      document.getElementById("grandTotal").textContent = `₹${data.cart.grandTotal.toFixed(2)}`;
+ 
+      couponInput.value=""
+      // Remove the discount section
+      const discountElements = document.querySelectorAll('.summary-item');
+      discountElements.forEach((element) => {
+        if (element.querySelector('p').textContent.includes('Discount Applied')) {
+          element.remove();
+        }
+      });
+
+      // Enable the coupon fields again
+      document.getElementById("couponCode").disabled = false;
+      document.querySelector(".coupon-button").disabled = false;
+      const couponSelect = document.getElementById("couponSelect");
+      couponSelect.disabled = false;
+
+      // Hide the "Remove Coupon" button
+      const removeButton = document.getElementById("removeCouponButton");
+      removeButton.style.display = 'none'; // Hide the button
+
+      // Reset the applied coupon flag
+      appliedCoupon = false;
+
+      // Show success alert using Swal
+      Swal.fire({
+        icon: "success",
+        title: "Coupon Removed!",
+        text: data.message,
+      });
+    } else {
+      // Show error alert using Swal
+      Swal.fire({
+        icon: "error",
+        title: "Error Removing Coupon",
+        text: data.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error removing coupon:", error);
+
+    // Show generic error alert using Swal
+    Swal.fire({
+      icon: "error",
+      title: "An Error Occurred",
+      text: "Unable to remove the coupon. Please try again later.",
+    });
   }
 }
 
 
-
-
-  
 </script>
-  <%-include("partials/footer") %>
+<%-include("partials/footer") %>
