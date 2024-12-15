@@ -17,7 +17,11 @@ const categorySchema = new mongoose.Schema({
     categoryId: {
         type: Number,
         unique:true,
-     }
+     },
+      offer: {
+           type: mongoose.Schema.Types.ObjectId,
+           ref: "Offer", // Link to Offer model
+         },
 }, {
     timestamps: true
 });

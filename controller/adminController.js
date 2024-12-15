@@ -5,6 +5,7 @@ const User = require("../model/user");
 const Category = require("../model/category");
 const Order = require("../model/order");
 const Coupon = require("../model/coupon");
+const Offer = require("../model/offer")
 const { v4: uuidv4 } = require("uuid");
 
 exports.getLogin = async (req, res) => {
@@ -587,7 +588,12 @@ exports.addCoupon = async (req, res) => {
       !expiryDate){
       return res.status(500).json({message:"please fill all the fields"})
       }
-     
+
+    const existingCoupon = await Coupon.find({code:code})
+    console.log(existingCoupon);
+    if(existingCoupon){
+      return res.status(500).json({message:"same coupon code already exist"})
+    }
     const newCoupon = new Coupon({
       code,
       discountType,
@@ -660,7 +666,8 @@ exports.getSingleCoupon = async (req,res)=>{
     const couponData = await Coupon.findById(couponId)
     res.status(200).json({message:"success",couponData})
   } catch (error) {
-    
+    console.log(error)
+    return res.status(500).json({message:"something happened wrong"})
   }
 }
 
@@ -692,3 +699,209 @@ exports.editCoupon = async (req,res)=>{
       console.log(error)
     }
 }
+
+//=====================================================
+
+
+exports.getOffers = async (req, res) => {
+  console.log("it is reaching in get offers");
+    try {
+        const productOffers = await Offer.find({ offerType: 'product' }).populate('appliedToProduct', 'name');
+        // console.log("productOffers",productOffers)
+        
+        const categoryOffers = await Offer.find({ offerType: 'category' }).populate('appliedToCategory', 'name');
+        
+        const applicableProducts = await Product.find({}, 'name');
+        const applicableCategories = await Category.find({}, 'name');
+        // console.log("applicableProducts",applicableProducts)
+        // console.log("applicableCategories",applicableCategories)
+        
+        const offers = await Offer.find()
+        // console.log("offers",offers)
+        res.render('admin/offerManagement', {
+            productOffers,
+            categoryOffers,
+            applicableCategories,
+            applicableProducts,
+            offers,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+};
+
+
+exports.addOffer = async (req, res) => {
+  try {
+    const {
+      offerId,
+      offerName,
+      percentage,
+      validFrom,
+      validUntil,
+      offerType,
+      appliedToProduct,
+      appliedToCategory,
+      maximumDiscount,
+    } = req.body;
+
+    if (!offerName || !percentage || !validFrom || !validUntil || !offerType || !(appliedToProduct || appliedToCategory) || !maximumDiscount) {
+      return res.status(400).json({ message: "All required fields must be filled." });
+    }
+
+    // Check for existing offer
+    const existingOffer = await Offer.findOne({ offerName });
+    if (existingOffer) {
+      return res.status(404).json({ message: "Offer already exists." });
+    }
+
+    // Fetch the relevant product or category
+    const product = await Product.findById(appliedToProduct).populate("offer");
+    const category = await Category.findById(appliedToCategory).populate("offer");
+
+    const newOffer = new Offer({
+      offerName,
+      percentage,
+      validFrom,
+      validUntil,
+      offerType,
+      appliedToProduct,
+      appliedToCategory,
+      offerTypeReference: offerType === 'product' ? 'Product' : 'Category',
+      maximumDiscount,
+      productName: product?.name || "",
+      categoryName: category?.name || "",
+    });
+
+    // If the offer applies to a product
+    if (offerType === 'product' && product) {
+      product.originalPrice = product.price; // Set the original price
+      const discountAmount = Math.min((product.price * percentage) / 100, maximumDiscount); // Calculate discount
+      product.discountedPrice = product.price - discountAmount; // Calculate new price
+      product.offer = newOffer._id; // Link offer to product
+      await product.save();
+    } 
+    // If the offer applies to a category
+    else if (offerType === 'category' && category) {
+      const productsInCategory = await Product.find({ category: category._id }).populate("offer")
+      for (const product of productsInCategory) {
+        product.originalPrice = product.price;
+        const discountAmount = Math.min((product.price * percentage) / 100, maximumDiscount);
+        product.discountedPrice = product.price - discountAmount;
+        product.offer = newOffer._id;
+        await product.save();
+      }
+      category.offer = newOffer._id; // Link offer to category
+      await category.save();
+    }
+
+    await newOffer.save();
+    res.status(201).json({ message: "Offer created successfully.", offer: newOffer });
+
+  } catch (error) {
+    console.error("Error in addOffer:", error);
+    res.status(500).json({ message: "Internal server error. Please try again later." });
+  }
+};
+    exports.getSingleOffer = async (req,res)=>{
+      console.log("it is reaching in get single offer")
+      try {
+        const offerId = req.params.id
+        if(!offerId){
+          return res.status(500).json({message})
+        }
+
+        const offerData = await Offer.findById(offerId)
+        console.log(offerData);
+        if(!offerData){
+          return res.status(500).json({message:"offer does not found"})
+        }
+
+        res.status(200).json({message:"offer captured ",offerData})
+      } catch (error) {
+        console.log("error happened in capturing offer",error)
+        return res.status(500).json({message:"somethng happened wrong"})
+      }
+    }
+
+
+      exports.editOffer = async (req,res)=>{
+        console.log("it is reaching in edit offer");
+
+        try {
+          const offerId = req.params.id;
+          if(!offerId){
+            return res.status(500).json({message:"offer id is not found"})
+          }
+          console.log(req.body)
+          const { data } = req.body; 
+          if (!data) {
+            return res.status(400).json({ message: "No data received for update" });
+          }
+
+        const updatedOffer = await Offer.findByIdAndUpdate(offerId,
+          { $set: data }, 
+          { new: true, runValidators: true } )
+      
+        res.status(200).json({message:"offer updated successful",updatedOffer})
+          
+        } catch (error) {
+          console.log("something happened wrong",error)
+          return res.status(500).json({message:"something happened wrong"})
+        }
+      }
+
+      // Delete Offer
+    exports.deleteOffer = async (req, res) => {
+      console.log("It is reaching in delete offer");
+
+      try {
+        const offerId = req.params.id; // Get the offerId from the request params
+
+        if (!offerId) {
+          return res.status(500).json({ message: "Offer id not found" });
+        }
+
+        const offer = await Offer.findById(offerId); // Find the offer by its ID
+        if (!offer) {
+          return res.status(500).json({ message: "Offer not found" });
+        }
+
+        offer.isActive = false; // Set the offer's isActive status to false
+        await offer.save(); // Save the offer with the updated status
+
+        // Redirect to the offers list after the operation is complete
+        res.redirect("/admin/offers");
+      } catch (error) {
+        console.log("Error happened in deleting offer", error);
+        return res.status(500).json({ message: "Something went wrong" });
+      }
+    };
+
+    // Reuse Offer (Reactivate)
+    exports.reuseOffer = async (req, res) => {
+      console.log("It is reaching in reuse offer");
+
+      try {
+        const offerId = req.params.id;
+
+        if (!offerId) {
+          return res.status(500).json({ message: "Offer id not found" });
+        }
+
+        const offer = await Offer.findById(offerId);
+        if (!offer) {
+          return res.status(500).json({ message: "Offer not found" });
+        }
+
+        offer.isActive = true; // Set the offer's isActive status to true (reactivate)
+        await offer.save();
+
+        // Redirect to the offers list after the operation is complete
+        res.redirect("/admin/offers");
+      } catch (error) {
+        console.log("Error happened in reusing offer", error);
+        return res.status(500).json({ message: "Something went wrong" });
+      }
+    };

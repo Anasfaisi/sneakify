@@ -164,8 +164,16 @@
         </div>
 
         <p class="product-description mb-4"><%= product.description %></p>
-        <h4 class="product-price text-danger">₹ <%= product.price.toFixed(2) %></h4>
-
+        <h4 class="product-price text-danger">
+          <% if (product.discountedPrice) { %>
+            <s class="text-muted">₹ <%= product.originalPrice.toFixed(2) %></s> 
+            ₹ <%= product.discountedPrice.toFixed(2) %>
+          <% } else { %>
+            ₹ <%= product.price.toFixed(2) %>
+          <% } %>
+        </h4>
+        
+        
         <div class="rating-reviews mb-4">
           <div class="d-flex align-items-center">
             <!-- Star Rating -->

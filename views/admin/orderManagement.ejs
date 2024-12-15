@@ -89,7 +89,7 @@
             <tbody>
               <% orders.forEach((order) => { %>
                 <tr>
-                  <td><%= order._id %></td>
+                  <td><%= order.orderId %></td>
                   <td><%= order.userId.email %></td> <!-- Assuming user name is populated -->
                   <td><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></td>
                   <td>$<%= order.grandTotal.toFixed(2) %></td>
@@ -165,7 +165,7 @@
           console.log(data._id);
           const orderDetails = document.getElementById('orderDetails');
           orderDetails.innerHTML = `
-            <p><strong>Order ID:</strong> ${data._id}</p>
+            <p><strong>Order ID:</strong> ${data.orderId}</p>
             <p><strong>User Name:</strong> ${data.userId.firstName}</p>
             <p><strong>Order Status:</strong> ${data.status}</p>
             <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
@@ -233,41 +233,7 @@
     });
   }
 
-  // Function to cancel order
-  // function cancelOrder(orderId) {
-  //   Swal.fire({
-  //     title: 'Are you sure?',
-  //     text: 'This action will cancel the order!',
-  //     icon: 'warning',
-  //     showCancelButton: true,
-  //     confirmButtonColor: '#d33',
-  //     cancelButtonColor: '#3085d6',
-  //     confirmButtonText: 'Yes, cancel it!'
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       fetch(`/admin/orders/${orderId}/cancel`, {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json'
-  //         }
-  //       })
-  //         .then((response) => response.json())
-  //         .then((data) => {
-  //           if (data.success) {
-  //             Swal.fire('Cancelled!', 'The order has been cancelled.', 'success').then(() => {
-  //               location.reload(); // Reload the page to reflect changes
-  //             });
-  //           } else {
-  //             Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
-  //           }
-  //         })
-  //         .catch((error) => {
-  //           console.error('Error cancelling order:', error);
-  //           Swal.fire('Error!', 'Failed to cancel the order.', 'error');
-  //         });
-  //     }
-  //   });
-  // }
+   
 </script>
 
 </body>

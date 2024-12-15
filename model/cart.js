@@ -65,10 +65,10 @@ cartSchema.methods.calculateTotals = function (coupon) {
   this.totalItems = this.products.reduce((sum, item) => sum + item.quantity, 0);
   this.totalPrice = this.products.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
-  // Apply GST
-  this.gst = this.totalPrice * 0.18; // Assuming GST is 18%
 
-  // Apply coupon discount if available
+  this.gst = this.totalPrice * 0.18; 
+
+  
   if (coupon && this.totalPrice >= coupon.minimumPurchase) {
     let discount = 0;
     if (coupon.discountType === 'percentage') {
@@ -78,17 +78,15 @@ cartSchema.methods.calculateTotals = function (coupon) {
       discount = coupon.discountValue;
     }
 
-    // Set the discount on cart
     this.discount = discount;
     this.couponCode = coupon.code;
-    this.couponValid = true; // Mark coupon as valid
+    this.couponValid = true; 
   } else {
-    this.couponValid = false; // Coupon is not valid
+    this.couponValid = false; 
     this.discount = 0;
     this.couponCode = null;
   }
 
-  // Calculate grand total (price + GST - discount)
   this.grandTotal = this.totalPrice + this.gst - this.discount;
 
   return this.save();

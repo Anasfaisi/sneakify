@@ -43,4 +43,14 @@ router.post("/:id/deleted",isAdmin,controller.reuseCoupon)
 router.get("/getCoupon/:id",isAdmin,controller.getSingleCoupon)
 router.put("/editCoupon/:id",isAdmin,controller.editCoupon)
 
+router.get("/offers",isAdmin,controller.getOffers)
+router.post("/addOffer",isAdmin,controller.addOffer)
+router.get("/getOffer/:id",isAdmin,controller.getSingleOffer)
+router.put("/editOffer/:id",isAdmin,controller.editOffer)
+router.post('/offer/:id/delete', isAdmin,controller.deleteOffer);
+router.post('/offer/:id/deleted', isAdmin,controller.reuseOffer);
+
+
+
+
 module.exports = router;

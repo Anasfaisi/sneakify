@@ -40,7 +40,7 @@ const orderSchema = new mongoose.Schema(
     grandTotal: { type: Number, required: true }, 
     status: {
       type: String,
-      enum: ['pending', 'shipped', 'delivered', 'cancelled'], 
+      enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel requested'], 
       default: 'pending',
     },
     orderDate: { type: Date, default: Date.now  }, 
@@ -49,6 +49,8 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending', 'completed'],
       default: 'pending', 
     },
+    cancelRequest: { type: Boolean, default: false },
+  cancelReason: { type: String }, 
   },
   { timestamps: true }
 );

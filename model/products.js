@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const sizeStockSchema = new mongoose.Schema({
   size: { type: String, required: true },
 
-  stock: { type: Number, required: true, min: 0 }, 
+  stock: { type: Number, required: true, min: 0 },
 });
 
 const productSchema = new mongoose.Schema(
@@ -17,7 +17,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-   
+
     price: {
       type: Number,
       required: true,
@@ -46,12 +46,21 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Manually mark products as featured
     },
+    offer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Offer", // Link to Offer model
+    },
+    discountedPrice: { type: Number, default: null },
+    originalPrice: { type: Number, default: null },
 
+    
   },
-  
+
   {
     timestamps: true,
   }
 );
+
+
 
 module.exports = mongoose.model("Product", productSchema);

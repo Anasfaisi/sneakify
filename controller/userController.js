@@ -498,23 +498,39 @@ exports.filter = async (req, res) => {
   }
 }
 
+//=========================================================
 exports.productDetails = async (req, res) => {
   try {
-
-    const relatedProducts = await Product.find();
     const productId = req.params.id;
-   
-    const product = await Product.findById(productId);
+
+    // Find the product by ID and populate the offer
+    const product = await Product.findById(productId).populate("offer");
+    console.log(product);
+    if (!product) {
+      return res.status(404).render("users/error", {
+        message: "Product not found",
+      });
+    }
+
+    // Increment product popularity
     product.popularity += 1;
-    await product.save();
-    res.render("users/productDetails", { product, relatedProducts });
+    await product.save()
+
+    
+    const relatedProducts = await Product.find()
+    
+    res.render("users/productDetails", {
+      product,
+      relatedProducts,
+   
+    });
+    
   } catch (error) {
-    console.error("this is hapening " + error);
-    res
-      .status(500)
-      .json({ success: false, message: "can't able to fetch product" });
+    console.error("Error fetching product details:", error);
+    res.render("users/productDetails")
   }
 };
+
 
 exports.getStock = async (req, res) => {
   const { id, size } = req.params;
