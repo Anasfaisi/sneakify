@@ -476,7 +476,7 @@
                         Swal.fire({
                             icon: "error",
                             title: "Payment Successful, Order Failed",
-                            text: "Please contact support.",
+                            text: result.message||"Please contact support.",
                             showConfirmButton: true,
                         });
                     }

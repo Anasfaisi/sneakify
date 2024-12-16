@@ -6,6 +6,8 @@ const Category = require("../model/category");
 const Order = require("../model/order");
 const Coupon = require("../model/coupon");
 const Offer = require("../model/offer")
+const Wallet= require("../model/wallet")
+const Notification = require("../model/notification")
 const { v4: uuidv4 } = require("uuid");
 
 exports.getLogin = async (req, res) => {
@@ -242,29 +244,35 @@ exports.listProducts = async (req, res) => {
   }
 };
 
+
+//====================================================================
 exports.getOrders = async (req, res) => {
   try {
-    // Get the current page and set a default if not present
     const currentPage = parseInt(req.query.page) || 1;
-    const itemsPerPage = 10; // Number of orders per page
+    const itemsPerPage = 10; 
 
-    // Calculate the number of orders to skip for pagination
+    
     const skip = (currentPage - 1) * itemsPerPage;
 
-    // Fetch orders with pagination
+    
     const orders = await Order.find()
       .populate("userId")
       .skip(skip)
       .limit(itemsPerPage);
 
-    // Get the total number of orders for pagination
+    
     const totalOrders = await Order.countDocuments();
     const totalPages = Math.ceil(totalOrders / itemsPerPage);
+    const notifications = await Notification.find({}).sort({ createdAt: -1 }).populate({path: 'orderId',})
+    
+    
+
 
     res.render("admin/orderManagement", {
       orders,
       currentPage,
       totalPages,
+      notifications,
     });
   } catch (error) {
     console.log("Error in fetching orders:", error);
@@ -319,24 +327,100 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-exports.cancelOrder = async (req, res) => {
+exports.approveCancelOrder = async (req, res) => {
+  console.log("it is reaching in cancel order");
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: "cancelled" },
-      { new: true }
-    );
-    if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+    const {orderId,notificationId} =req.body;
+
+    console.log("orderId======>",orderId)
+
+    const order = await Order.findById(orderId)
+    
+    console.log("the order",order.status);
+   
+    if (!order || order.status !== "cancel_requested") {
+      return res.status(404).json({ message: "Invalid order for approval" });
     }
-    res.json({ success: true, message: "Order has been cancelled", order });
+    
+    
+    if (order.paymentMethod !== "Cash on Delivery") {
+      const wallet = await Wallet.findOne({ userId: order.userId._id }) || new Wallet({ userId: order.userId._id, balance: 0, transactions: [] });
+
+      // Credit refund amount
+      wallet.balance += order.totalAmount;
+      wallet.transactions.push({
+        type: "credit",
+        amount: order.totalAmount,
+        description: `Refund for cancelled order ${order.orderId}`,
+        date: new Date(),
+      });
+    
+
+      await wallet.save();
+    }
+      order.status = "cancelled";
+      console.log(order.status)
+      await order.save();
+    
+
+
+     const notification = await Notification.findById(notificationId)
+     await notification.deleteOne({_id:notificationId})
+
+
+    res.status(200).json({ message: "Order cancellation approved" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Failed to cancel order" });
+    console.log(error, "Error approving cancellation");
+    res.status(500).json({ message: "An error occurred during approval" });
   }
 };
+
+exports.approveReturnOrder = async (req,res)=>{
+
+  console.log("it is reacing in approve return")
+  try {
+    const userId = req.session.passport.user;
+    const orderId = req.params.id;
+    const notificationId = req.body.notificationId
+    console.log(orderId)
+    const order = await Order.findById(orderId)
+    if(!order){
+      return res.status(500).json({message:"order not found"})
+    }
+    console.log(order.status)
+    console.log(order.status !== "return_requested");
+    if(order.status !== "return_requested"){
+      return res.status(500).json({message:"invalid order for approval"})
+    }
+   
+       
+    order.status = "returned";
+    console.log(order.status)
+    await order.save();
+
+
+    const wallet = await Wallet.findOne({ userId: order.userId._id }) || new Wallet({ userId: order.userId._id, balance: 0, transactions: [] });
+    // Credit refund amount
+      wallet.balance += order.totalAmount;
+      wallet.transactions.push({
+        type: "credit",
+        amount: order.totalAmount,
+        description: `Refund for cancelled order ${orderId}`,
+        date: new Date(),
+      });
+
+      await wallet.save();
+
+      const notification = await Notification.findById(notificationId)
+      await notification.deleteOne({_id:notificationId})
+
+      res.status(200).json({ message: "Order return approved" });
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 
 
 exports.getEditProducts = async (req, res) => {

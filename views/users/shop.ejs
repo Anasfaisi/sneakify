@@ -120,12 +120,13 @@
                       <h5 class="card-title"><%= product.name %></h5>
                       <p class="card-text text-muted"><%= product.category %></p>
                       <div class="d-flex justify-content-between align-items-center">
-                          <span class="product-price">₹<%= product.price.toFixed(2) %></span>
-                          <div class="product-sizes">
-                              <% product.sizes.forEach(function(sizeStock) { %>
-                                  <span class="badge bg-secondary me-1"><%= sizeStock.size %></span>
-                              <% }); %>
-                          </div>
+                        <% if (product.discountedPrice) { %>
+                            <s class="text-muted">₹ <%= product.originalPrice.toFixed(2) %></s> 
+                            ₹ <%= product.discountedPrice.toFixed(2) %>
+                          <% } else { %>
+                            ₹ <%= product.price.toFixed(2) %>
+                          <% } %>
+                        
                       </div>
                      
                   </div>

@@ -40,7 +40,7 @@ const orderSchema = new mongoose.Schema(
     grandTotal: { type: Number, required: true }, 
     status: {
       type: String,
-      enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel requested'], 
+      enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel_requested',"returned","return_requested"], 
       default: 'pending',
     },
     orderDate: { type: Date, default: Date.now  }, 

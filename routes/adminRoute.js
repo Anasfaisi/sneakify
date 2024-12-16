@@ -33,7 +33,8 @@ router.post('/products/edit/:productId', upload.any(),controller.editProducts)
 router.get("/orders",isAdmin,controller.getOrders)
 router.get("/orderDetails/:id",isAdmin,controller.getOrderDetails)
 router.post('/orders/:id/status', isAdmin, controller.updateOrderStatus);
-router.post('/orders/:id/cancel', isAdmin, controller.cancelOrder);
+router.post('/orders/:id/cancel', isAdmin, controller.approveCancelOrder);
+router.post("/orders/:id/return",isAdmin,controller.approveReturnOrder)
 
 
 router.get("/coupons",isAdmin,controller.getCoupons)

@@ -9,7 +9,8 @@ const Address = require("../model/address");
 const Cart = require("../model/cart");
 const Order = require("../model/order");
 const Category = require("../model/category")
-
+const Notification = require('../model/notification'); 
+const Wallet = require("../model/wallet")
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -692,7 +693,9 @@ exports.getAddress = async (req, res) => {
     res.render("users/address", {
       address,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
 };
 
 exports.addAddress = async (req, res) => {
@@ -798,8 +801,8 @@ exports.getorderHistory = async (req, res) => {
   try {
     const userId = req.session.passport.user;
     const user = await User.findById(userId);
-    const orders = await Order.find({ userId: user._id });
-    console.log(orders);
+    const orders = await Order.find({ userId: user._id }).sort({createdAt:-1})
+  
 
     res.render("users/orderHistory", { orders });
   } catch (error) {
@@ -820,48 +823,61 @@ exports.getOrderDetails = async (req, res) => {
     console.log(error, "error occured in getting order details");
   }
 };
-
 exports.cancelOrder = async (req, res) => {
   console.log("it is reached in cancel order");
   try {
     const orderId = req.params.id;
-    console.log(orderId);
     const userId = req.session.passport.user;
-
     const order = await Order.findOne({
       _id: orderId,
       userId: userId,
     }).populate("products.productId");
-    console.log(order);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    console.log(order.status);
+
     if (order.status !== "pending") {
       return res.status(400).json({ message: "Order cannot be cancelled" });
     }
-    order.status = "cancelled";
-    console.log(order.status);
 
+    // Mark order as "cancel_requested" for admin approval
+    order.status = "cancel_requested";
+    await order.save();
 
+    // Update product stock for sizes
     for (const item of order.products) {
       const product = item.productId;
       const sizeStock = product.sizes.find((size) => size.size === item.size);
       if (sizeStock) {
-    
-
-
         await Product.findOneAndUpdate(
           { _id: product._id, "sizes.size": item.size },
-          { $inc: { "sizes.$.stock": item.quantity } }, 
-          { new: true } 
+          { $inc: { "sizes.$.stock": item.quantity } },
+          { new: true }
         );
       }
     }
-    await order.save();
+    await Notification.create({
+      type: "order_cancel",
+      orderId: order._id,
+      userId: userId,
+      message: `User requested to cancel order ${order.orderId}. Awaiting approval.`,
+      isRead: false,
 
-    res.status(200).json({ message: "cancelled the product" });
+      orderDetails: {
+        orderId: order.orderId, // Include the orderId
+        products: order.products.map((product) => ({
+          name: product.productId.name, // Ensure the `name` field exists in the product model
+          quantity: product.quantity,
+        })),
+      },
+    });
+
+
+    // Notify user of cancellation request
+    res.status(200).json({
+      message: "Order cancellation requested. Waiting for admin approval.",
+    });
   } catch (error) {
     console.log(error, "error in canceling the product");
     res
@@ -869,3 +885,70 @@ exports.cancelOrder = async (req, res) => {
       .json({ message: "An error occurred while cancelling the order" });
   }
 };
+
+
+exports.returnOrder = async (req,res)=>{
+  console.log("it is reaching in return order")
+  try {
+    const userId = req.session.passport.user;
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId)
+    
+    if(!order){
+      return res.status(500).json({message:"order not found"})
+    }
+    if(order.status !== "delivered"){
+      return res.status(500).json({message:"Invalid order for approval"})
+    }
+    order.status = "return_requested"
+    await order.save()
+
+    await Notification.create({
+      type: "order_returned",
+      orderId: order._id,
+      userId: userId,
+      message: `User requested to return order ${order.orderId}. Awaiting approval.`,
+      isRead: false,
+
+      orderDetails: {
+        orderId: order.orderId, // Include the orderId
+        products: order.products.map((product) => ({
+          name: product.productId.name, // Ensure the `name` field exists in the product model
+          quantity: product.quantity,
+        })),
+      },
+    });
+    res.status(200).json({message:"Order return requested. Waiting for admin approval."})
+    
+  } catch (error) {
+    console.log("error ",error)
+    return res.status(500).json({message:"something happened wrong"})
+    
+  }
+  
+}
+//===========================================
+exports.loadWallet= async (req,res)=>{
+  console.log("it is reaching in wallet page")
+  try {
+
+    const wallet = await Wallet.findOne({userId:req.session.passport.user})
+    if(!wallet){
+
+      res.render("users/wallet",{
+        wallet :{
+          price:0,
+          transactions:[]
+        }
+      })
+    }
+
+     res.render("users/wallet",{
+      wallet
+     })
+    
+  } catch (error) {
+    console.log("errror",error)
+
+  }
+}
