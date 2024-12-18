@@ -673,7 +673,7 @@ exports.addCoupon = async (req, res) => {
       return res.status(500).json({message:"please fill all the fields"})
       }
 
-    const existingCoupon = await Coupon.find({code:code})
+    const existingCoupon = await Coupon.findOne({code:code})
     console.log(existingCoupon);
     if(existingCoupon){
       return res.status(500).json({message:"same coupon code already exist"})
@@ -989,3 +989,35 @@ exports.addOffer = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong" });
       }
     };
+
+
+    //===================================================
+    exports.loadSalesReport = async (req,res)=>{
+      console.log("it is reaching in sales report")
+      try {
+        const salesData = await Order.find()
+        if(!salesData){
+
+        
+       return  res.render("admin/salesReport",{
+          totalSales:0,
+          totalAmount:0,
+          totalDiscount:0,
+          salesData:[]
+        })
+      }
+
+      
+
+      res.render("admin/salesReport",{
+        totalSales:0,
+        totalAmount:0,
+        totalDiscount:0,
+        salesData,
+      })
+      } catch (error) {
+        console.log(error)
+
+        
+      }
+    }

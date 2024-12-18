@@ -50,8 +50,8 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Offer", // Link to Offer model
     },
-    discountedPrice: { type: Number, default: null },
-    originalPrice: { type: Number, default: null },
+    discountedPrice: { type: Number, default: 0 },
+    originalPrice: { type: Number, default: 0 },
 
     
   },
@@ -60,7 +60,6 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
 
 
 module.exports = mongoose.model("Product", productSchema);

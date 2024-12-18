@@ -9,7 +9,7 @@ exports.getCart = async (req, res) => {
   console.log("it is reached in getCart");
   try {
     const userId = req.session.passport.user;
-    console.log(userId);
+
     const cart = await Cart.findOne({ userId }).populate("products.productId");
     console.log(cart);
 
@@ -17,7 +17,7 @@ exports.getCart = async (req, res) => {
     if (!activeCoupon) {
       return res.status(404).json({ message: 'coupon not found' });
     }
-    console.log(activeCoupon, "coupons");
+
 
     if (!cart) {
       return res.render("users/cart", {
@@ -27,6 +27,7 @@ exports.getCart = async (req, res) => {
         grandTotal: 0,
         gst: 0,
         discount: 0,
+        couponDiscount:0,
       });
     }
 
@@ -39,13 +40,15 @@ exports.getCart = async (req, res) => {
       size: item.size,
       imageUrl: item.productId.images[0],
       price: item.price,
+      discountedPrice:item.productId.discountedPrice,
       quantity: item.quantity,
     }));
 
     const totalItemsPrice = cart.totalPrice;
-    const grandTotal = totalItemsPrice + cart.gst - cart.discount; // Include GST and discount in total calculation
+    const grandTotal = totalItemsPrice + cart.gst - cart.discount; 
     const gst = cart.gst;
     const discount = cart.discount;
+
 
     res.render("users/cart", {
       products,
@@ -75,7 +78,7 @@ exports.getCart = async (req, res) => {
         return res.status(400).json({ message: 'Product ID, size, and quantity are required' });
       }
   
-      const product = await Product.findById(productId);
+      const product = await Product.findById(productId)
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
@@ -97,6 +100,10 @@ exports.getCart = async (req, res) => {
       if (!cart) {
         cart = new Cart({ userId, products: [] });
       }
+      if(product.discountedPrice>0){
+        cart.couponDiscount =product.discountedPrice
+        console.log(cart.couponDiscount)
+       }
   
       const existingItemIndex = cart.products.findIndex(
         (item) => item.productId._id.toString() === productId && item.size === size
@@ -121,7 +128,7 @@ exports.getCart = async (req, res) => {
             message: `You can only add up to 5 items of size ${size} for this product.`,
           });
         }
-  
+      
         cart.products.push({
           productId,
           size,
@@ -245,10 +252,15 @@ exports.getCart = async (req, res) => {
 
   // /coupons
   exports.applyCoupon =  async (req, res) => {
+    console.log("it reached in apply coupon")
   try {
-    const { couponCode } = req.body;
+    console.log(req.body.couponCode);
+    
+    const couponCode = req.body.couponCode;
+    console.log(couponCode)
+
   const cart = await Cart.findOne({ userId: req.session.passport.user });
-  console.log("carrrt",cart);
+  console.log("carrrt",cart,"stop======");
   if (!cart) {
     return res.status(400).json({message:"Cart not found."});
   }
@@ -273,8 +285,9 @@ exports.getCart = async (req, res) => {
   }
 
   // Now apply the coupon and calculate totals
+  console.log("1111111111111111111111111111111")
   const updatedCart = await cart.calculateTotals(coupon);
-  console.log("updated cart   ",updatedCart);;
+  console.log("updated cart   ",updatedCart);
 
   console.log("everything working properly")
   return res.status(200).json({
@@ -282,7 +295,7 @@ exports.getCart = async (req, res) => {
     cart: updatedCart ,
   });
   } catch (error) {
-    console.log("error happened in applying coupon")
+    console.log("error happened in applying coupon",error)
     res.status(500).json({message:"somethig happened wrong"})
   }
 }

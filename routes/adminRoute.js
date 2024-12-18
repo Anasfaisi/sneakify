@@ -52,6 +52,6 @@ router.post('/offer/:id/delete', isAdmin,controller.deleteOffer);
 router.post('/offer/:id/deleted', isAdmin,controller.reuseOffer);
 
 
-
+router.get("/salesReport",isAdmin,controller.loadSalesReport)
 
 module.exports = router;

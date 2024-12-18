@@ -20,6 +20,7 @@ exports.getCheckout = async (req, res) => {
     if (!cart) {
       return res.redirect("/users/cart");
     }
+    
     if (!cart) {
       return res.render("users/checkout", {
         products: [],
@@ -38,15 +39,15 @@ exports.getCheckout = async (req, res) => {
       id: item.productId._id,
       name: item.productId.name,
       description: item.productId.description,
-      size: item.size || "Default", // Add size logic if applicable
-      imageUrl: item.productId.images[0], // Product image
+      size: item.size || "Default",
+      imageUrl: item.productId.images[0], 
       price: item.price,
       quantity: item.quantity,
       total: item.quantity * item.price,
     }));
 
     // Calculate totals
-    const totalItemsPrice = cart.totalPrice;
+    const totalItemsPrice = cart.grandTotal;
     const shippingCharge = totalItemsPrice > 3000 ? 0 : 100;
     const grandTotal = totalItemsPrice + shippingCharge;
 
@@ -102,8 +103,16 @@ exports.placeOrder = async (req, res) => {
       }
 
       // Add the item to the products array after checking the stock
-      const total = item.quantity * item.price;
+
+      console.log(item.quantity)
+      console.log(item.price);
+      console.log(cart.couponDiscount);
+      console.log(cart.gst);
+      console.log(cart.discount?cart.discount:0);
+      
+      const total = (item.quantity * (cart.couponDiscount))+(cart.gst)-(cart.discount?cart.discount:0) ;
       totalAmount += total;
+      console.log(totalAmount)
       products.push({
         productId: item.productId._id,
         name: item.productId.name,
@@ -123,6 +132,9 @@ exports.placeOrder = async (req, res) => {
 
     const shippingCharge = totalAmount > 3000 ? 0 : 100;
     const grandTotal = totalAmount + shippingCharge;
+    // const totalDiscount = (cart.couponDiscount)+(cart.discount??0)
+    // console.log(cart.couponDiscount)
+    // console.log(cart.couponDiscount??0)
     console.log(grandTotal,"---grandTotal")
 
     const orderId = `ORD-${uuidv4()
@@ -142,6 +154,7 @@ exports.placeOrder = async (req, res) => {
       grandTotal,
       status: "pending",
       paymentStatus: "pending",
+      // totalDiscount
     });
 
     await newOrder.save();
@@ -170,12 +183,12 @@ exports.orderPlaced = async (req, res) => {
   try {
     const order = await Order.findById(orderId);
     console.log(order);
-
+   const cart = await Cart.findOne({userId:req.session.passport.user})
     if (!order) {
       return res.status(404).send("Order not found.");
     }
 
-    res.render("users/orderPlaced", { order });
+    res.render("users/orderPlaced", { order,cart });
   } catch (error) {
     console.error("Error fetching order:", error);
     res.status(500).send("An error occurred.");

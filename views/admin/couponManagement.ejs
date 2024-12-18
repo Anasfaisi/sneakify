@@ -155,11 +155,11 @@
 
             <div class="mb-3" id="editDiscountValueField">
               <label for="editDiscountValue" class="form-label">Discount Value</label>
-              <input type="number" class="form-control" id="editDiscountValue" name="discountValue" >
+              <input type="number" class="form-control" id="editDiscountValue" name="discountValue">
             </div>
 
             <div class="mb-3" id="editMaxDiscountField" style="display: none;">
-              <label for="editMaximumDiscount" class="form-label">Maximum Discount  %:</label>
+              <label for="editMaximumDiscount" class="form-label">Maximum Discount %:</label>
               <input type="number" id="editMaximumDiscount" name="maximumDiscount" class="form-control">
             </div>
             <div class="mb-3">
@@ -207,7 +207,7 @@
 
 
   <script>
-    //add product form
+    //add coupon form
     document.getElementById("addCouponForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const errorContainer = document.getElementById("errorContainer");
@@ -216,6 +216,10 @@
       const formData = new FormData(addCouponForm);
       const data = Object.fromEntries(formData.entries());
       console.log(Object.fromEntries(formData.entries()));
+      const discountValueField = document.getElementById("discountValueField");
+      const discountValueInput = document.getElementById("discountValue");
+      const maxDiscountField = document.getElementById("maxDiscountField");
+
 
       // code
       if (!/^[A-Z0-9]{5,15}$/.test(data.code)) {
@@ -223,9 +227,10 @@
       }
 
 
-      const discountValue = parseFloat(data.discountValue);
-      if (!discountValue || discountValue <= 0) {
-        errors.push("Discount value must be a positive number.");
+      if (discountValueField.style.display !== "none") {
+        if (!discountValue || discountValue <= 0) {
+          errors.push("Discount value must be a positive number.");
+        }
       }
       if (data.discountType === 'percentage' && discountValue > 100) {
         errors.push("Percentage discount value cannot exceed 100%.");
@@ -237,9 +242,12 @@
       }
 
       const maximumDiscount = parseFloat(data.maximumDiscount);
-      if (data.discountType === 'percentage' && (!maximumDiscount || maximumDiscount <= 0)) {
-        errors.push("Maximum discount must be a positive number for percentage discounts.");
+      if (maxDiscountField.style.display !=="none"){
+        if (data.discountType === 'percentage' && (!maximumDiscount || maximumDiscount <= 0)) {
+          errors.push("Maximum discount must be a positive number for percentage discounts.");
+        }
       }
+    
 
       if (!minimumPurchase || minimumPurchase < 0) {
         errors.push("Minimum purchase must be a non-negative number.");
@@ -305,148 +313,150 @@
 
 
 
-<script>
-  async function populateCoupon(couponId) {
-    try {
-      let response = await fetch(`/admin/getCoupon/${couponId}`);
-      const data = await response.json();
-      console.log(data,"data after fetching the single coupon")
-      const { couponData } = data;
+  <script>
+    async function populateCoupon(couponId) {
+      try {
+        let response = await fetch(`/admin/getCoupon/${couponId}`);
+        const data = await response.json();
+        console.log(data, "data after fetching the single coupon")
+        const {
+          couponData
+        } = data;
 
-      document.getElementById('editCode').value = couponData.code;
-      document.getElementById('editDiscountType').value = couponData.discountType;
-      document.getElementById('editDiscountValue').value = couponData.discountValue;
-      document.getElementById('editMaximumDiscount').value = couponData.maximumDiscount;
-      document.getElementById('editMinimumPurchase').value = couponData.minimumPurchase;
-      document.getElementById('editStartDate').value = new Date(couponData.startDate).toISOString().split('T')[0];
-      document.getElementById('editExpiryDate').value = new Date(couponData.expiryDate).toISOString().split('T')[0];
+        document.getElementById('editCode').value = couponData.code;
+        document.getElementById('editDiscountType').value = couponData.discountType;
+        document.getElementById('editDiscountValue').value = couponData.discountValue;
+        document.getElementById('editMaximumDiscount').value = couponData.maximumDiscount;
+        document.getElementById('editMinimumPurchase').value = couponData.minimumPurchase;
+        document.getElementById('editStartDate').value = new Date(couponData.startDate).toISOString().split('T')[0];
+        document.getElementById('editExpiryDate').value = new Date(couponData.expiryDate).toISOString().split('T')[0];
 
-      const discountTypeField = document.getElementById("editDiscountType");
-      discountTypeField.dispatchEvent(new Event("change"));
+        const discountTypeField = document.getElementById("editDiscountType");
+        discountTypeField.dispatchEvent(new Event("change"));
 
-      document.getElementById("editCouponForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const errorContainer = document.getElementById("editErrorContainer");
-        errorContainer.innerHTML = '';
-        const errors = [];
+        document.getElementById("editCouponForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const errorContainer = document.getElementById("editErrorContainer");
+          errorContainer.innerHTML = '';
+          const errors = [];
 
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData.entries());
 
-    // Clear irrelevant fields based on discount type
-    if (data.discountType === "percentage") {
-        data.discountValue = ""; // Ignore discountValue for percentage
-    } else if (data.discountType === "fixed") {
-        data.maximumDiscount = ""; // Ignore maximumDiscount for fixed
-    }
+          // Clear irrelevant fields based on discount type
+          if (data.discountType === "percentage") {
+            data.discountValue = ""; // Ignore discountValue for percentage
+          } else if (data.discountType === "fixed") {
+            data.maximumDiscount = ""; // Ignore maximumDiscount for fixed
+          }
 
-    // Validate Coupon Code
-    if (!/^[A-Z0-9]{5,15}$/.test(data.code)) {
-        errors.push("Code must be 5-15 characters long and contain only uppercase letters and numbers.");
-    }
+          // Validate Coupon Code
+          if (!/^[A-Z0-9]{5,15}$/.test(data.code)) {
+            errors.push("Code must be 5-15 characters long and contain only uppercase letters and numbers.");
+          }
 
-    // Validate Discount Value
-    if (data.discountType === "fixed") {
-        const discountValue = parseFloat(data.discountValue);
-        if (!discountValue || discountValue <= 0) {
-            errors.push("Discount value must be a positive number for fixed discounts.");
-        }
+          // Validate Discount Value
+          if (data.discountType === "fixed") {
+            const discountValue = parseFloat(data.discountValue);
+            if (!discountValue || discountValue <= 0) {
+              errors.push("Discount value must be a positive number for fixed discounts.");
+            }
 
-        // If type is fixed, ensure discount value is not greater than minimum purchase
-        const minimumPurchase = parseFloat(data.minimumPurchase);
-        if (discountValue > minimumPurchase) {
-            errors.push("For fixed discounts, the discount value cannot exceed the minimum purchase value.");
-        }
-    }
+            // If type is fixed, ensure discount value is not greater than minimum purchase
+            const minimumPurchase = parseFloat(data.minimumPurchase);
+            if (discountValue > minimumPurchase) {
+              errors.push("For fixed discounts, the discount value cannot exceed the minimum purchase value.");
+            }
+          }
 
-    // Validate Maximum Discount for Percentage
-    if (data.discountType === "percentage") {
-        const maximumDiscount = parseFloat(data.maximumDiscount);
-        if (!maximumDiscount || maximumDiscount <= 0||maximumDiscount>50) {
-            errors.push("Maximum discount must be a positive number for percentage discounts.");
-        }
-    }
+          // Validate Maximum Discount for Percentage
+          if (data.discountType === "percentage") {
+            const maximumDiscount = parseFloat(data.maximumDiscount);
+            if (!maximumDiscount || maximumDiscount <= 0 || maximumDiscount > 50) {
+              errors.push("Maximum discount must be a positive number for percentage discounts.");
+            }
+          }
 
-    // Validate Minimum Purchase
-    const minimumPurchase = parseFloat(data.minimumPurchase);
-    if (!minimumPurchase || minimumPurchase < 0) {
-        errors.push("Minimum purchase must be a non-negative number.");
-    }
+          // Validate Minimum Purchase
+          const minimumPurchase = parseFloat(data.minimumPurchase);
+          if (!minimumPurchase || minimumPurchase < 0) {
+            errors.push("Minimum purchase must be a non-negative number.");
+          }
 
-    // Validate Start Date
-    const today = new Date();
-    const startDate = new Date(data.startDate);
-    if (!data.startDate || startDate < today) {
-        errors.push("Start date must be today or a future date.");
-    }
+          // Validate Start Date
+          const today = new Date();
+          const startDate = new Date(data.startDate);
+          if (!data.startDate || startDate < today) {
+            errors.push("Start date must be today or a future date.");
+          }
 
-    // Validate Expiry Date
-    const expiryDate = new Date(data.expiryDate);
-    if (!data.expiryDate || expiryDate <= startDate) {
-        errors.push("Expiry date must be later than the start date.");
-    }
+          // Validate Expiry Date
+          const expiryDate = new Date(data.expiryDate);
+          if (!data.expiryDate || expiryDate <= startDate) {
+            errors.push("Expiry date must be later than the start date.");
+          }
 
-    // If there are errors, display them
-    if (errors.length > 0) {
-        errorContainer.innerHTML = errors.map(error => `<p>${error}</p>`).join('');
-        errorContainer.style.display = 'block';
-        return;
-    }
+          // If there are errors, display them
+          if (errors.length > 0) {
+            errorContainer.innerHTML = errors.map(error => `<p>${error}</p>`).join('');
+            errorContainer.style.display = 'block';
+            return;
+          }
 
-        try {
-          const response = await fetch(`/admin/editCoupon/${couponId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          });
+          try {
+            const response = await fetch(`/admin/editCoupon/${couponId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
 
-          const result = await response.json();
-          console.log(result, "result of the edit coupon")
-          if (response.ok) {
-            swal.fire({
-              icon: "success",
-              title: "Success",
-              text: result.message || "Coupon edited successfully",
-            }).then(() => location.reload());
-          } else {
+            const result = await response.json();
+            console.log(result, "result of the edit coupon")
+            if (response.ok) {
+              swal.fire({
+                icon: "success",
+                title: "Success",
+                text: result.message || "Coupon edited successfully",
+              }).then(() => location.reload());
+            } else {
+              swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: result.message || "Could not edit coupon",
+              });
+            }
+          } catch (error) {
             swal.fire({
               icon: "error",
               title: "Failed",
-              text: result.message || "Could not edit coupon",
+              text: "Something went wrong",
             });
           }
-        } catch (error) {
-          swal.fire({
-            icon: "error",
-            title: "Failed",
-            text: "Something went wrong",
-          });
-        }
-      });
-    } catch (error) {
-      console.error("Error populating coupon data:", error);
+        });
+      } catch (error) {
+        console.error("Error populating coupon data:", error);
+      }
     }
-  }
-</script>
+  </script>
 
-<script>
-  //logic of discountvalue and maxcount percentage
-  document.getElementById("editDiscountType").addEventListener("change", (event) => {
-  const editDiscountType = event.target.value;
-  const maxDiscountField = document.getElementById("editMaxDiscountField");
-  const discountValueField = document.getElementById("editDiscountValueField");
+  <script>
+    //logic of discountvalue and maxcount percentage
+    document.getElementById("editDiscountType").addEventListener("change", (event) => {
+      const editDiscountType = event.target.value;
+      const maxDiscountField = document.getElementById("editMaxDiscountField");
+      const discountValueField = document.getElementById("editDiscountValueField");
 
-  if (editDiscountType === "percentage") {
-    maxDiscountField.style.display = "block"; // Show maximum discount
-    discountValueField.style.display = "none"; // Show discount value
-  } else {
-    maxDiscountField.style.display = "none"; // Hide maximum discount
-    discountValueField.style.display = "block"; // Show discount value
-  }
-});
-</script>
+      if (editDiscountType === "percentage") {
+        maxDiscountField.style.display = "block"; // Show maximum discount
+        discountValueField.style.display = "none"; // Show discount value
+      } else {
+        maxDiscountField.style.display = "none"; // Hide maximum discount
+        discountValueField.style.display = "block"; // Show discount value
+      }
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

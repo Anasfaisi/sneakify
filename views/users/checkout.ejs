@@ -170,7 +170,7 @@
             <span class="text-success">(Free)</span>
             <% } %>
           </p>
-          <h4 class="fw-bold" id="grandTotal" data-grandTotal="<%= grandTotal %>">Grand Total: ₹<%= grandTotal %></h4>
+          <h4 class="fw-bold" id="grandTotal" data-grandTotal="<%= grandTotal %>">Grand Total: ₹<%= grandTotal.toFixed(2) %></h4>
           <button id="placeOrder" class="btn btn-success w-100 mt-3">Place Order</button>
         </div>
       </div>
@@ -230,6 +230,7 @@
                   name="paymentMethod"
                   value="cashOnDelivery"
                   id="cashOnDelivery"
+                  checked
                 />
                 <label for="cod">Cash on Delivery</label>
               </div>
@@ -239,7 +240,6 @@
                   name="paymentMethod"
                   value="razorPay"
                   id="online"
-                  checked
 
                 />
                 <label for="online">Online Payment</label>

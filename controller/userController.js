@@ -9,6 +9,7 @@ const Address = require("../model/address");
 const Cart = require("../model/cart");
 const Order = require("../model/order");
 const Category = require("../model/category")
+const Offer = require("../model/offer")
 const Notification = require('../model/notification'); 
 const Wallet = require("../model/wallet")
 const generateOtp = () => {
@@ -503,11 +504,12 @@ exports.filter = async (req, res) => {
 exports.productDetails = async (req, res) => {
   try {
     const productId = req.params.id;
-
+  const userId =req.session.passport.user
+  console.log(userId);
     // Find the product by ID and populate the offer
     const product = await Product.findById(productId).populate("offer");
-    console.log(product);
-    if (!product) {
+    console.log(product)
+     if (!product) {
       return res.status(404).render("users/error", {
         message: "Product not found",
       });
@@ -516,9 +518,25 @@ exports.productDetails = async (req, res) => {
     // Increment product popularity
     product.popularity += 1;
     await product.save()
+ 
+    if (product.offer?._id) {
+     const offer = await Offer.findById(product.offer?._id);
+     
+      if (offer && offer.isActive) {
+        const discount = (product.price * offer.percentage) / 100;
+        discountedPrice = product.price - Math.min(discount, offer.maximumDiscount);
+        console.log("discountedPrice",discountedPrice)
+        product.discountedPrice = discountedPrice;
+       
+      }
+      
+    }
 
+
+ 
     
     const relatedProducts = await Product.find()
+    console.log(product)
     
     res.render("users/productDetails", {
       product,

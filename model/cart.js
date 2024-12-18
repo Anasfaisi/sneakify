@@ -52,7 +52,11 @@ const cartSchema = new mongoose.Schema({
     type: Boolean,
     default: false, 
   },
-  grandTotal: {
+  couponDiscount:{
+    type:Number,
+    default:0,
+  },
+    grandTotal: {
     type: Number,
     default: 0,
   }
@@ -61,12 +65,16 @@ const cartSchema = new mongoose.Schema({
 
 
 cartSchema.methods.calculateTotals = function (coupon) {
+  console.log("it is reaching in calculate totals");
   // Calculate total items and price
   this.totalItems = this.products.reduce((sum, item) => sum + item.quantity, 0);
-  this.totalPrice = this.products.reduce((sum, item) => sum + item.quantity * item.price, 0);
-
-
-  this.gst = this.totalPrice * 0.18; 
+ this.totalPrice = this.products.reduce((sum, item) => {
+  
+    const priceToUse = this.couponDiscount || item.price; // Use discountedPrice if available
+    return sum + item.quantity * priceToUse;
+  }, 0);
+  console.log(this.totalPrice)
+  this.gst = this.totalPrice * 0.05; 
 
   
   if (coupon && this.totalPrice >= coupon.minimumPurchase) {

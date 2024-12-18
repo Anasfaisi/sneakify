@@ -186,7 +186,8 @@
           <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%= item.size %>')">Remove</button>
         </div>
       </div>
-      <div class="item-price">₹<%= item.price.toFixed(2) %></div>
+      
+      <div class="item-price">₹<%=item.discountedPrice?item.discountedPrice.toFixed(2):item.price.toFixed(2)%> each</div>
     </div>
     <% }); %>
 
@@ -464,10 +465,10 @@ async function applyCoupon() {
     console.log("Response Data:", data);
 
     if (response.ok) {
-      // Update the UI with the new cart details (coupon applied, new total)
+      
       document.getElementById("grandTotal").textContent = `₹${data.cart.grandTotal.toFixed(2)}`;
 
-      // Display the discount if applied
+
       if (data.cart.discount > 0) {
         const discountSection = document.querySelector('.summary-item');
         const discountElement = document.createElement('div');
@@ -479,14 +480,14 @@ async function applyCoupon() {
         discountSection.insertAdjacentElement('afterend', discountElement);
       }
 
-      // Disable the apply coupon button, input field, and coupon select dropdown after use
+      
       document.getElementById("couponCode").disabled = true;
       document.querySelector(".coupon-button").disabled = true;
       const couponSelect = document.getElementById("couponSelect");
       couponSelect.disabled = true;
 
       const removeButton = document.getElementById("removeCouponButton");
-      removeButton.style.display = 'inline-block'; // Make the button visible
+      removeButton.style.display = 'inline-block'; 
 
       appliedCoupon = true;
 
@@ -505,7 +506,7 @@ async function applyCoupon() {
   } catch (error) {
     console.error("Error during coupon application:", error);
 
-    // Show generic error alert using Swal
+    
     Swal.fire({
       icon: "error",
       title: "An Error Occurred",
