@@ -8,6 +8,12 @@ const Coupon = require("../model/coupon");
 const Offer = require("../model/offer")
 const Wallet= require("../model/wallet")
 const Notification = require("../model/notification")
+const path = require('path')
+const fs = require('fs');
+const moment = require('moment');
+const PDFDocument = require('pdfkit');
+const ExcelJS = require('exceljs');
+
 const { v4: uuidv4 } = require("uuid");
 
 exports.getLogin = async (req, res) => {
@@ -22,7 +28,6 @@ exports.getLogin = async (req, res) => {
 
 exports.postLogin = async (req, res) => {
   const { email, password } = req.body;
-  //   console.log(req.body.email);
 
   try {
     const admin = await Admin.findOne({ email });
@@ -58,7 +63,6 @@ exports.logout = async (req, res) => {
         message: "Could not log out",
       });
     }
-    console.log("session destroyed succesfully");
     return res.status(200).json({ message: "logged out succesfully" });
   });
 };
@@ -67,19 +71,18 @@ exports.logout = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if no page is specified
-    const limit = 5; // Number of products per page
+    const page = parseInt(req.query.page) || 1; 
+    const limit = 5; 
     const skip = (page - 1) * limit;
 
-    // Get the total count of products
     const totalProducts = await Product.countDocuments();
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Fetch the products for the current page
+    
     const products = await Product.find()
       .skip(skip)
       .limit(limit)
-      .populate("category"); // If you want to populate the category (optional)
+      .populate("category"); 
 
     const categories = await Category.find({ isActive: true });
 
@@ -131,14 +134,17 @@ exports.addProducts = async (req, res) => {
         });
     }
 
-    // Parse and validate other fields
-    const imageUrls = req.files.map((file) => file.filename); // Assuming files are uploaded successfully
+    
+    const imageUrls = req.files.map((file) => file.filename); 
     if (!name || !description || !price || !category) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
-
+    
+    const samplecategory = await Category.findOne({name:category})
+    console.log(samplecategory)
+    const categoryId = samplecategory._id;
     price = Number(price);
     if (typeof price !== "number" || price <= 0) {
       return res
@@ -149,9 +155,7 @@ exports.addProducts = async (req, res) => {
       .replace(/-/g, "")
       .slice(0, 6)
       .toUpperCase()}`;
-    console.log(productId);
 
-    // Create the new product with the validated data
 
     const newProduct = new Product({
       productId,
@@ -159,7 +163,8 @@ exports.addProducts = async (req, res) => {
       description,
       price,
       category,
-      sizes, // Use the parsed sizes array
+      categoryId,
+      sizes, 
       images: imageUrls,
       isActive: true,
     });
@@ -179,17 +184,15 @@ exports.addProducts = async (req, res) => {
 };
 
 exports.unListProducts = async (req, res) => {
-  console.log("addddd");
+
   try {
     const productId = req.params.id;
     const action = req.params.action;
-    console.log(productId);
-    console.log(action);
-    console.log("sdfghjkl");
+ 
 
     // Find the product by ID
     const product = await Product.findById(productId);
-    console.log(product);
+    
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -207,23 +210,19 @@ exports.unListProducts = async (req, res) => {
 
     res.status(200).json({ message: "Product status updated successfully" });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ message: "Error updating product status" });
   }
 };
 
 //to list the products
 exports.listProducts = async (req, res) => {
-  console.log("aaaaaa");
+
   try {
-    console.log(req.params);
     const productId = req.params.id;
     const action = req.params.action;
-    console.log(productId);
-    console.log(action);
 
     const product = await Product.findById(productId);
-    console.log(product);
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -288,7 +287,6 @@ exports.getOrderDetails = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate("userId")
       .populate("products.productId");
-    console.log(order);
 
     res.status(200).json(order);
   } catch (error) {
@@ -332,11 +330,9 @@ exports.approveCancelOrder = async (req, res) => {
   try {
     const {orderId,notificationId} =req.body;
 
-    console.log("orderId======>",orderId)
 
     const order = await Order.findById(orderId)
     
-    console.log("the order",order.status);
    
     if (!order || order.status !== "cancel_requested") {
       return res.status(404).json({ message: "Invalid order for approval" });
@@ -359,7 +355,6 @@ exports.approveCancelOrder = async (req, res) => {
       await wallet.save();
     }
       order.status = "cancelled";
-      console.log(order.status)
       await order.save();
     
 
@@ -382,20 +377,17 @@ exports.approveReturnOrder = async (req,res)=>{
     const userId = req.session.passport.user;
     const orderId = req.params.id;
     const notificationId = req.body.notificationId
-    console.log(orderId)
     const order = await Order.findById(orderId)
     if(!order){
       return res.status(500).json({message:"order not found"})
     }
-    console.log(order.status)
-    console.log(order.status !== "return_requested");
+ 
     if(order.status !== "return_requested"){
       return res.status(500).json({message:"invalid order for approval"})
     }
    
        
     order.status = "returned";
-    console.log(order.status)
     await order.save();
 
 
@@ -432,6 +424,7 @@ exports.getEditProducts = async (req, res) => {
     }
     res.render("admin/editProduct", { product, categories });
   } catch (err) {
+    console.log(error)
     res.status(500).json({ error: "Failed to fetch product details." });
   }
 };
@@ -504,30 +497,37 @@ exports.editProducts = async (req, res) => {
 // ===========================================================================
 exports.listUsers = async (req, res) => {
   try {
-    const users = await User.find({});
-    console.log(users);
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 users per page
+    const skip = (page - 1) * limit;
 
-    res.render("admin/userManagement", { users });
+    const totalUsers = await User.countDocuments(); // Total users
+    const users = await User.find().skip(skip).limit(limit); // Paginated users
+
+    res.render("admin/userManagement", {
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalUsers,
+    });
   } catch (error) {
+    console.log(error)
     res.status(500).send("Error fetching users");
   }
 };
 
+
 exports.updateUserStatus = async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log(userId);
     const { isBlocked } = req.body;
-    console.log(isBlocked);
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { isBlocked },
       { new: true }
     );
-    console.log(updatedUser);
     if (isBlocked && req.session.user && req.session.user._id === userId) {
-      console.log("in the session destroying");
       req.session.destroy((err) => {
         if (err) {
           console.error("Error destroying session:", err);
@@ -554,9 +554,21 @@ exports.updateUserStatus = async (req, res) => {
 // =============================================================================
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find({});
-    res.render("admin/category", { categories });
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 categories per page
+    const skip = (page - 1) * limit;
+
+    const totalCategories = await Category.countDocuments(); // Count all categories
+    const categories = await Category.find().skip(skip).limit(limit); // Fetch paginated categories
+
+    res.render("admin/category", {
+      categories,
+      currentPage: page,
+      totalPages: Math.ceil(totalCategories / limit),
+      totalCategories,
+    });
   } catch (error) {
+    console.log(error)
     res.status(500).send("Server Error");
   }
 };
@@ -564,7 +576,6 @@ exports.getAllCategories = async (req, res) => {
 exports.addCategory = async (req, res) => {
   let { name } = req.body;
   name = name.toLowerCase();
-  console.log(name);
   try {
     const category = new Category({ name, isActive: true });
     console.log(category);
@@ -575,13 +586,11 @@ exports.addCategory = async (req, res) => {
       name: { $regex: name, $options: "i" },
     });
     if (existingCategories.length > 0) {
-      console.log("Matching categories found:", existingCategories);
       return res
         .status(400)
         .json({ success: false, message: "Category already exists" });
     } else {
       const savedCategory = await category.save();
-      console.log(savedCategory);
       res.status(200).json({ success: true, message: "succesfully updated" });
     }
   } catch (error) {
@@ -602,6 +611,7 @@ exports.activateCategory = async (req, res) => {
       res.status(404).json({ error: "Category not found" });
     }
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: "Failed to activate category" });
   }
 };
@@ -624,10 +634,8 @@ exports.deactivateCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   console.log("it is in update");
   const { name } = req.body;
-  console.log(name);
   try {
     let category = await Category.findByIdAndUpdate(req.params.id, { name });
-    console.log(category);
     res.status(200).json({ success: true, message: "succesfully updated" });
   } catch (error) {
     res.status(500).send("Error updating category");
@@ -639,16 +647,34 @@ exports.updateCategory = async (req, res) => {
 
 
 exports.getCoupons = async (req, res) => {
-  console.log("it is reaaching in get coupon ");
+  console.log("it is reaching in get coupon");
   try {
-    const coupons = await Coupon.find();
-    if (!coupons) {
-      res.status(500).json({ message: "no coupons found" });
-    }
+    // Extract page and limit query parameters, defaulting to page 1 and limit 10
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Calculate the starting index
+    const startIndex = (page - 1) * limit;
+
+    // Fetch total count for calculating total pages
+    const totalCount = await Coupon.countDocuments();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Fetch paginated coupons
+    const coupons = await Coupon.find()
+      .skip(startIndex)
+      .limit(limit);
+
+    // Render the coupon management page with paginated data
     res.render("admin/couponManagement", {
       coupons,
+      currentPage: page,
+      totalPages,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error fetching coupons:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 exports.addCoupon = async (req, res) => {
@@ -663,7 +689,6 @@ exports.addCoupon = async (req, res) => {
       startDate,
       expiryDate,
     } = req.body;
-    console.log(req.body)
     
     if(!code||
       !discountType||
@@ -674,7 +699,6 @@ exports.addCoupon = async (req, res) => {
       }
 
     const existingCoupon = await Coupon.findOne({code:code})
-    console.log(existingCoupon);
     if(existingCoupon){
       return res.status(500).json({message:"same coupon code already exist"})
     }
@@ -687,7 +711,6 @@ exports.addCoupon = async (req, res) => {
       startDate,
       expiryDate,
     })
-    console.log(newCoupon,"new coupon")
     await newCoupon.save()
     res.status(200).json({message:"coupon added succesfully"})
 
@@ -761,7 +784,6 @@ exports.editCoupon = async (req,res)=>{
       const couponId = req.params.id
       if(!couponId){ return res.status(404).json({message:"coupon id not found"})}
 
-      console.log(req.body)
        const editData = req.body;
        if (!editData || Object.keys(editData).length === 0) {
         return res.status(400).json({ message: "No data provided for updating" });
@@ -789,30 +811,40 @@ exports.editCoupon = async (req,res)=>{
 
 exports.getOffers = async (req, res) => {
   console.log("it is reaching in get offers");
-    try {
-        const productOffers = await Offer.find({ offerType: 'product' }).populate('appliedToProduct', 'name');
-        // console.log("productOffers",productOffers)
-        
-        const categoryOffers = await Offer.find({ offerType: 'category' }).populate('appliedToCategory', 'name');
-        
-        const applicableProducts = await Product.find({}, 'name');
-        const applicableCategories = await Category.find({}, 'name');
-        // console.log("applicableProducts",applicableProducts)
-        // console.log("applicableCategories",applicableCategories)
-        
-        const offers = await Offer.find()
-        // console.log("offers",offers)
-        res.render('admin/offerManagement', {
-            productOffers,
-            categoryOffers,
-            applicableCategories,
-            applicableProducts,
-            offers,
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
-    }
+  try {
+    // Extract page and limit query parameters, default to page 1 and limit 10
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Calculate the starting index
+    const startIndex = (page - 1) * limit;
+
+    // Fetch total count for calculating total pages
+    const totalOffers = await Offer.countDocuments();
+    const totalPages = Math.ceil(totalOffers / limit);
+
+    // Fetch paginated offers
+    const offers = await Offer.find()
+      .populate('applicableProducts', 'name')
+      .populate('applicableCategories', 'name')
+      .skip(startIndex)
+      .limit(limit);
+   console.log(offers[0].m)
+    // Fetch all applicable products and categories (not paginated)
+    const applicableProducts = await Product.find({}, 'name');
+    const applicableCategories = await Category.find({}, 'name');
+
+    res.render('admin/offerManagement', {
+      offers,
+      applicableProducts,
+      applicableCategories,
+      currentPage: page,
+      totalPages,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
 };
 
 
@@ -825,12 +857,12 @@ exports.addOffer = async (req, res) => {
       validFrom,
       validUntil,
       offerType,
-      appliedToProduct,
-      appliedToCategory,
+      applicableProducts,
+      applicableCategories,
       maximumDiscount,
     } = req.body;
 
-    if (!offerName || !percentage || !validFrom || !validUntil || !offerType || !(appliedToProduct || appliedToCategory) || !maximumDiscount) {
+    if (!offerName || !percentage || !validFrom || !validUntil || !offerType || !(applicableProducts || applicableCategories) || !maximumDiscount) {
       return res.status(400).json({ message: "All required fields must be filled." });
     }
 
@@ -841,17 +873,17 @@ exports.addOffer = async (req, res) => {
     }
 
     // Fetch the relevant product or category
-    const product = await Product.findById(appliedToProduct).populate("offer");
-    const category = await Category.findById(appliedToCategory).populate("offer");
+    const product = await Product.findById(applicableProducts).populate("offer");
+    const category = await Category.findById(applicableCategories).populate("offer");
 
-    const newOffer = new Offer({
+     const newOffer = new Offer({
       offerName,
       percentage,
       validFrom,
       validUntil,
       offerType,
-      appliedToProduct,
-      appliedToCategory,
+      applicableCategories,
+      applicableProducts,
       offerTypeReference: offerType === 'product' ? 'Product' : 'Category',
       maximumDiscount,
       productName: product?.name || "",
@@ -860,9 +892,13 @@ exports.addOffer = async (req, res) => {
 
     // If the offer applies to a product
     if (offerType === 'product' && product) {
-      product.originalPrice = product.price; // Set the original price
-      const discountAmount = Math.min((product.price * percentage) / 100, maximumDiscount); // Calculate discount
-      product.discountedPrice = product.price - discountAmount; // Calculate new price
+      const offerDiscount = Math.min((product.price * percentage) / 100, maximumDiscount); // Calculate discount
+      if(offerDiscount > product.price/2){
+        product.offerDiscount = maximumDiscount
+        return res.status(500).json({message:"cannot set offer less than cost 50% of the Products Actual price "})
+      }else{
+      product.offerDiscount = product.price - offerDiscount; 
+      }
       product.offer = newOffer._id; // Link offer to product
       await product.save();
     } 
@@ -870,9 +906,13 @@ exports.addOffer = async (req, res) => {
     else if (offerType === 'category' && category) {
       const productsInCategory = await Product.find({ category: category._id }).populate("offer")
       for (const product of productsInCategory) {
-        product.originalPrice = product.price;
-        const discountAmount = Math.min((product.price * percentage) / 100, maximumDiscount);
-        product.discountedPrice = product.price - discountAmount;
+        const offerDiscount= Math.min((product.price * percentage) / 100, maximumDiscount);
+        if(offerDiscount > product.price/2){
+          product.offerDiscount = maximumDiscount
+          return res.status(500).json({message:"cannot set offer less than cost 50% of the Products Actual price "})
+        }else{
+        product.offerDiscount = product.price - discountAmount; 
+        }
         product.offer = newOffer._id;
         await product.save();
       }
@@ -888,7 +928,8 @@ exports.addOffer = async (req, res) => {
     res.status(500).json({ message: "Internal server error. Please try again later." });
   }
 };
-    exports.getSingleOffer = async (req,res)=>{
+
+exports.getSingleOffer = async (req,res)=>{
       console.log("it is reaching in get single offer")
       try {
         const offerId = req.params.id
@@ -897,7 +938,6 @@ exports.addOffer = async (req, res) => {
         }
 
         const offerData = await Offer.findById(offerId)
-        console.log(offerData);
         if(!offerData){
           return res.status(500).json({message:"offer does not found"})
         }
@@ -910,7 +950,7 @@ exports.addOffer = async (req, res) => {
     }
 
 
-      exports.editOffer = async (req,res)=>{
+exports.editOffer = async (req,res)=>{
         console.log("it is reaching in edit offer");
 
         try {
@@ -918,7 +958,7 @@ exports.addOffer = async (req, res) => {
           if(!offerId){
             return res.status(500).json({message:"offer id is not found"})
           }
-          console.log(req.body)
+
           const { data } = req.body; 
           if (!data) {
             return res.status(400).json({ message: "No data received for update" });
@@ -937,7 +977,7 @@ exports.addOffer = async (req, res) => {
       }
 
       // Delete Offer
-    exports.deleteOffer = async (req, res) => {
+exports.deleteOffer = async (req, res) => {
       console.log("It is reaching in delete offer");
 
       try {
@@ -964,7 +1004,7 @@ exports.addOffer = async (req, res) => {
     };
 
     // Reuse Offer (Reactivate)
-    exports.reuseOffer = async (req, res) => {
+exports.reuseOffer = async (req, res) => {
       console.log("It is reaching in reuse offer");
 
       try {
@@ -992,32 +1032,294 @@ exports.addOffer = async (req, res) => {
 
 
     //===================================================
-    exports.loadSalesReport = async (req,res)=>{
-      console.log("it is reaching in sales report")
+exports.loadSalesReport = async (req, res) => {
+      console.log("it is reaching in sales report");
+    
       try {
-        const salesData = await Order.find()
-        if(!salesData){
-
-        
-       return  res.render("admin/salesReport",{
-          totalSales:0,
-          totalAmount:0,
-          totalDiscount:0,
-          salesData:[]
-        })
-      }
-
-      
-
-      res.render("admin/salesReport",{
-        totalSales:0,
-        totalAmount:0,
-        totalDiscount:0,
-        salesData,
-      })
+        const { dateRange, page = 1, limit = 10 } = req.query; // Extract pagination and date range
+        const currentPage = parseInt(page);
+        const itemsPerPage = parseInt(limit);
+    
+        let dateFilter = {}; // Initialize the filter object
+        const currentDate = moment();
+    
+        // Apply date filtering logic
+        if (dateRange === '1-day') {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'days').toDate() };
+        } else if (dateRange === '1-week') {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'weeks').toDate() };
+        } else if (dateRange === '1-month') {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'months').toDate() };
+        }
+    
+        // Fetch total sales data (no pagination) to calculate overall totals
+        const totalSalesData = await Order.find(dateFilter);
+        const totalAmount = totalSalesData.reduce((sum, order) => sum + order.grandTotal, 0);
+        const totalSales = totalSalesData.length;
+        const totalDiscount = totalSalesData.reduce(
+          (sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0),
+          0
+        );
+    
+        // Count total records for pagination
+        const totalFilteredSalesData = totalSalesData.length;
+        const totalPages = Math.ceil(totalFilteredSalesData / itemsPerPage);
+    
+        // Fetch paginated sales data based on the date filter
+        const salesData = await Order.find(dateFilter)
+          .sort({ createdAt: -1 })
+          .skip((currentPage - 1) * itemsPerPage)
+          .limit(itemsPerPage);
+    
+        // If no sales data is found
+        if (!salesData || salesData.length === 0) {
+          return res.render("admin/salesReport", {
+            totalSales,
+            totalAmount,
+            totalDiscount,
+            salesData: [],
+            currentPage,
+            totalPages,
+          });
+        }
+    
+        // Render sales report page with overall totals
+        res.render("admin/salesReport", {
+          totalSales,
+          totalAmount,
+          totalDiscount,
+          salesData,
+          currentPage,
+          totalPages,
+        });
       } catch (error) {
-        console.log(error)
-
-        
+        console.log(error);
+        res.status(500).send("Error loading sales report");
       }
-    }
+    };
+    
+
+
+exports.exportExcel = async (req, res) => {
+  try {
+    // Fetch sales data
+    const salesData = await Order.find(); // Replace with your logic to fetch sales data
+
+    // Create a new workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Sales Report');
+
+    // Add columns
+    worksheet.columns = [
+      { header: 'Order ID', key: 'orderId', width: 20 },
+      { header: 'Total Amount', key: 'grandTotal', width: 15 },
+      { header: 'Coupon Discount', key: 'couponDiscount', width: 15 },
+      { header: 'Offer Discount', key: 'offerDiscount', width: 15 },
+      { header: 'User Name', key: 'userName', width: 20 },
+      { header: 'Date', key: 'date', width: 15 },
+    ];
+
+    // Add rows
+    salesData.forEach(order => {
+      worksheet.addRow({
+        orderId: order.orderId,
+        grandTotal: order.grandTotal,
+        couponDiscount: order.couponDiscount || 'No coupon applied',
+        offerDiscount: order.offerDiscount || 'No offers',
+        userName: order.addressDetails.firstName,
+        date: new Date(order.createdAt).toLocaleDateString(),
+      });
+    });
+
+    // Write to file and send to the user
+    const filePath = path.join(__dirname, 'sales-report.xlsx');
+    await workbook.xlsx.writeFile(filePath);
+
+    res.download(filePath, 'sales-report.xlsx', (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Error downloading file.');
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error generating Excel report.');
+  }
+};
+
+
+
+
+
+
+exports.exportPDF =  async (req, res) => {
+  try {
+      const { dateRange } = req.query; // Get the selected date range from the query parameters
+
+      // Initialize a filter object
+      let dateFilter = {};
+
+      // Get the current date
+      const currentDate = new Date();
+
+      // Apply the filtering logic based on the selected date range
+      if (dateRange === '1-day') {
+          const startOfDay = new Date();
+          startOfDay.setHours(0, 0, 0, 0);
+          dateFilter.createdAt = { $gte: startOfDay };  // Filter orders from today onwards
+      } else if (dateRange === '1-week') {
+          const startOfWeek = new Date();
+          startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());  // Start of the week (Sunday)
+          dateFilter.createdAt = { $gte: startOfWeek };  // Filter orders from the start of the week
+      } else if (dateRange === '1-month') {
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);  // First day of the month
+          dateFilter.createdAt = { $gte: startOfMonth };  // Filter orders from the start of the month
+      }
+
+      // Fetch the orders based on the date filter
+      const orders = await Order.find(dateFilter).populate('userId').exec();
+
+      // Map the orders data
+      const data = orders.map(order => ({
+          orderId: order.orderId,
+          totalAmount: order.totalAmount,
+          couponDiscount: order.couponDiscount || 'No coupon applied',
+          offerDiscount: order.offerDiscount || 'No offers',
+          userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
+          date: new Date(order.createdAt).toLocaleDateString(),
+      }));
+
+      // Calculate summary values
+      const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const totalSales = orders.length;
+      const totalDiscount = orders.reduce((sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0), 0);
+
+      // Generate the PDF document (similar to the previous logic)
+      const doc = new PDFDocument();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=Sneakify-sales-report.pdf');
+      doc.pipe(res);
+
+      doc.fontSize(16).text('Sales Report', { align: 'center' });
+      doc.moveDown(1.5);
+
+      const pageHeight = 700;
+      const marginTop = 50;
+      const marginBottom = 50;
+      const tableTop = 100;
+      const rowHeight = 25;
+      const columnSpacing = 5;
+      const columnWidth = 80;
+      let y = tableTop;
+
+      const headers = Object.keys(data[0]);
+      let x = 50;
+
+      // Add headers to the table
+      headers.forEach((header) => {
+          doc.fontSize(10).text(header, x, y, { width: columnWidth, align: 'center' });
+          x += columnWidth + columnSpacing;
+      });
+
+      doc.moveTo(50, y + rowHeight - 10)
+         .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y + rowHeight - 10)
+         .stroke();
+
+      y += rowHeight;
+
+      // Check page space before adding each row of data
+      function checkPageSpace(doc, currentY, heightNeeded) {
+          if (currentY + heightNeeded > pageHeight - marginBottom) {
+              doc.addPage();
+              return marginTop;
+          }
+          return currentY;
+      }
+
+      // Add data rows to the table
+      data.forEach((row) => {
+          y = checkPageSpace(doc, y, rowHeight);
+          x = 50;
+
+          Object.values(row).forEach((cell) => {
+              doc.fontSize(8).text(String(cell), x, y, { width: columnWidth, align: 'center', ellipsis: true });
+              x += columnWidth + columnSpacing;
+          });
+
+          y += rowHeight;
+
+          doc.moveTo(50, y - 10)
+             .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y - 10)
+             .stroke();
+      });
+
+      // Add summary to the PDF
+      y = checkPageSpace(doc, y, 100);
+      doc.fontSize(12).text('Summary', 50, y);
+      y += 20;
+
+      doc.fontSize(10)
+         .text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50, y)
+         .text(`Total Sales: ${totalSales}`, 50, y + 15)
+         .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50, y + 30);
+
+      doc.end();
+  } catch (error) {
+      console.log(`Error in downloadPDF: ${error}`);
+      res.status(500).send('Error generating PDF');
+  }
+};
+
+
+exports.salesReport = async (req, res) => {
+  try {
+      const { filter } = req.query;  // Get the selected filter value from query parameters
+      
+      // Initialize date filter object
+      let dateFilter = {};
+
+      // Get the current date
+      const currentDate = moment();  // Current date and time
+      
+      if (filter === 'today') {
+          // Set the filter to only include orders created today (from midnight)
+          dateFilter.createdAt = { $gte: currentDate.startOf('day').toDate() };
+      } else if (filter === 'this-week') {
+          // Set the filter to include orders created this week (from the start of the week)
+          dateFilter.createdAt = { $gte: currentDate.startOf('week').toDate() };
+      } else if (filter === 'this-month') {
+          // Set the filter to include orders created this month (from the first day of the month)
+          dateFilter.createdAt = { $gte: currentDate.startOf('month').toDate() };
+      }
+
+      // Fetch orders based on the date filter
+      const orders = await Order.find(dateFilter).populate('userId').exec();
+
+      // Map the order data
+      const salesData = orders.map(order => ({
+          orderId: order.orderId,
+          totalAmount: order.totalAmount,
+          couponDiscount: order.couponDiscount || 'No coupon applied',
+          offerDiscount: order.offerDiscount || 'No offers',
+          userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
+          date: new Date(order.createdAt).toLocaleDateString(),
+      }));
+
+      const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const totalSales = orders.length;
+      const totalDiscount = orders.reduce((sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0), 0);
+
+      res.render('admin/sales-report', {
+          salesData,
+          totalAmount,
+          totalSales,
+          totalDiscount,
+          filter  
+      });
+
+  } catch (error) {
+      console.log(`Error fetching sales report: ${error}`);
+      res.status(500).send('Error fetching sales data');
+  }
+};

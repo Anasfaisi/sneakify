@@ -110,11 +110,20 @@
 </style>
 
 <div class="container mt-2">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/users/profile">profile</a></li>
+      <li class="breadcrumb-item"><a href="/users/orders">orders</a></li>
+      
+    </ol>
+  </nav>
   <div class="row">
     <!-- Sidebar Section -->
-    <div class="col-md-3">
+    <div class="col-md-3 ">
       <%- include('partials/profileSidebar') %>
     </div>
+  
 
     <!-- Order History Section -->
     <div class="col-md-9">
@@ -160,6 +169,31 @@
                 <% }) %>
               </tbody>
             </table>
+
+
+            <nav aria-label="Order History Pagination">
+              <ul class="pagination justify-content-center">
+                <% if (currentPage > 1) { %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+                  </li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                  <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                  </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+                  </li>
+                <% } %>
+              </ul>
+            </nav>
+        
+        
+
+
           <% } else { %>
             <p>No orders found.</p>
           <% } %>

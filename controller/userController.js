@@ -29,11 +29,10 @@ exports.getSignuppage = async (req, res) => {
 };
 
 exports.signup = async (req, res) => {
-  console.log("it is able to reach post signup route");
+  console.log("reached in post signup route");
   const { firstName, lastName, email, password } = req.body;
   try {
     const existingUser = await User.findOne({ email });
-    console.log("the existing user : ", existingUser);
     if (existingUser) {
       return res
         .status(400)
@@ -42,10 +41,8 @@ exports.signup = async (req, res) => {
 
     //generate otp
     const otp = generateOtp();
-    console.log(otp);
 
     const otpExpiry = new Date(Date.now() + 15 * 1000);
-    console.log(otpExpiry);
 
     await unverifiedUser.create({
       firstName,
@@ -58,7 +55,6 @@ exports.signup = async (req, res) => {
 
     // send otp email
     const emailSent = await emailService.sendOtp(email, otp);
-    console.log(emailSent);
 
     if (!emailSent) {
       console.error("error in sending email");
@@ -120,14 +116,12 @@ exports.otpVerify = async (req, res) => {
     console.log("database otp :", user.otp);
 
     if (user.otp != otp) {
-      console.log("OTP invalid or expired");
       return res.status(500).json({ message: "invalid OTP" });
     }
     if (user.otpExpiry < Date.now()) {
       return res.status(500).json({ message: "OTP expired try with new one " });
     }
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    console.log(hashedPassword);
 
     orgUser = await User.create({
       firstName: user.firstName,
@@ -141,9 +135,7 @@ exports.otpVerify = async (req, res) => {
 
     req.session.passport = {};
     req.session.passport.user = orgUser._id;
-    console.log(req.session.passport.user)
 
-    console.log("User successfully verified:", req.session.passport);
 
     delete req.session.pendingEmail;
     await unverifiedUser.deleteOne({ email });
@@ -207,8 +199,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user.isBlocked) {
-      console.log("this is responsible for not entering");
-      console.log(req.session);
+  
       return res.redirect("/users/login");
     }
 
@@ -229,7 +220,6 @@ exports.login = async (req, res) => {
 
     req.session.passport = {};
     req.session.passport.user = user._id;
-    console.log(req.session);
     res.status(200).json({ success: true, message: "logged in succesfully" });
   } catch (error) {
     console.error("error occured in usercontroller in login validation", error);
@@ -258,7 +248,7 @@ exports.getForgetPassword = async (req, res) => {
 };
 
 exports.forgetPassword = async (req, res) => {
-  console.log("=========reached in post forget password");
+  console.log("reached in post forget password");
   try {
     const email = req.body.email;
 
@@ -274,7 +264,6 @@ exports.forgetPassword = async (req, res) => {
     const resetUrl = `${req.protocol}://${req.get(
       "host"
     )}/users/resetPassword?email=${encodedEmail}`;
-    console.log(resetUrl);
 
     const expiryTime = Date.now() + 10 * 60 * 1000; // 15 minutes
     user.resetPasswordExpiry = expiryTime;
@@ -284,13 +273,10 @@ exports.forgetPassword = async (req, res) => {
       email,
       resetUrl
     );
-    console.log(emailSent);
     if (!emailSent) {
       return res.status(500).json({ message: "Error sending reset link" });
     }
-    console.log("1");
     return res.status(200).json({ message: "Password reset link sent" });
-    console.log("2");
   } catch (error) {
     console.error("Error in forget password:", error);
     return res
@@ -303,11 +289,9 @@ exports.showResetPasswordForm = (req, res) => {
   console.log("it is reaching in show reset form");
   try {
     const { email } = req.query;
-    console.log(email);
 
     // Decode the email
     const decodedEmail = Buffer.from(email, "base64").toString("utf-8");
-    console.log(decodedEmail);
 
     return res.render("users/resetPasswordForm", {
       email: decodedEmail,
@@ -357,9 +341,6 @@ exports.resetPassword = async (req, res) => {
 //==============================================================
 
 exports.home = async (req, res) => {
-  
-
-
   try {
     const products = await Product.find({ isActive: true });
     const users = await User.find({ isBlocked: false });
@@ -373,13 +354,27 @@ exports.home = async (req, res) => {
 //=============================================================
 
 exports.listingProducts = async (req, res) => {
-  console.log("It is reached in listing products");
+  console.log("Reached listing products controller");
   try {
-    const { sizes, category, minPrice, maxPrice, sort, featured , page = 1, limit = 5,search } = req.query; 
-    let filter = { isActive: true }; 
+    const { 
+      sizes, 
+      category, 
+      minPrice, 
+      maxPrice, 
+      sort, 
+      featured, 
+      page = 1, 
+      limit = 5, 
+      search 
+    } = req.query;
 
+
+    // Base filter for active products
+    let filter = { isActive: true };
+
+    // Search filter
     if (search) {
-      const searchRegex = new RegExp(search, "i"); // "i" for case-insensitive
+      const searchRegex = new RegExp(search, "i"); // Case-insensitive search
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } }
@@ -398,7 +393,7 @@ exports.listingProducts = async (req, res) => {
       filter.category = { $in: categories };
     }
 
-    // Price filter
+    // Price range filter
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
@@ -410,7 +405,7 @@ exports.listingProducts = async (req, res) => {
       filter.featured = true;
     }
 
-    // Initialize the query
+    // Sorting options
     let sortOptions = {};
     if (sort) {
       switch (sort) {
@@ -424,7 +419,7 @@ exports.listingProducts = async (req, res) => {
           sortOptions.popularity = -1; // Descending popularity
           break;
         case 'newArrivals':
-          sortOptions.createdAt = -1; // New arrivals (desc)
+          sortOptions.createdAt = -1; // New arrivals
           break;
         case 'name-asc':
           sortOptions.name = 1; // Alphabetical order (ascending)
@@ -437,51 +432,64 @@ exports.listingProducts = async (req, res) => {
       }
     }
 
-    
-    
+    // Pagination calculations
     const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments(filter); // Total number of products matching the filter
-    const totalPages = Math.ceil(totalProducts / limit); // Total number of pages
+    console.log("filter",filter)
+    const totalProducts = await Product.countDocuments(filter); // Total matching products
+    const totalPages = Math.ceil(totalProducts / limit);
 
-    let productsQuery = Product.find(filter).sort(sortOptions).skip(skip).limit(limit);
+    // Fetching products with the applied filters and sort options
+    let productsQuery = Product.find(filter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(Number(limit));
 
     const products = await productsQuery;
 
+    // Filtering in-stock products
     const inStockProducts = products.filter((product) =>
       product.sizes.some((size) => size.stock > 0)
     );
 
-    // Mark out of stock sizes
+    // Mark out-of-stock sizes
     inStockProducts.forEach((product) => {
       product.sizes.forEach((size) => {
         size.isOutOfStock = size.stock === 0;
       });
     });
 
-    // Fetch categories
+    // Fetch active categories for filtering
     const categoriesList = await Category.find({ isActive: true });
+    let shopPage = 1; 
 
-    // Render the view
+    const queryParams = { ...req.query };
+    delete queryParams.page; // Remove page to avoid duplication
+    delete queryParams.limit; // Remove limit since it's already included in links
+    const queryString = new URLSearchParams(queryParams).toString();
+
+    // Rendering the view
     res.render("users/shop", {
       products: inStockProducts,
       categories: categoriesList,
       currentPage: Number(page),
-      totalPages: totalPages,
-      totalProducts: totalProducts,
+      totalPages,
+      totalProducts,
       search: search || '',
+      shopPage,
+      queryString,
+      limit: Number(limit)
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server error");
-  }
+    next(error)  }
 };
+
 
 
 
 exports.filter = async (req, res) => {
   console.log("it is reached in filter");
   const { sizes } = req.query; // sizes=5,6,7
-  console.log("sizes are :",sizes);
   let filter = {};
 
   if (sizes) {
@@ -490,9 +498,7 @@ exports.filter = async (req, res) => {
 }
 
   try {
-    console.log("filter :", filter);
       const products = await Product.find(filter);
-      console.log(products);
       res.json(products); // Return filtered products
   } catch (error) {
       console.error("Error fetching products:", error);
@@ -504,11 +510,8 @@ exports.filter = async (req, res) => {
 exports.productDetails = async (req, res) => {
   try {
     const productId = req.params.id;
-  const userId =req.session.passport.user
-  console.log(userId);
-    // Find the product by ID and populate the offer
+
     const product = await Product.findById(productId).populate("offer");
-    console.log(product)
      if (!product) {
       return res.status(404).render("users/error", {
         message: "Product not found",
@@ -525,18 +528,34 @@ exports.productDetails = async (req, res) => {
       if (offer && offer.isActive) {
         const discount = (product.price * offer.percentage) / 100;
         discountedPrice = product.price - Math.min(discount, offer.maximumDiscount);
-        console.log("discountedPrice",discountedPrice)
-        product.discountedPrice = discountedPrice;
+        product.offerDiscount = discountedPrice;
        
       }
-      
+      }
+       const categoryOffer = await Offer.findOne({
+      offerType: "category",
+      applicableCategories: product.categoryId._id,
+      isActive: true,
+      validFrom: { $lte: new Date() },
+      validUntil: { $gte: new Date() },
+    });
+    console.log(categoryOffer)
+      if(categoryOffer && categoryOffer.applicableCategories.equals(product.categoryId._id)){
+      const discount = (product.price * categoryOffer.percentage)/100;
+      const discountedPrice = product.price - Math.min(discount,categoryOffer.maximumDiscount);
+      product.categoryDiscount= discountedPrice
     }
+    product.finalDiscount = Math.max(product.offerDiscount || 0, product.categoryDiscount || 0);
+
+   await product.save()
+   console.log(product);
+   
 
 
- 
-    
+
+
+     
     const relatedProducts = await Product.find()
-    console.log(product)
     
     res.render("users/productDetails", {
       product,
@@ -627,7 +646,6 @@ exports.profile = async (req, res) => {
     const currentUser = req.session.passport.user;
 
     const user = await User.findById(currentUser);
-    console.log(user);
     res.render("users/profile", { user });
   } catch (error) {
     console.log("error in rendering the profile* :", error);
@@ -653,9 +671,7 @@ exports.updateUserDetails = async (req, res) => {
 
 exports.updatePassword = async (req, res) => {
   try {
-    console.log(req.session, "req.session");
     const userId = req.session.passport?.user;
-    console.log(userId);
     if (!userId) {
       return res
         .status(404)
@@ -663,7 +679,6 @@ exports.updatePassword = async (req, res) => {
     }
 
     const user = await User.findById(userId);
-    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -677,11 +692,8 @@ exports.updatePassword = async (req, res) => {
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "New passwords do not match" });
     }
-    console.log(currentPassword);
-    console.log(user.password, "====");
-
+  
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    console.log(isMatch);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
@@ -785,7 +797,6 @@ exports.editAddress = async (req, res) => {
       pincode,
       phone,
     });
-    console.log("this is user address ", userAddress);
 
     userAddress.save();
     res.status(200).json({ message: "user address updated succesfully" });
@@ -814,17 +825,28 @@ exports.deleteAddress = async (req, res) => {
 
 //================================================================================
 
-exports.getorderHistory = async (req, res) => {
-  console.log("it is reached in get order history");
+exports.getorderHistory =  async (req, res) => {
   try {
-    const userId = req.session.passport.user;
-    const user = await User.findById(userId);
-    const orders = await Order.find({ userId: user._id }).sort({createdAt:-1})
-  
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = 10; // 10 orders per page
+    const skip = (page - 1) * limit;
 
-    res.render("users/orderHistory", { orders });
+    // Fetch paginated orders
+    const orders = await Order.find({ userId: req.user._id })
+      .sort({ orderDate: -1 }) // Sort by latest orders
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments({ userId: req.session.passport.user });
+
+    res.render('users/orderHistory', {
+      orders,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
+    });
   } catch (error) {
-    console.log(error, "error occured in getting order history");
+    console.error('Error fetching orders:', error);
+    res.status(500).send('Server Error');
   }
 };
 
@@ -833,9 +855,7 @@ exports.getOrderDetails = async (req, res) => {
 
   try {
     const orderId = req.params.id;
-    console.log(orderId);
     const order = await Order.findById(orderId);
-    console.log(order);
     res.render("users/orderDetails", { order });
   } catch (error) {
     console.log(error, "error occured in getting order details");
@@ -844,6 +864,7 @@ exports.getOrderDetails = async (req, res) => {
 exports.cancelOrder = async (req, res) => {
   console.log("it is reached in cancel order");
   try {
+    const {reason} = req.body;
     const orderId = req.params.id;
     const userId = req.session.passport.user;
     const order = await Order.findOne({
@@ -860,8 +881,10 @@ exports.cancelOrder = async (req, res) => {
     }
 
     // Mark order as "cancel_requested" for admin approval
-    order.status = "cancel_requested";
+    order.status = "cancelled";
+    order.cancelReason= reason;
     await order.save();
+    
 
     // Update product stock for sizes
     for (const item of order.products) {
@@ -875,26 +898,12 @@ exports.cancelOrder = async (req, res) => {
         );
       }
     }
-    await Notification.create({
-      type: "order_cancel",
-      orderId: order._id,
-      userId: userId,
-      message: `User requested to cancel order ${order.orderId}. Awaiting approval.`,
-      isRead: false,
-
-      orderDetails: {
-        orderId: order.orderId, // Include the orderId
-        products: order.products.map((product) => ({
-          name: product.productId.name, // Ensure the `name` field exists in the product model
-          quantity: product.quantity,
-        })),
-      },
-    });
+   
 
 
     // Notify user of cancellation request
     res.status(200).json({
-      message: "Order cancellation requested. Waiting for admin approval.",
+      message: "Order cancelled",
     });
   } catch (error) {
     console.log(error, "error in canceling the product");
@@ -908,6 +917,8 @@ exports.cancelOrder = async (req, res) => {
 exports.returnOrder = async (req,res)=>{
   console.log("it is reaching in return order")
   try {
+    const {reason} = req.body;
+
     const userId = req.session.passport.user;
     const orderId = req.params.id;
     const order = await Order.findById(orderId)
@@ -919,6 +930,7 @@ exports.returnOrder = async (req,res)=>{
       return res.status(500).json({message:"Invalid order for approval"})
     }
     order.status = "return_requested"
+    order.cancelReason= reason;
     await order.save()
 
     await Notification.create({
@@ -927,7 +939,7 @@ exports.returnOrder = async (req,res)=>{
       userId: userId,
       message: `User requested to return order ${order.orderId}. Awaiting approval.`,
       isRead: false,
-
+      cancelReason:reason,
       orderDetails: {
         orderId: order.orderId, // Include the orderId
         products: order.products.map((product) => ({
@@ -946,27 +958,41 @@ exports.returnOrder = async (req,res)=>{
   
 }
 //===========================================
-exports.loadWallet= async (req,res)=>{
-  console.log("it is reaching in wallet page")
+exports.loadWallet = async (req, res) => {
   try {
+    const userId = req.session.passport.user;
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = 10; // Transactions per page
+    const skip = (page - 1) * limit;
 
-    const wallet = await Wallet.findOne({userId:req.session.passport.user})
-    if(!wallet){
-
-      res.render("users/wallet",{
-        wallet :{
-          price:0,
-          transactions:[]
-        }
-      })
+    const wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      return res.render("users/wallet", {
+        wallet: {
+          balance: 0,
+          transactions: [],
+        },
+        currentPage: 1,
+        totalPages: 0,
+      });
     }
 
-     res.render("users/wallet",{
-      wallet
-     })
-    
-  } catch (error) {
-    console.log("errror",error)
+    // Paginate transactions
+    const totalTransactions = wallet.transactions.length;
+    const paginatedTransactions = wallet.transactions
+      .slice(skip, skip + limit)
+      .reverse(); // Reverse to show latest transactions first
 
+    res.render("users/wallet", {
+      wallet: {
+        balance: wallet.balance,
+        transactions: paginatedTransactions,
+      },
+      currentPage: page,
+      totalPages: Math.ceil(totalTransactions / limit),
+    });
+  } catch (error) {
+    console.error("Error loading wallet:", error);
+    res.status(500).send("Server Error");
   }
-}
+};

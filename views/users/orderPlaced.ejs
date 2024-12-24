@@ -36,14 +36,19 @@
     <% order.products.forEach(product => { %>
       <div class="d-flex align-items-center mb-3">
         <% if (product.imageUrl) { %>
-          <img src="/<%= product.imageUrl[0] %>" alt="<%= product.name %>" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
+          <img src="/<%= product.image %>" alt="<%= product.name %>" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
         <% } %>
         <div>
           <h5><%= product.name %></h5>
           <p class="mb-0">Size: <%= product.size %></p>
           <p class="mb-0">Price: ₹<%= product.price %></p>
           <p class="mb-0">Quantity: <%= product.quantity %></p>
-          <p>Total: ₹<%= product.total %></p>
+
+          <p class="mb-0">Total price: <%= product.price * product.quantity %></p>
+          <% if(product.discountedPrice> 0) { %>
+          <p class="mb-0">Offer price : <%= product.discountedPrice %></p>
+          <p class="mb-0">total offer Discount : <%= (product.price - product.discountedPrice)*product.quantity %></p>
+          <% } %>
         </div>
       </div>
     <% }); %>
@@ -55,9 +60,13 @@
     <h3>Order Total</h3>
     <p><strong>Items Total:</strong> ₹<%= order.totalAmount %></p>
     <p><strong>Shipping Charge:</strong> ₹<%= order.shippingCharge %></p>
-
+    <p><strong>coupon discount applied:</strong> ₹<%= order.couponDiscount %></p>
+    <p><strong>gst</strong> ₹<%= order.gst %></p>
+   
     <h4 class="fw-bold">Grand Total: ₹<%= order.grandTotal %></h4>
+    <p class="text-success"> you save rs <%=order.totalDiscount %> in this order</p>
   </div>
+   
 
   <div class="text-center mt-5">
     <a href="/users/shop" class="btn btn-primary">Continue Shopping</a>

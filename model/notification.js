@@ -6,6 +6,7 @@ const notificationSchema = new mongoose.Schema({
   
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   message: { type: String, required: true },
+  cancelReason:{type:String},
   isRead: { type: Boolean, default: false },
   orderDetails: { // New field for additional order information
     orderId: { type: String },

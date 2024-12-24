@@ -31,7 +31,6 @@ exports.getCart = async (req, res) => {
       });
     }
 
-    await cart.calculateTotals();
 
     const products = cart.products.map((item) => ({
       id: item.productId._id,
@@ -40,23 +39,44 @@ exports.getCart = async (req, res) => {
       size: item.size,
       imageUrl: item.productId.images[0],
       price: item.price,
-      discountedPrice:item.productId.discountedPrice,
+      finalDiscount:item.productId.finalDiscount,
       quantity: item.quantity,
     }));
+       
 
-    const totalItemsPrice = cart.totalPrice;
-    const grandTotal = totalItemsPrice + cart.gst - cart.discount; 
-    const gst = cart.gst;
-    const discount = cart.discount;
+    const { totalItemsPrice, totalDiscount } = cart.products.reduce(
+      (acc, item) => {
+        const originalPrice = item.productId.price;
+        const finalPrice = item.productId.finalDiscount || originalPrice;
+        const quantity = item.quantity;
+    
+        const itemTotalPrice = finalPrice * quantity;
+        const itemDiscount = (originalPrice - finalPrice) * quantity;
+    
+        acc.totalItemsPrice += itemTotalPrice;
+        acc.totalDiscount += itemDiscount;
+    
+        return acc;
+      },
+      { totalItemsPrice: 0, totalDiscount: 0 }
+    );
 
 
+    const gst = (totalItemsPrice * 5) / 100;
+
+    const grandTotal = totalItemsPrice + gst 
+        
+    cart.totalPrice = totalItemsPrice;
+    cart.totalDiscount= totalDiscount;
+    cart.grandTotal = grandTotal
+    cart.gst = gst;
+
+
+    await cart.save()
     res.render("users/cart", {
       products,
-      totalItemsPrice,
-      grandTotal,
+      cart,
       activeCoupon,
-      gst,
-      discount,
     });
   } catch (error) {
     console.error("error rendering cart page:", error);
@@ -73,7 +93,6 @@ exports.getCart = async (req, res) => {
       if(!userId){return res.status(404).json({message:"user not found please signup or signin"})}
   
       const { productId, size, quantity } = req.body;
-      console.log(quantity)
       if (!productId || !size || !quantity) {
         return res.status(400).json({ message: 'Product ID, size, and quantity are required' });
       }
@@ -100,11 +119,7 @@ exports.getCart = async (req, res) => {
       if (!cart) {
         cart = new Cart({ userId, products: [] });
       }
-      if(product.discountedPrice>0){
-        cart.couponDiscount =product.discountedPrice
-        console.log(cart.couponDiscount)
-       }
-  
+    
       const existingItemIndex = cart.products.findIndex(
         (item) => item.productId._id.toString() === productId && item.size === size
       );
@@ -134,6 +149,7 @@ exports.getCart = async (req, res) => {
           size,
           quantity,
           price: product.price,
+          finalDiscount:product.finalDiscount||0,
         });
       }
   
@@ -237,7 +253,7 @@ exports.getCart = async (req, res) => {
 
         cart.products.splice(productIndex,1)
 
-        await cart.calculateTotals()
+      
         await cart.save()
         res.status(200).json({message:"succesfully removed the product"})
         
@@ -251,86 +267,117 @@ exports.getCart = async (req, res) => {
 
 
   // /coupons
-  exports.applyCoupon =  async (req, res) => {
-    console.log("it reached in apply coupon")
+ exports.applyCoupon = async (req, res) => {
+  console.log("it reached in apply coupon");
   try {
-    console.log(req.body.couponCode);
-    
-    const couponCode = req.body.couponCode;
-    console.log(couponCode)
-
-  const cart = await Cart.findOne({ userId: req.session.passport.user });
-  console.log("carrrt",cart,"stop======");
-  if (!cart) {
-    return res.status(400).json({message:"Cart not found."});
-  }
-
-  const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
-  console.log("coupon",coupon);
-  if (!coupon) {
-    return res.status(400).json({message:"Invalid or inactive coupon."})
-  }
-
-  // Validate the coupon with cart total
-  if (cart.totalPrice < coupon.minimumPurchase) {
-    return res.status(400).json({message:`Minimum cart value should be ₹${coupon.minimumPurchase}`});
-  }
-   console.log(cart.totalPrice,coupon.minimumPurchase);
-  if (coupon.expiryDate < Date.now()) {
-    return res.status(400).json({message:"Coupon has expired."})
-  }
-
-  if (coupon.usageLimit <= coupon.usageCount) {
-    return res.status(400).json({message:"Coupon usage limit exceeded."})
-  }
-
-  // Now apply the coupon and calculate totals
-  console.log("1111111111111111111111111111111")
-  const updatedCart = await cart.calculateTotals(coupon);
-  console.log("updated cart   ",updatedCart);
-
-  console.log("everything working properly")
-  return res.status(200).json({
-    message: "Coupon applied successfully.",
-    cart: updatedCart ,
-  });
-  } catch (error) {
-    console.log("error happened in applying coupon",error)
-    res.status(500).json({message:"somethig happened wrong"})
-  }
-}
-
-exports.removeCoupon = async (req, res) => {
-  try {
+    const { couponCode } = req.body;
+    console.log(couponCode);
     const userId = req.session.passport.user;
-    const {couponCode} = req.body
-    console.log(couponCode)
-    
-    const cart = await Cart.findOne({ userId });
+
+    const cart = await Cart.findOne({ userId }).populate("products.productId");
     if (!cart) {
-      return res.status(404).json({ message: "Cart not found" });
+      return res.status(400).json({ message: "Cart not found." });
     }
+
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
-    console.log("coupon",coupon);
+    console.log(coupon);
+    
     if (!coupon) {
-      return res.status(400).json({message:"Invalid or inactive coupon."})
+      return res.status(400).json({ message: "Invalid or inactive coupon." });
     }
-    
-    cart.discount = 0;  
-    cart.gst = 0;       
 
-    
-    const updatedCart = await cart.calculateTotals();
+    if (cart.totalPrice < coupon.minimumPurchase) {
+      return res.status(400).json({
+        message: `Minimum cart value should be ₹${coupon.minimumPurchase}.`,
+      });
+    }
 
-    
+    if (coupon.expiryDate < Date.now()) {
+      return res.status(400).json({ message: "Coupon has expired." });
+    }
 
-    res.status(200).json({
-      message: "Coupon successfully removed",
-      cart: updatedCart,
+    // if (coupon.usageLimit <= coupon.usageCount) {
+    //   return res.status(400).json({ message: "Coupon usage limit exceeded." });
+    // }
+
+    // if (coupon.usersUsed.includes(userId)) {
+    //   return res.status(400).json({ message: "Coupon already used by this user." });
+    // }
+
+    // Calculate the discount
+    let couponDiscount = 0;
+    if (coupon.discountType === "percentage") {
+      console.log(cart.totalPrice)
+      console.log(coupon.discountValue);
+      console.log(coupon.maximumDiscount);
+      couponDiscount = (cart.totalPrice * coupon.maximumDiscount) / 100;
+
+      console.log(couponDiscount);
+    } else if (coupon.discountType === "fixed") {
+      couponDiscount = coupon.discountValue;
+    }
+
+    couponDiscount = Math.min(couponDiscount, cart.totalPrice);
+
+    cart.couponDiscount = couponDiscount;
+    cart.totalDiscount = (cart.totalDiscount || 0) + couponDiscount; 
+    cart.grandTotal = cart.totalPrice + cart.gst - cart.couponDiscount; // Update grand total
+
+    // Update the coupon usage
+    coupon.usageCount += 1;
+    coupon.usersUsed.push(userId);
+
+    await cart.save();
+    await coupon.save();
+
+    console.log("everything working properly");
+    return res.status(200).json({
+      message: "Coupon applied successfully.",
+      couponDiscount,
+      totalDiscount: cart.totalDiscount,
+      grandTotal: cart.grandTotal,
+      cart,
     });
   } catch (error) {
-    console.error("Error removing coupon:", error);
-    res.status(500).json({ message: "An error occurred while removing the coupon" });
+    console.log("error happened in applying coupon", error);
+    res.status(500).json({ message: "Something went wrong while applying the coupon." });
   }
 };
+
+exports.removeCoupon = async (req, res) => {
+  console.log("it reached in remove coupon");
+  try {
+    const userId = req.session.passport.user;
+
+    // Fetch the cart
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(400).json({ message: "Cart not found." });
+    }
+
+    // Check if a coupon is applied
+    if (!cart.couponDiscount || cart.couponDiscount === 0) {
+      return res.status(400).json({ message: "No coupon applied to remove." });
+    }
+
+    // Remove the coupon discount
+    const couponDiscount = cart.couponDiscount;
+    cart.totalDiscount -= couponDiscount; // Subtract coupon discount from total discount
+    cart.couponDiscount = 0; // Clear coupon-specific discount
+    cart.grandTotal = cart.totalPrice +cart.gst; // Recalculate grand total
+
+    await cart.save();
+
+    console.log("Coupon removed successfully");
+    return res.status(200).json({
+      message: "Coupon removed successfully.",
+      totalDiscount: cart.totalDiscount,
+      grandTotal: cart.grandTotal,
+    });
+  } catch (error) {
+    console.log("Error happened in removing coupon", error);
+    res.status(500).json({ message: "Something went wrong while removing the coupon." });
+  }
+};
+
 

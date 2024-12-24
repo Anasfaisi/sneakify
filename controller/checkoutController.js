@@ -42,22 +42,28 @@ exports.getCheckout = async (req, res) => {
       size: item.size || "Default",
       imageUrl: item.productId.images[0], 
       price: item.price,
+      discountedPrice: item.finalDiscount,
       quantity: item.quantity,
       total: item.quantity * item.price,
+    
+      finalDiscount:item.productId.finalDiscount
     }));
+  
 
     // Calculate totals
-    const totalItemsPrice = cart.grandTotal;
-    const shippingCharge = totalItemsPrice > 3000 ? 0 : 100;
-    const grandTotal = totalItemsPrice + shippingCharge;
 
+ 
+    const shippingCharge = cart.totalPrice > 3000 ? 0 : 100;
+    const grandTotal = cart.totalPrice + shippingCharge+cart.gst-cart.couponDiscount;
+    cart.grandTotal= grandTotal;
+    await cart.save()
     // Render the checkout page
     res.render("users/checkout", {
       products,
-      totalItemsPrice,
       grandTotal,
       shippingCharge,
       addresses,
+      cart
     });
   } catch (error) {
     console.error("Error rendering checkout page:", error);
@@ -88,7 +94,7 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Your cart is empty." });
     }
 
-    let totalAmount = 0;
+   
     const products = [];
     // Step 1: Check stock and map products
     for (const item of cart.products) {
@@ -102,24 +108,20 @@ exports.placeOrder = async (req, res) => {
         });
       }
 
-      // Add the item to the products array after checking the stock
-
-      console.log(item.quantity)
-      console.log(item.price);
-      console.log(cart.couponDiscount);
-      console.log(cart.gst);
-      console.log(cart.discount?cart.discount:0);
+   
       
-      const total = (item.quantity * (cart.couponDiscount))+(cart.gst)-(cart.discount?cart.discount:0) ;
-      totalAmount += total;
-      console.log(totalAmount)
+      
+
       products.push({
         productId: item.productId._id,
         name: item.productId.name,
         price: item.productId.price,
         size: item.size,
         quantity: item.quantity,
-        total: total,
+        image:item.productId.images[0],
+        totalPrice: item.quantity * item.productId.price,
+        discountedPrice:item.productId.finalDiscount,
+      
       });
 
       // Step 2: Decrease stock after checking
@@ -130,12 +132,9 @@ exports.placeOrder = async (req, res) => {
       );
     }
 
-    const shippingCharge = totalAmount > 3000 ? 0 : 100;
-    const grandTotal = totalAmount + shippingCharge;
-    // const totalDiscount = (cart.couponDiscount)+(cart.discount??0)
-    // console.log(cart.couponDiscount)
-    // console.log(cart.couponDiscount??0)
-    console.log(grandTotal,"---grandTotal")
+  
+    const shippingCharge = cart.totalPrice > 3000 ? 0 : 100;
+  
 
     const orderId = `ORD-${uuidv4()
       .replace(/-/g, "")
@@ -149,9 +148,12 @@ exports.placeOrder = async (req, res) => {
       addressDetails,
       paymentMethod,
       products,
-      totalAmount,
+      totalAmount :cart.totalPrice,
+      totalDiscount: cart.totalDiscount,
       shippingCharge,
-      grandTotal,
+      grandTotal :cart.grandTotal,
+      gst:cart.gst,
+      couponDiscount:cart.couponDiscount,
       status: "pending",
       paymentStatus: "pending",
       // totalDiscount
@@ -168,7 +170,7 @@ exports.placeOrder = async (req, res) => {
         displayOrderId: newOrder.orderId,
       });
   } catch (error) {
-    console.error("Error placing order:", error);
+    console.error("error placing order:", error);
     res
       .status(500)
       .json({ message: "An error occurred while placing the order." });

@@ -15,6 +15,7 @@ const couponSchema = new mongoose.Schema(
   
       min: 0,
     },
+    
     minimumPurchase: {
       type: Number,
       default: 0, // Minimum cart value to apply the coupon
@@ -31,7 +32,8 @@ const couponSchema = new mongoose.Schema(
       required: true,
     },
     usageLimit: {
-      type: Number, // Max times this coupon can be used
+      type: Number,
+      default :5, // Max times this coupon can be used
     },
     usageCount: {
       type: Number,

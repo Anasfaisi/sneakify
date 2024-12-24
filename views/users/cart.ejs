@@ -161,111 +161,135 @@
     color: #28a745;
   }
 </style>
-<main class="cart-container">
-  <div class="cart-items">
-    <h2>Your Cart</h2>
-    <p>Items in your cart are not reserved—check out now to make them yours.</p>
 
-    <!-- Loop through cart items -->
-    <% if (products.length > 0) { %>
-    <% products.forEach(item => { %>
-    <div class="cart-item">
-      <div class="item-details">
-        <img src="/<%= item.imageUrl %>" alt="<%= item.name %>">
-        <div class="item-info">
-          <h3><%= item.name %></h3>
-          <p><%= item.description %></p>
-          <p>Size: <%= item.size %></p>
-          <div>
-            <p>Quantity:
-              <button class="quantity-decrease" onclick="decreaseQuantity(this, '<%= item.id %>','<%= item.size %>')">-</button>
-              <span class="quantity-display"><%= item.quantity %></span>
-              <button class="quantity-increase" onclick="increaseQuantity(this, '<%= item.id %>','<%= item.size %>')">+</button>
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/users/cart">Cart</a></li>
+      
+    </ol>
+  </nav>
+  <main class="cart-container">
+ 
+    <div class="cart-items">
+      <h2>Your Cart</h2>
+      <p>Items in your cart are not reserved—check out now to make them yours.</p>
+  
+      <!-- Loop through cart items -->
+      <% if (products.length > 0) { %>
+      <% products.forEach(item => { %>
+      <div class="cart-item">
+        <div class="item-details">
+          <img src="/<%= item.imageUrl %>" alt="<%= item.name %>">
+          <div class="item-info">
+            <h3><%= item.name %></h3>
+            <p><%= item.description %></p>
+            <p>Size: <%= item.size %></p>
+            <div>
+              <p>Quantity:
+                <button class="quantity-decrease" onclick="decreaseQuantity(this, '<%= item.id %>','<%= item.size %>')">-</button>
+                <span class="quantity-display"><%= item.quantity %></span>
+                <button class="quantity-increase" onclick="increaseQuantity(this, '<%= item.id %>','<%= item.size %>')">+</button>
+            </div>
+            </p>
+            <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%= item.size %>')">Remove</button>
           </div>
-          </p>
-          <button class="remove-item" onclick="removeProduct('<%= item.id %>','<%= item.size %>')">Remove</button>
+        </div>
+        
+        <h4 class="product-price text-success">
+          <% if (item.finalDiscount ) { %>
+            <s class="text-muted">₹ <%= item.price.toFixed(2)*item.quantity %></s> 
+            ₹ <%= item.finalDiscount.toFixed(2)*item.quantity %>
+          <% } else { %>
+            ₹ <%= item.price.toFixed(2)*item.quantity %>
+          <% } %>
+        </h4>      </div>
+      <% }); %>
+  
+      <!-- Coupon Input Section -->
+      <div class="coupon-container">
+        <h3>Apply Coupon</h3>
+        <input type="text" id="couponCode" class="coupon-input" placeholder="Enter coupon code" />
+        <button class="coupon-button " onclick="applyCoupon()">Apply Coupon</button>
+        <button class="coupon-button" id="removeCouponButton" style="display: none;color:white;background-color: red;" onclick="removeCoupon()">Remove Coupon</button>
+      </div>
+  
+      <!-- Active Coupon Section -->
+      <% if (activeCoupon && activeCoupon.length > 0) { %>
+      <div class="active-coupon">
+        <label for="couponSelect">Select Active Coupon:</label>
+        <select id="couponSelect" name="couponSelect" class="form-select" onchange="populateCouponCode()">
+          <option value="" disabled selected>Select a coupon</option>
+          <% activeCoupon.forEach(coupon => { %>
+          <option value="<%= coupon.code %>">
+            <%= coupon.code %> -
+            <% if (coupon.discountType === 'percentage') { %>
+            <%= coupon.maximumDiscount %>% off on minimum ₹<%= coupon.minimumPurchase %> cart value
+            <% } else if (coupon.discountType === 'fixed') { %>
+            Flat ₹<%= coupon.discountValue %> off on minimum ₹<%= coupon.minimumPurchase %> cart value
+            <% } %>
+          </option>
+          <% }) %>
+        </select>
+        <p class="coupon-info">
+          <em>Select a coupon to see details or apply.</em>
+        </p>
+      </div>
+      <% } else { %>
+      <p>No active coupons available at the moment.</p>
+      <% } %>
+  
+      <!-- Order Summary Section -->
+      <div class="order-summary">
+        <h2>Order Summary</h2>
+        <div class="summary-item">
+          <p>Items (<%= products.length %>)</p>
+          <p>₹<%= cart.totalPrice.toFixed(2) %></p>
+        </div>
+  
+        <!-- Display GST if available -->
+        <% if ( cart.gst > 0 ) { %>
+        <div class="summary-item">
+          <p>GST (Tax):</p>
+          <p>+ ₹<%= cart.gst.toFixed(2) %></p>
+        </div>
+        <% } %>
+
+     
+  
+        <!-- Display discount if available -->
+        <% if (cart.couponDiscount >0 ) { %>
+        <div class="summary-item">
+          <p>Discount Applied (Coupon):</p>
+          <p>- ₹<%= cart.couponDiscount.toFixed(2) %></p>
+        </div>
+        <% } %>
+  
+        <div class="summary-total">
+          <h3>Total</h3>
+          <h3 id="grandTotal">₹<%= cart.grandTotal.toFixed(2) %></h3>
+        </div>
+  
+        <a href="/users/checkout">
+          <button class="checkout-button">Checkout</button>
+        </a>
+        
+        <div class="summary-item text-center align-items-center">
+          <p class="text-success totalDiscount">you saved rs <%= cart.totalDiscount %> on this order</p>
         </div>
       </div>
-      
-      <div class="item-price">₹<%=item.discountedPrice?item.discountedPrice.toFixed(2):item.price.toFixed(2)%> each</div>
-    </div>
-    <% }); %>
-
-    <!-- Coupon Input Section -->
-    <div class="coupon-container">
-      <h3>Apply Coupon</h3>
-      <input type="text" id="couponCode" class="coupon-input" placeholder="Enter coupon code" />
-      <button class="coupon-button " onclick="applyCoupon()">Apply Coupon</button>
-      <button class="coupon-button" id="removeCouponButton" style="display: none;color:white;background-color: red;" onclick="removeCoupon()">Remove Coupon</button>
-    </div>
-
-    <!-- Active Coupon Section -->
-    <% if (activeCoupon && activeCoupon.length > 0) { %>
-    <div class="active-coupon">
-      <label for="couponSelect">Select Active Coupon:</label>
-      <select id="couponSelect" name="couponSelect" class="form-select" onchange="populateCouponCode()">
-        <option value="" disabled selected>Select a coupon</option>
-        <% activeCoupon.forEach(coupon => { %>
-        <option value="<%= coupon.code %>">
-          <%= coupon.code %> -
-          <% if (coupon.discountType === 'percentage') { %>
-          <%= coupon.maximumDiscount %>% off on minimum ₹<%= coupon.minimumPurchase %> cart value
-          <% } else if (coupon.discountType === 'fixed') { %>
-          Flat ₹<%= coupon.discountValue %> off on minimum ₹<%= coupon.minimumPurchase %> cart value
-          <% } %>
-        </option>
-        <% }) %>
-      </select>
-      <p class="coupon-info">
-        <em>Select a coupon to see details or apply.</em>
-      </p>
-    </div>
-    <% } else { %>
-    <p>No active coupons available at the moment.</p>
-    <% } %>
-
-    <!-- Order Summary Section -->
-    <div class="order-summary">
-      <h2>Order Summary</h2>
-      <div class="summary-item">
-        <p>Items (<%= products.length %>)</p>
-        <p>₹<%= totalItemsPrice.toFixed(2) %></p>
-      </div>
-
-      <!-- Display GST if available -->
-      <% if (gst > 0) { %>
-      <div class="summary-item">
-        <p>GST (Tax):</p>
-        <p>+ ₹<%= gst.toFixed(2) %></p>
-      </div>
+  
+      <% } else { %>
+      <p>Your cart is empty.</p>
       <% } %>
-
-      <!-- Display discount if available -->
-      <% if (discount > 0) { %>
-      <div class="summary-item">
-        <p>Discount Applied (Coupon):</p>
-        <p>- ₹<%= discount.toFixed(2) %></p>
-      </div>
-      <% } %>
-
-      <div class="summary-total">
-        <h3>Total</h3>
-        <h3 id="grandTotal">₹<%= grandTotal.toFixed(2) %></h3>
-      </div>
-
-      <a href="/users/checkout">
-        <button class="checkout-button">Checkout</button>
-      </a>
     </div>
+  
+  
+  </main>
+  
 
-    <% } else { %>
-    <p>Your cart is empty.</p>
-    <% } %>
-  </div>
-
-
-</main>
-
+</div>
 
 <script>
   //incrementing and decrementing the product
@@ -469,13 +493,13 @@ async function applyCoupon() {
       document.getElementById("grandTotal").textContent = `₹${data.cart.grandTotal.toFixed(2)}`;
 
 
-      if (data.cart.discount > 0) {
+      if (data.cart.couponDiscount > 0) {
         const discountSection = document.querySelector('.summary-item');
         const discountElement = document.createElement('div');
         discountElement.classList.add('summary-item');
         discountElement.innerHTML = `
           <p>Discount Applied (Coupon):</p>
-          <p>- ₹${data.cart.discount.toFixed(2)}</p>
+          <p>- ₹${data.cart.couponDiscount.toFixed(2)}</p>
         `;
         discountSection.insertAdjacentElement('afterend', discountElement);
       }
@@ -495,7 +519,8 @@ async function applyCoupon() {
         icon: "success",
         title: "Coupon Applied!",
         text: data.message,
-      });
+      })
+
     } else {
       Swal.fire({
         icon: "error",
@@ -537,7 +562,7 @@ async function removeCoupon() {
 
     if (response.ok) {
       // Update the UI after removing the coupon
-      document.getElementById("grandTotal").textContent = `₹${data.cart.grandTotal.toFixed(2)}`;
+      document.getElementById("grandTotal").textContent = `₹${data.grandTotal.toFixed(2)}`;
  
       couponInput.value=""
       // Remove the discount section
@@ -566,7 +591,7 @@ async function removeCoupon() {
         icon: "success",
         title: "Coupon Removed!",
         text: data.message,
-      });
+      }).then(()=>location.reload())
     } else {
       // Show error alert using Swal
       Swal.fire({

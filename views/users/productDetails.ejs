@@ -132,7 +132,6 @@
 
 <div class="container-fluid mt-4">
   <div class="row d-flex align-items-start justify-content-between p-5">
-    <!-- Thumbnail Gallery -->
     <div class="col-md-2 d-flex flex-column gap-2 align-items-start">
       <div class="thumbnail-gallery">
         <% product.images.forEach((image, index) => { %>
@@ -157,7 +156,6 @@
     <!-- Product Details -->
     <div class="col-md-5">
       <div class="product-details">
-        <!-- Wishlist Icon -->
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h1 class="product-name fw-bold"><%= product.name %></h1>
           <i class="bi bi-heart wishlist-icon fs-3 text-danger cursor-pointer border"></i>
@@ -165,9 +163,9 @@
 
         <p class="product-description mb-4"><%= product.description %></p>
         <h4 class="product-price text-danger">
-          <% if (product.discountedPrice) { %>
-            <s class="text-muted">₹ <%= product.originalPrice.toFixed(2) %></s> 
-            ₹ <%= product.discountedPrice.toFixed(2) %>
+          <% if (product.finalDiscount ) { %>
+            <s class="text-muted">₹ <%= product.price.toFixed(2) %></s> 
+            ₹ <%= product.finalDiscount.toFixed(2) %>
           <% } else { %>
             ₹ <%= product.price.toFixed(2) %>
           <% } %>
@@ -226,16 +224,7 @@
         </a>
           
         </div>
-        <div class="coupon-section mt-4">
-          <h4>Have a Coupon?</h4>
-          <div class="d-flex">
-            <input type="text" id="couponCode" class="form-control" placeholder="Enter Coupon Code" aria-label="Coupon Code">
-            <button id="applyCoupon" class="btn btn-primary ms-2">Apply Coupon</button>
-          </div>
-
-          <div id="couponFeedback" class="mt-2 text-success" style="display:none;">
-            Coupon Applied Successfully!
-          </div>
+    
         </div>
       </div>
     </div>

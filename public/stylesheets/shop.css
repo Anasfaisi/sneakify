@@ -181,3 +181,6 @@ body {
     text-decoration: none;
   }
   
+  .priceDisplay{
+    justify-content: space-around;
+  }

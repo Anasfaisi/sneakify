@@ -69,6 +69,14 @@
 
 </style>
 <div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/users/cart">Cart</a></li>
+      <li class="breadcrumb-item"><a href="/users/checkout">Checkout</a></li>
+      
+    </ol>
+  </nav>
   <h3>Checkout</h3>
   <nav>
     <ul class="nav nav-tabs">
@@ -151,9 +159,14 @@
               <h5 class="mb-1"><%= product.name %></h5>
               <p class="mb-0"><%= product.description %></p>
               <p class="mb-0">Size: <%= product.size %></p>
-              <p class="mb-0">Price: ₹<%= product.price %></p>
+              <% if (product.finalDiscount ) { %>
+                <s class="text-muted">₹ <%= product.price.toFixed(2) %></s> 
+                ₹ <%= product.finalDiscount.toFixed(2) %>
+              <% } else { %>
+                ₹ <%= product.price.toFixed(2) %>
+              <% } %>
               <p class="mb-0">Quantity: <%= product.quantity %></p>
-              <p>Total: ₹<%= product.total %></p>
+              <p>Total: ₹<%= (product.finalDiscount ?? product.price)*product.quantity %></p>
             </div>
           </div>
           <% }); %>
@@ -164,13 +177,20 @@
       <div class="card">
         <div class="card-body">
           <h3 class="card-title">Order Summary</h3>
-          <p>Items Total: ₹<%= totalItemsPrice %></p>
+          <p>Items Total: ₹<%= cart.totalPrice %></p>
           <p>Shipping: ₹<%= shippingCharge %>
             <% if (shippingCharge === 0) { %>
             <span class="text-success">(Free)</span>
             <% } %>
           </p>
-          <h4 class="fw-bold" id="grandTotal" data-grandTotal="<%= grandTotal %>">Grand Total: ₹<%= grandTotal.toFixed(2) %></h4>
+          <div class="summary-item">
+            <p style="display: inline;">GST (Tax):</p>
+            <p style="display: inline;">₹<%= cart.gst.toFixed(2) %></p>
+          </div>
+          <% if (cart.couponDiscount >0) { %>
+          <p class="mt-2"> Coupon Discount:₹ <%=cart.couponDiscount  %> </p>
+         <% } %>
+          <h4 class="fw-bold mt-2" id="grandTotal" data-grandTotal="<%= grandTotal %>">Grand Total: ₹<%= grandTotal.toFixed(2) %></h4>
           <button id="placeOrder" class="btn btn-success w-100 mt-3">Place Order</button>
         </div>
       </div>

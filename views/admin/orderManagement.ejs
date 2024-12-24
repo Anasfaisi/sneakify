@@ -113,7 +113,7 @@
                   <td>
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal" onclick="viewOrderDetails('<%= order._id %>')">View Details</button>
                     <td>
-                      <button class="btn btn-success btn-sm"style="display: inline;" onclick="updateOrderStatus('<%= order._id %>')">Update Status</button>
+                      <button class="btn btn-success btn-sm"style="display: inline;" onclick="updateOrderStatus('<%= order._id %>','<%= order.status %>')">Update Status</button>
                       </td>
                     
                     
@@ -137,19 +137,32 @@
             <% if (notifications && notifications.length > 0) { %>
               <ul class="list-group">
                 <% notifications.forEach((notification) => { %>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <%= notification.message %>
-
-                    <button class="btn btn-primary btn-sm" id="viewButton" value="<%=notification.orderId.status %>"  onclick='handleNotification("<%=notification.orderId._id  %>","<%=notification._id %>")' >
-                      View
-                    </button>
+                  <li class="list-group-item">
+                    <div class="d-flex flex-column">
+                      <!-- Notification Message -->
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><strong>Message:</strong> <%= notification.message %></span>
+                        <button class="btn btn-primary btn-sm" id="viewButton" value="<%= notification.orderId.status %>" 
+                          onclick='handleNotification("<%= notification.orderId._id %>", "<%= notification._id %>")'>
+                          View
+                        </button>
+                      </div>
+          
+                      <!-- Cancellation Reason -->
+                      <% if (notification.cancelReason) { %>
+                        <div class="alert alert-warning p-2">
+                          <strong>Cancel Reason:</strong> <%= notification.cancelReason %>
+                        </div>
+                      <% } %>
+                    </div>
                   </li>
                 <% }); %>
               </ul>
             <% } else { %>
-              <p>No new notifications.</p>
+              <p class="text-muted">No new notifications.</p>
             <% } %>
           </div>
+          
         </div>
       </div>
     </div>
@@ -200,37 +213,60 @@
   </div>
 </div>
 
-
 <script>
   function viewOrderDetails(orderId) {
     fetch(`/admin/orderDetails/${orderId}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log(data._id);
-      const orderDetails = document.getElementById('orderDetails');
-      orderDetails.innerHTML = `
-            <p><strong>Order ID:</strong> ${data.orderId}</p>
-            <p><strong>User Name:</strong> ${data.userId.firstName}</p>
-            <p><strong>Order Status:</strong> ${data.status}</p>
-            <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
-            <p><strong>Products:</strong></p>
-            <ul>
-              ${data.products.map(product => `
-              <li>${product.name} - $${product.price} x ${product.quantity} (Total: $${product.total})</li>
-              `).join('')}
-              </ul>
-              <p><strong>Total Amount:</strong> $${data.grandTotal.toFixed(2)}</p>
-              <p><strong>Address:</strong> ${data.addressDetails.address}, ${data.addressDetails.city}, ${data.addressDetails.state}, ${data.addressDetails.country} - ${data.addressDetails.pincode}</p>
-              `;
-            });
-    }
+      .then(response => response.json())
+      .then(data => {
+        console.log(data._id);
+        const orderDetails = document.getElementById('orderDetails');
 
+        // Check if the status is "cancelled" or "returned"
+        const cancelReasonHTML =
+          (data.status === "cancelled" || data.status === "returned") && data.cancelReason
+            ? `<p><strong>Cancel Reason:</strong> ${data.cancelReason}</p>`
+            : "";
 
-    
-    </script>
+        orderDetails.innerHTML = `
+          <p><strong>Order ID:</strong> ${data.orderId}</p>
+          <p><strong>User Name:</strong> ${data.userId.firstName}</p>
+          <p><strong>Order Status:</strong> ${data.status}</p>
+          ${cancelReasonHTML} <!-- Conditionally added cancel reason -->
+          <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
+          <p><strong>Products:</strong></p>
+          <ul>
+            ${data.products
+              .map(
+                product => `
+                <li>${product.name} - $${product.price} x ${product.quantity} (Total: $${product.total})</li>
+              `
+              )
+              .join("")}
+          </ul>
+          <p><strong>Total Amount:</strong> $${data.grandTotal.toFixed(2)}</p>
+          <p><strong>Address:</strong> ${data.addressDetails.address}, ${data.addressDetails.city}, ${data.addressDetails.state}, ${data.addressDetails.country} - ${data.addressDetails.pincode}</p>
+        `;
+      })
+      .catch(error => {
+        console.error("Error fetching order details:", error);
+      });
+  }
+</script>
 
 <script>
-  function updateOrderStatus(orderId) {
+  function updateOrderStatus(orderId, currentStatus) {
+    // Check if the status is already "final" (e.g., Delivered, Cancelled)
+    const finalStatuses = ['delivered', 'cancelled'];
+
+    if (finalStatuses.includes(currentStatus)) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Action Not Allowed',
+        text: `The order has already been marked as "${currentStatus}" and cannot be updated.`,
+      });
+      return;
+    }
+
     Swal.fire({
       title: 'Update Order Status',
       input: 'select',
@@ -275,9 +311,8 @@
       }
     });
   }
-  
-  
-  </script>
+</script>
+
 
 <script>
  async function handleNotification(orderId,notificationId) {

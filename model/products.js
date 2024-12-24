@@ -33,6 +33,12 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    categoryId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"Category",
+      required:true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -50,10 +56,18 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Offer", // Link to Offer model
     },
-    discountedPrice: { type: Number, default: 0 },
-    originalPrice: { type: Number, default: 0 },
-
-    
+    offerDiscount:{
+      type:Number,
+      default:0,
+    },
+    categoryDiscount:{
+      type:Number,
+      default:0
+    },
+    finalDiscount :{
+      type:Number,
+      default:0
+    }
   },
 
   {

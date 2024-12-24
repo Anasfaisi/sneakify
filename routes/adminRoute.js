@@ -53,5 +53,10 @@ router.post('/offer/:id/deleted', isAdmin,controller.reuseOffer);
 
 
 router.get("/salesReport",isAdmin,controller.loadSalesReport)
+router.get('/export/excel',isAdmin,controller.exportExcel);
+router.get('/export/pdf',isAdmin ,controller.exportPDF);
+router.get('/salesReport',isAdmin,controller.salesReport)
+
+
 
 module.exports = router;

@@ -6,7 +6,9 @@ const orderProductSchema = new mongoose.Schema({
   price: { type: Number, required: true }, 
   size: { type: String, },  
   quantity: { type: Number, required: true, min: 1 }, 
-  total: { type: Number, required: true },  
+  totalPrice: { type: Number, required: true }, 
+  discountedPrice:{type:Number},
+
 });
 
 
@@ -39,6 +41,8 @@ const orderSchema = new mongoose.Schema(
     shippingCharge: { type: Number, default: 0 }, 
     grandTotal: { type: Number, required: true }, 
     totalDiscount:{type:Number,default :0},
+    gst:{type:Number},
+    couponDiscount:{type:Number},
     status: {
       type: String,
       enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel_requested',"returned","return_requested"], 
@@ -52,6 +56,9 @@ const orderSchema = new mongoose.Schema(
     },
     cancelRequest: { type: Boolean, default: false },
   cancelReason: { type: String }, 
+  couponDiscount:{type:Number},
+  offerDiscount:{type:Number}
+
   },
   { timestamps: true }
 );
