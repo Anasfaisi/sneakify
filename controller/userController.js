@@ -12,9 +12,24 @@ const Category = require("../model/category")
 const Offer = require("../model/offer")
 const Notification = require('../model/notification'); 
 const Wallet = require("../model/wallet")
+const { jsPDF } = require("jspdf");
+const PDFDocument = require('pdfkit');
+
+
+
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+function generateReferralCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let referralCode = '';
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    referralCode += chars[randomIndex];
+  }
+  return referralCode;
+}
+
 
 exports.getSignuppage = async (req, res) => {
   if (req.session?.passport?.user) {
@@ -30,7 +45,8 @@ exports.getSignuppage = async (req, res) => {
 
 exports.signup = async (req, res) => {
   console.log("reached in post signup route");
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, referralCode} = req.body;
+  console.log(referralCode)
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -42,7 +58,7 @@ exports.signup = async (req, res) => {
     //generate otp
     const otp = generateOtp();
 
-    const otpExpiry = new Date(Date.now() + 15 * 1000);
+    const otpExpiry = new Date(Date.now() + 30 * 1000);
 
     await unverifiedUser.create({
       firstName,
@@ -59,6 +75,46 @@ exports.signup = async (req, res) => {
     if (!emailSent) {
       console.error("error in sending email");
       res.status(500).json({ message: "failed to send email" });
+    }
+
+    if (referralCode) {
+      // Find the user who referred
+      const referrer = await User.findOne({ referralCode });
+
+      if (referrer) {
+        // Check if the referrer is not blocked
+        if (referrer.isBlocked) {
+          console.log('Referrer is blocked');
+        } else {
+          // Add 100 Rs to the referrer's wallet
+          const wallet = await Wallet.findOne({ userId: referrer._id });
+
+          if (!wallet) {
+            // If the referrer doesn't have a wallet, create one
+            await Wallet.create({ userId: referrer._id, balance: 100 });
+          } else {
+            // Add 100 Rs to the wallet balance
+            wallet.balance += 100;
+            await wallet.save();
+          }
+
+          // Log the referral transaction
+          await Wallet.updateOne(
+            { userId: referrer._id },
+            {
+              $push: {
+                transactions: {
+                  type: "credit",
+                  amount: 100,
+                  description: "Referral bonus",
+                },
+              },
+            }
+          );
+
+          console.log(`100 Rs added to referrer's wallet (${referrer.firstName} ${referrer.lastName})`);
+        }
+      }
     }
     req.session.pendingEmail = email;
 
@@ -122,12 +178,14 @@ exports.otpVerify = async (req, res) => {
       return res.status(500).json({ message: "OTP expired try with new one " });
     }
     const hashedPassword = await bcrypt.hash(user.password, 10);
+    const newReferralCode = generateReferralCode();
 
     orgUser = await User.create({
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       password: hashedPassword,
+      referralCode:newReferralCode,
     });
 
     orgUser.isVerified = true;
@@ -647,6 +705,7 @@ exports.profile = async (req, res) => {
 
     const user = await User.findById(currentUser);
     res.render("users/profile", { user });
+    console.log(user)
   } catch (error) {
     console.log("error in rendering the profile* :", error);
     res.status(500).json({ message: "rendering failed" });
@@ -957,6 +1016,148 @@ exports.returnOrder = async (req,res)=>{
   }
   
 }
+
+exports.invoiceDownload = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.session.passport.user;
+    const order = await Order.findOne({ _id: orderId }).populate('userId').exec();
+
+    if (!order) {
+      return res.status(404).send('Order not found');
+    }
+
+    // Create a new PDF document
+    const doc = new PDFDocument({
+      margin: 50,
+      size: 'A4'
+    });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Invoice-${orderId}.pdf`);
+    doc.pipe(res);
+
+    // Add company logo and header
+    doc.fontSize(20).text('INVOICE', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`Invoice Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
+    doc.fontSize(10).text(`Order ID: ${order.orderId}`, { align: 'right' });
+    doc.moveDown(1);
+
+    // Add a horizontal line
+    doc.moveTo(50, 150).lineTo(550, 150).stroke();
+    doc.moveDown(1);
+
+    // Billing and Shipping Information in two columns
+    const startY = 170;
+    
+    // Left column - Billing Details
+    doc.fontSize(12).text('Bill To:', 50, startY, { bold: true });
+    const address = order.addressDetails;
+    doc.fontSize(10)
+       .text(`${address.firstName} ${address.lastName}`, 50, startY + 20)
+       .text(address.address, 50, startY + 35)
+       .text(`${address.city}, ${address.state}, ${address.pincode}`, 50, startY + 50)
+       .text(address.country, 50, startY + 65)
+       .text(`Phone: ${address.phone}`, 50, startY + 80);
+
+    // Right column - Order Details
+    doc.fontSize(12).text('Order Information:', 300, startY, { bold: true });
+    doc.fontSize(10)
+       .text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`, 300, startY + 20)
+       .text(`Payment Method: ${order.paymentMethod}`, 300, startY + 35)
+       .text(`Payment Status: ${order.paymentStatus}`, 300, startY + 50)
+       .text(`Order Status: ${order.status}`, 300, startY + 65);
+
+    // Add a horizontal line
+    doc.moveDown(4);
+    doc.moveTo(50, 280).lineTo(550, 280).stroke();
+
+    // Product Details Table
+    const tableTop = 300;
+    const tableHeaders = [
+      { x: 50, w: 200, label: 'Product' },
+      { x: 250, w: 60, label: 'Size' },
+      { x: 310, w: 60, label: 'Qty' },
+      { x: 370, w: 80, label: 'Price' },
+      { x: 450, w: 100, label: 'Total' }
+    ];
+
+    // Draw table headers with background
+    doc.fillColor('#f0f0f0')
+       .rect(50, tableTop - 10, 500, 20)
+       .fill();
+    
+    doc.fillColor('#000000');
+    tableHeaders.forEach(header => {
+      doc.fontSize(10).text(header.label, header.x, tableTop, { width: header.w });
+    });
+
+    // Draw table rows
+    let y = tableTop + 20;
+    order.products.forEach((product, i) => {
+      // Add zebra striping
+      if (i % 2 === 1) {
+        doc.fillColor('#f9f9f9')
+           .rect(50, y - 5, 500, 20)
+           .fill();
+        doc.fillColor('#000000');
+      }
+
+      doc.fontSize(9)
+         .text(product.name, 50, y, { width: 200 })
+         .text(product.size || '-', 250, y, { width: 60 })
+         .text(product.quantity.toString(), 310, y, { width: 60 })
+         .text(`₹${product.price.toFixed(2)}`, 370, y, { width: 80 })
+         .text(`₹${product.totalPrice.toFixed(2)}`, 450, y, { width: 100 });
+      y += 20;
+    });
+
+    // Add totals section
+    const totalsY = y + 20;
+    doc.moveTo(50, y + 10).lineTo(550, y + 10).stroke();
+
+    // Right-aligned totals
+    const totalsConfig = [
+      { label: 'Subtotal:', value: `₹${order.totalAmount.toFixed(2)}` },
+      { label: 'Shipping:', value: `₹${order.shippingCharge.toFixed(2)}` },
+      { label: 'GST:', value: `₹${order.gst || 0}` },
+      { label: 'Coupon Discount:', value: `-₹${order.couponDiscount || 0}` },
+      { label: 'Offer Discount:', value: `-₹${order.offerDiscount || 0}` }
+    ];
+
+    let totalY = totalsY;
+    totalsConfig.forEach(item => {
+      doc.fontSize(10)
+         .text(item.label, 350, totalY)
+         .text(item.value, 450, totalY);
+      totalY += 20;
+    });
+
+    // Grand Total with background
+    doc.fillColor('#f0f0f0')
+       .rect(350, totalY, 200, 25)
+       .fill();
+    doc.fillColor('#000000')
+       .fontSize(12)
+       .text('Grand Total:', 350, totalY + 5)
+       .text(`₹${order.grandTotal.toFixed(2)}`, 450, totalY + 5, { bold: true });
+
+    // Footer
+    doc.fontSize(8)
+       .text('Thank you for your business!', 50, doc.page.height - 50, {
+         align: 'center',
+         color: '#666666'
+       });
+
+    // Finalize PDF
+    doc.end();
+  } catch (error) {
+    console.error(`Error generating invoice PDF: ${error}`);
+    res.status(500).send('Error generating PDF');
+  }
+};
 //===========================================
 exports.loadWallet = async (req, res) => {
   try {

@@ -40,7 +40,19 @@ const userSchema = new mongoose.Schema({
         unique:true,
         sparse:true
     },
-    resetPasswordExpiry: { type: Date },
+    resetPasswordExpiry: { 
+        type: Date
+     },
+    referralCode: {
+        type: String,
+        unique: true,
+        required: true
+    },
+    referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
 });
 
 

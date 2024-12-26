@@ -23,7 +23,9 @@
           <h5 class="mb-3">User Details</h5>
           <p><strong>First Name:</strong> <%= user.firstName %></p>
           <p><strong>Last Name:</strong> <%= user.lastName %></p>
-          <p><strong>Email:</strong> <%= user.email %></p>
+          <p><strong>Email:</strong> <%= user.email %></p readonly>
+          <p>Your referral link: <a href="http://localhost:3000/users/signup?ref=<%= user.referralCode %>" target="_blank">http://localhost:3000/users/signup?ref=<%= user.referralCode %></a></p readonly>
+
 
           <hr>
           <div class="d-flex justify-content-between">

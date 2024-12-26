@@ -12,7 +12,7 @@
   <div class="mt-4">
     <h3>Order Summary</h3>
     <p><strong>Order Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %></p>
-    <p><strong>Status:</strong> success</p>
+    <p><strong>Status:</strong> <%=order.status %></p>
     <p><strong>Payment Method:</strong> 
       <%= order.paymentMethod === "cashOnDelivery" ? "Cash on Delivery (COD)" : order.paymentMethod %>
     </p>
@@ -60,7 +60,9 @@
     <h3>Order Total</h3>
     <p><strong>Items Total:</strong> ₹<%= order.totalAmount %></p>
     <p><strong>Shipping Charge:</strong> ₹<%= order.shippingCharge %></p>
+    <% if(order.couponDiscount >0){  %>
     <p><strong>coupon discount applied:</strong> ₹<%= order.couponDiscount %></p>
+    <% } %>
     <p><strong>gst</strong> ₹<%= order.gst %></p>
    
     <h4 class="fw-bold">Grand Total: ₹<%= order.grandTotal %></h4>

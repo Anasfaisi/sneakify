@@ -1,226 +1,160 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-  </head>
-  <body>
-    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-      <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Sneakify Admin</a>
-      <div class="d-flex align-items-center">
-        <div class="dropdown mr-3">
-          <button class="btn btn-dark dropdown-toggle" type="button" id="notificationsDropdown" data-toggle="dropdown">
-            <i class="fas fa-bell"></i>
-            <span class="badge badge-danger">3</span>
-          </button>
-          <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="#">New order #123</a>
-            <a class="dropdown-item" href="#">Low stock alert</a>
-            <a class="dropdown-item" href="#">New customer signup</a>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+html
+Copy code
+<body>
+  <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Sneakify Admin</a>
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-light" id="logoutButton">
+        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <%- include("partials/sidebar") %>
+
+      <!-- Main Content -->
+      <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">Sales Overview</h1>
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary" onclick="fetchChartData('yearly')">Yearly</button>
+            <button class="btn btn-outline-secondary" onclick="fetchChartData('monthly')">Monthly</button>
+            <button class="btn btn-outline-secondary" onclick="fetchChartData('weekly')">Weekly</button>
           </div>
         </div>
-        <button class="btn btn-outline-light" id="logoutButton">
-          <i class="fas fa-sign-out-alt mr-1"></i>Logout
-        </button>
-      </div>
-    </nav>
 
-    <div class="container-fluid">
-      <div class="row">
-        <!-- Sidebar -->
-        <%- include("partials/sidebar") %>
+    
+        <!-- Sales Chart -->
+        <canvas id="salesChart" width="400" height="200"></canvas>
 
-        <!-- Main Content -->
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Dashboard Overview</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-              <div class="btn-group mr-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-                <i class="fas fa-calendar"></i> This week
-              </button>
-            </div>
-          </div>
-
-          <!-- Statistics Cards -->
-          <div class="row mb-4">
-            <div class="col-sm-6 col-md-3">
-              <div class="card stats-card bg-primary text-white">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="card-subtitle mb-2">Total Sales</h6>
-                      <h3 class="card-title mb-0">₹89,450</h3>
-                      <small class="text-white-50">+12.5% from last month</small>
-                    </div>
-                    <div class="stats-icon bg-primary-light">
-                      <i class="fas fa-chart-line fa-2x"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-md-3">
-              <div class="card stats-card bg-success text-white">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="card-subtitle mb-2">Total Orders</h6>
-                      <h3 class="card-title mb-0">156</h3>
-                      <small class="text-white-50">+8.2% from last month</small>
-                    </div>
-                    <div class="stats-icon bg-success-light">
-                      <i class="fas fa-shopping-cart fa-2x"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-md-3">
-              <div class="card stats-card bg-info text-white">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="card-subtitle mb-2">Total Customers</h6>
-                      <h3 class="card-title mb-0">2,854</h3>
-                      <small class="text-white-50">+15.3% from last month</small>
-                    </div>
-                    <div class="stats-icon bg-info-light">
-                      <i class="fas fa-users fa-2x"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-md-3">
-              <div class="card stats-card bg-warning text-white">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="card-subtitle mb-2">Products Stock</h6>
-                      <h3 class="card-title mb-0">486</h3>
-                      <small class="text-white-50">4 items low stock</small>
-                    </div>
-                    <div class="stats-icon bg-warning-light">
-                      <i class="fas fa-box fa-2x"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <!-- Best Selling Data -->
+        <div class="row mt-4">
           <!-- Best Selling Products -->
-          <div class="row">
-            <div class="col-md-8">
-              <div class="card">
-                <div class="card-header">
-                  <h5 class="card-title mb-0">Best Selling Products</h5>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-bordered table-hover top-products-table">
-                      <thead>
-                        <tr>
-                          <th>Product</th>
-                          <th>Price</th>
-                          <th>Sold</th>
-                          <th>Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <span>Nike Jordan Special Edition</span>
-                            </div>
-                          </td>
-                          <td>₹3,000</td>
-                          <td>124 pairs</td>
-                          <td>₹372,000</td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <span>Nike Air Max 270</span>
-                            </div>
-                          </td>
-                          <td>₹2,800</td>
-                          <td>98 pairs</td>
-                          <td>₹274,400</td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <span>Adidas Ultra Boost</span>
-                            </div>
-                          </td>
-                          <td>₹2,500</td>
-                          <td>87 pairs</td>
-                          <td>₹217,500</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card">
-                <div class="card-header">
-                  <h5 class="card-title mb-0">Recent Orders</h5>
-                </div>
-                <div class="card-body">
-                  <div class="list-group">
-                    <a href="#" class="list-group-item list-group-item-action">
-                      <span>#10123</span> - ₹12,000
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action">
-                      <span>#10124</span> - ₹5,400
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action">
-                      <span>#10125</span> - ₹2,750
-                    </a>
-                  </div>
-                </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">Top 10 Best-Selling Products</div>
+              <div class="card-body">
+                <ul class="list-group" id="topProductsList"></ul>
               </div>
             </div>
           </div>
-        </main>
-      </div>
+
+          <!-- Best Selling Categories -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">Top 10 Best-Selling Categories</div>
+              <div class="card-body">
+                <ul class="list-group" id="topCategoriesList"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
+  </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    let salesChart;
+
+    // Fetch Chart Data
+    async function fetchChartData(filter) {
+  try {
+    const response = await fetch(`/admin/chartData?filter=${filter}`);
+    const data = await response.json();
+
+    if (salesChart) {
+      salesChart.destroy();
+    }
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    salesChart = new Chart(ctx, {
+      type: 'bar',  // Change type to 'bar' for a bar chart
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Sales',
+          data: data.sales,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',  // Adjust the color
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+  }
+}
 
 
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-      document.getElementById("logoutButton").addEventListener("click", async () => {
-        try {
-          const response = await fetch("/admin/logout", {
-            method: "GET",
-            headers: {
-              "content-type": "application/json"
-            }
-          });
+    // Fetch Dashboard Stats
+    async function fetchDashboardStats() {
+      try {
+        const response = await fetch('/admin/dashboardStats');
+        const { topProducts, topCategories } = await response.json();
 
-          if (response.ok) {
-            window.location.href = "/admin/login";
-          } else {
-            console.log("Logout failed");
-          }
-        } catch (error) {
-          console.log("error from home ejs in logout validation  " + error);
-        }
+        // Populate Top Products
+        populateList('topProductsList', topProducts, 'name', 'totalSold');
+
+        // Populate Top Categories
+        populateList('topCategoriesList', topCategories, 'category', 'totalSold');
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    }
+
+    function populateList(listId, data, labelKey, valueKey) {
+      const list = document.getElementById(listId);
+      list.innerHTML = '';
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = `${item[labelKey]} - ${item[valueKey]} sold`;
+        list.appendChild(li);
       });
-    </script>
-  </body>
+    }
+
+    // Fetch Dashboard Data
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch('/admin/dashboardData');
+        const data = await response.json();
+
+        // Update the UI with real-time data
+        document.getElementById('totalSales').textContent = `₹${data.totalSales}`;
+        document.getElementById('totalProducts').textContent = data.totalProducts;
+        document.getElementById('totalCustomers').textContent = data.totalCustomers;
+        document.getElementById('revenue').textContent = `₹${data.revenue}`;
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    }
+
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchChartData('yearly');
+      fetchDashboardStats();
+      fetchDashboardData();
+    });
+  </script>
+</body>
 </html>

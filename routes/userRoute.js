@@ -56,6 +56,7 @@ router.get("/orders",isAuthenticated,controller.getorderHistory)
 router.get("/orderDetails/:id",isAuthenticated,controller.getOrderDetails)
 router.post("/orderCancel/:id",controller.cancelOrder)
 router.post("/orderReturn/:id",controller.returnOrder)
+router.get("/invoiceDownload/:id",controller.invoiceDownload)
 
 
 router.get("/cart",isAuthenticated,cartController.getCart)
@@ -75,11 +76,10 @@ router.delete("/removeItem",wishlistController.removeItem)
 router.get("/wallet",isAuthenticated,controller.loadWallet)
 
 router.get("/checkout",isAuthenticated,checkoutController.getCheckout)
-
 router.post("/placeOrder",checkoutController.placeOrder)
 router.get("/orderPlaced",checkoutController.orderPlaced)
-router.post("/razorPay/createOrder",checkoutController.createOrder)
-
-
-
+router.post("/razorPay/createOrder",checkoutController.placeOrder)
+router.post("/razorPay/verifyPayment",checkoutController.verifyPayment)
+router.post("/handlePaymentFailure",checkoutController.handleFailure)
+router.post("/razorPay/retryPayment",checkoutController.retryPayment)
 module.exports = router;

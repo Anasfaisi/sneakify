@@ -51,9 +51,7 @@ exports.postLogin = async (req, res) => {
   }
 };
 
-exports.getDashboard = async (req, res) => {
-  res.render("admin/dashboard");
-};
+
 
 exports.logout = async (req, res) => {
   req.session.destroy((err) => {
@@ -66,6 +64,157 @@ exports.logout = async (req, res) => {
     return res.status(200).json({ message: "logged out succesfully" });
   });
 };
+
+
+exports.getDashboard = async (req, res) => {
+  console.log("it is reaching in admin dashboard")
+  res.render("admin/dashboard");
+};
+
+
+exports.getChart = async (req, res) => {
+  const filter = req.query.filter || 'yearly'; // default to yearly
+
+  try {
+    // Logic to get the sales data based on the filter (Yearly, Monthly, Weekly)
+    let aggregationPipeline;
+
+    if (filter === 'yearly') {
+      aggregationPipeline = [
+        { $group: { _id: { $year: '$orderDate' }, totalSales: { $sum: '$grandTotal' } } },
+        { $sort: { _id: 1 } }  // Sort by year ascending
+      ];
+    } else if (filter === 'monthly') {
+      aggregationPipeline = [
+        { $group: { _id: { $month: '$orderDate' }, totalSales: { $sum: '$grandTotal' } } },
+        { $sort: { _id: 1 } }  // Sort by month ascending
+      ];
+    } else if (filter === 'weekly') {
+      aggregationPipeline = [
+        { $group: { _id: { $isoWeek: '$orderDate' }, totalSales: { $sum: '$grandTotal' } } },
+        { $sort: { _id: 1 } }  // Sort by week ascending
+      ];
+    }
+
+    const salesData = await Order.aggregate(aggregationPipeline);
+
+    // Prepare labels and sales data
+    const labels = salesData.map(item => item._id);
+    const sales = salesData.map(item => item.totalSales);
+
+    res.json({ labels, sales });
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+    res.status(500).json({ error: 'Failed to fetch chart data' });
+  }
+}
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    // Top Products
+    const topProducts = await Order.aggregate([
+      { $unwind: "$products" }, // Flatten the products array
+      {
+        $group: {
+          _id: "$products.productId",
+          totalSold: { $sum: "$products.quantity" },
+          totalRevenue: { $sum: "$products.totalPrice" },
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $project: {
+          _id: 1,
+          name: "$productDetails.name",
+          price: "$productDetails.price",
+          totalSold: 1,
+          totalRevenue: 1,
+        },
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 10 }, // Top 10 products
+    ]);
+
+    // Top Categories
+    const topCategories = await Order.aggregate([
+      { $unwind: "$products" }, // Flatten the products array
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.productId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $group: {
+          _id: "$productDetails.category", // Group by category
+          totalSold: { $sum: "$products.quantity" },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          category: "$_id",
+          totalSold: 1,
+        },
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 10 }, // Top 10 categories
+    ]);
+
+    // Send the results
+    res.json({
+      topProducts,
+      topCategories,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.getDashboardData = async (req, res)=> {
+  try {
+    // Total Sales (sum of all grandTotal from orders)
+    const totalSales = await Order.aggregate([
+      { $match: { status: { $ne: 'cancelled' } } },  // excluding cancelled orders
+      { $group: { _id: null, total: { $sum: '$grandTotal' } } },
+    ]);
+
+    // Total Products (count all products across orders)
+    const totalProducts = await Order.aggregate([
+      { $match: { status: { $ne: 'cancelled' } } }, // excluding cancelled orders
+      { $unwind: '$products' }, // flatten products array
+      { $count: 'total' }
+    ]);
+
+    // Total Customers (distinct count of users)
+    const totalCustomers = await Order.distinct('userId');
+
+    // Revenue (if you're considering it separately)
+    const revenue = totalSales[0] ? totalSales[0].total : 0;
+
+    res.json({
+      totalSales: totalSales[0] ? totalSales[0].total : 0,
+      totalProducts: totalProducts[0] ? totalProducts[0].total : 0,
+      totalCustomers: totalCustomers.length,
+      revenue: revenue,
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).send('Server error');
+  }
+}
 
 // =========================================================================
 
@@ -397,7 +546,7 @@ exports.approveReturnOrder = async (req,res)=>{
       wallet.transactions.push({
         type: "credit",
         amount: order.totalAmount,
-        description: `Refund for cancelled order ${orderId}`,
+        description: `Refund for cancelled order ${order.orderId}`,
         date: new Date(),
       });
 
@@ -1032,71 +1181,75 @@ exports.reuseOffer = async (req, res) => {
 
 
     //===================================================
-exports.loadSalesReport = async (req, res) => {
+    exports.loadSalesReport = async (req, res) => {
       console.log("it is reaching in sales report");
-    
+  
       try {
-        const { dateRange, page = 1, limit = 10 } = req.query; // Extract pagination and date range
-        const currentPage = parseInt(page);
-        const itemsPerPage = parseInt(limit);
-    
-        let dateFilter = {}; // Initialize the filter object
-        const currentDate = moment();
-    
-        // Apply date filtering logic
-        if (dateRange === '1-day') {
-          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'days').toDate() };
-        } else if (dateRange === '1-week') {
-          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'weeks').toDate() };
-        } else if (dateRange === '1-month') {
-          dateFilter.createdAt = { $gte: currentDate.subtract(1, 'months').toDate() };
-        }
-    
-        // Fetch total sales data (no pagination) to calculate overall totals
-        const totalSalesData = await Order.find(dateFilter);
-        const totalAmount = totalSalesData.reduce((sum, order) => sum + order.grandTotal, 0);
-        const totalSales = totalSalesData.length;
-        const totalDiscount = totalSalesData.reduce(
-          (sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0),
-          0
-        );
-    
-        // Count total records for pagination
-        const totalFilteredSalesData = totalSalesData.length;
-        const totalPages = Math.ceil(totalFilteredSalesData / itemsPerPage);
-    
-        // Fetch paginated sales data based on the date filter
-        const salesData = await Order.find(dateFilter)
-          .sort({ createdAt: -1 })
-          .skip((currentPage - 1) * itemsPerPage)
-          .limit(itemsPerPage);
-    
-        // If no sales data is found
-        if (!salesData || salesData.length === 0) {
-          return res.render("admin/salesReport", {
-            totalSales,
-            totalAmount,
-            totalDiscount,
-            salesData: [],
-            currentPage,
-            totalPages,
+          const { dateRange = '1-day', page = 1, limit = 10 } = req.query;  // Extract pagination and date range
+          const currentPage = parseInt(page);
+          const itemsPerPage = parseInt(limit);
+  
+          let dateFilter = { status: 'delivered' }; // Filter only 'delivered' orders
+          const currentDate = moment();
+  
+          // Apply date filtering logic
+          if (dateRange === '1-day') {
+              dateFilter.createdAt = { $gte: currentDate.subtract(1, 'days').toDate() };
+          } else if (dateRange === '1-week') {
+              dateFilter.createdAt = { $gte: currentDate.subtract(1, 'weeks').toDate() };
+          } else if (dateRange === '1-month') {
+              dateFilter.createdAt = { $gte: currentDate.subtract(1, 'months').toDate() };
+          }
+  
+          // Fetch total sales data (only delivered orders) to calculate overall totals
+          const totalSalesData = await Order.find(dateFilter);
+          const totalAmount = totalSalesData.reduce((sum, order) => sum + order.grandTotal, 0);
+          const totalSales = totalSalesData.length;
+          const totalDiscount = totalSalesData.reduce(
+              (sum, order) => sum + (order.totalDiscount || 0),
+              0
+          );
+  
+          // Count total records for pagination
+          const totalFilteredSalesData = totalSalesData.length;
+          const totalPages = Math.ceil(totalFilteredSalesData / itemsPerPage);
+  
+          // Fetch paginated sales data based on the date filter (only delivered orders)
+          const salesData = await Order.find(dateFilter)
+              .sort({ createdAt: -1 })
+              .skip((currentPage - 1) * itemsPerPage)
+              .limit(itemsPerPage);
+  
+          // If no sales data is found
+          if (!salesData || salesData.length === 0) {
+              return res.render("admin/salesReport", {
+                  totalSales,
+                  totalAmount,
+                  totalDiscount,
+                  salesData: [],
+                  currentPage,
+                  totalPages,
+                  dateRange,
+              });
+          }
+  
+          console.log(salesData)
+          // Render sales report page with overall totals
+          res.render("admin/salesReport", {
+              totalSales,
+              totalAmount,
+              totalDiscount,
+              salesData,
+              currentPage,
+              totalPages,
+              dateRange,
           });
-        }
-    
-        // Render sales report page with overall totals
-        res.render("admin/salesReport", {
-          totalSales,
-          totalAmount,
-          totalDiscount,
-          salesData,
-          currentPage,
-          totalPages,
-        });
       } catch (error) {
-        console.log(error);
-        res.status(500).send("Error loading sales report");
+          console.log(error);
+          res.status(500).send("Error loading sales report");
       }
-    };
+  };
+  
     
 
 
@@ -1271,55 +1424,3 @@ exports.exportPDF =  async (req, res) => {
   }
 };
 
-
-exports.salesReport = async (req, res) => {
-  try {
-      const { filter } = req.query;  // Get the selected filter value from query parameters
-      
-      // Initialize date filter object
-      let dateFilter = {};
-
-      // Get the current date
-      const currentDate = moment();  // Current date and time
-      
-      if (filter === 'today') {
-          // Set the filter to only include orders created today (from midnight)
-          dateFilter.createdAt = { $gte: currentDate.startOf('day').toDate() };
-      } else if (filter === 'this-week') {
-          // Set the filter to include orders created this week (from the start of the week)
-          dateFilter.createdAt = { $gte: currentDate.startOf('week').toDate() };
-      } else if (filter === 'this-month') {
-          // Set the filter to include orders created this month (from the first day of the month)
-          dateFilter.createdAt = { $gte: currentDate.startOf('month').toDate() };
-      }
-
-      // Fetch orders based on the date filter
-      const orders = await Order.find(dateFilter).populate('userId').exec();
-
-      // Map the order data
-      const salesData = orders.map(order => ({
-          orderId: order.orderId,
-          totalAmount: order.totalAmount,
-          couponDiscount: order.couponDiscount || 'No coupon applied',
-          offerDiscount: order.offerDiscount || 'No offers',
-          userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
-          date: new Date(order.createdAt).toLocaleDateString(),
-      }));
-
-      const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-      const totalSales = orders.length;
-      const totalDiscount = orders.reduce((sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0), 0);
-
-      res.render('admin/sales-report', {
-          salesData,
-          totalAmount,
-          totalSales,
-          totalDiscount,
-          filter  
-      });
-
-  } catch (error) {
-      console.log(`Error fetching sales report: ${error}`);
-      res.status(500).send('Error fetching sales data');
-  }
-};

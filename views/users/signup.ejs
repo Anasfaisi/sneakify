@@ -58,6 +58,7 @@
         <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required >
         <div id="errorConfirmPassword" class="text-danger"></div>
       </div>
+      <input type="hidden" name="referralCode" id="referralCode">
 
       <button type="submit" class="btn btn-primary w-100">Sign Up</button>
     </form>
@@ -71,8 +72,14 @@
   </div>
 </div>
 
-
- 
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralCode = urlParams.get('ref');
+  
+  if (referralCode) {
+    document.getElementById('referralCode').value = referralCode;
+  }
+ </script>
 
 <script>
   document.getElementById('signupForm').addEventListener('submit', async function (e) {
@@ -84,6 +91,8 @@
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
+  const referralCode = document.getElementById('referralCode').value
+
 
   // Error elements
   const errorFirstName = document.getElementById('errorFirstName');
@@ -156,7 +165,7 @@
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ firstName, lastName, email, password }),
+      body: JSON.stringify({ firstName, lastName, email, password ,referralCode }),
     });
 
     const data = await response.json();

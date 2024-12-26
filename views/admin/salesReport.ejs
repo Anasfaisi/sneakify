@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
 </head>
 <body>
     <%-include("partials/sidebar") %>
@@ -13,15 +12,16 @@
     <h2>Sales Report</h2>
 
     <div class="mb-3">
-        <form method="GET" action="/salesReport">
+        <form method="GET" action="/admin/salesReport">
             <label for="date-range">Filter By Date Range:</label>
             <select name="dateRange" id="date-range" onchange="this.form.submit()">
-                <option value="1-day">1 Day</option>
-                <option value="1-week">1 Week</option>
-                <option value="1-month">1 Month</option>
+                <option value="1-day" <%= dateRange === '1-day' ? 'selected' : '' %>>1 Day</option>
+                <option value="1-week" <%= dateRange === '1-week' ? 'selected' : '' %>>1 Week</option>
+                <option value="1-month" <%= dateRange === '1-month' ? 'selected' : '' %>>1 Month</option>
             </select>
         </form>
     </div>
+    
     
 
     <!-- Table -->
@@ -32,7 +32,7 @@
                 <th>Total Amount</th>
                 <th>Coupon Discount</th>
                 <th>Offer Discount</th>
-                <th>User name</th>
+                <th>User Name</th>
                 <th>Date</th>
             </tr>
         </thead>
@@ -40,10 +40,20 @@
             <% salesData.forEach(order => { %>
                 <tr>
                     <td><%= order.orderId %></td>
-                    <td><%= order.grandTotal %></td>
-                    <td><%= order.couponDiscount || 'No coupon applied' %></td>
-                    <td><%= order.offerDiscount || 'No offers' %></td>
-                    <td><%= order.addressDetails.firstName%></td>
+                    <td>₹<%= order.grandTotal.toFixed(2) %></td>
+                    <td><%= order.couponDiscount ? '₹' + order.couponDiscount.toFixed(2) : 'No coupon applied' %></td>
+                    <td>
+                        <% if (order.totalDiscount && order.totalDiscount > 0) { %>
+                            <% if (order.couponDiscount && order.couponDiscount > 0) { %>
+                                ₹<%= (order.totalDiscount - order.couponDiscount).toFixed(2) %>
+                            <% } else { %>
+                                ₹<%= order.totalDiscount.toFixed(2) %>
+                            <% } %>
+                        <% } else { %>
+                            No offers
+                        <% } %>
+                    </td>  
+                                   <td><%= order.addressDetails.firstName + ' ' + order.addressDetails.lastName %></td>
                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                 </tr>
             <% }) %>
@@ -89,7 +99,7 @@
         <% if (currentPage < totalPages) { %>
           <a href="?page=<%= currentPage + 1 %>&limit=10" class="btn btn-secondary mx-1">Next &gt;</a>
         <% } %>
-    
+    </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

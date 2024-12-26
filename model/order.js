@@ -45,16 +45,17 @@ const orderSchema = new mongoose.Schema(
     couponDiscount:{type:Number},
     status: {
       type: String,
-      enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel_requested',"returned","return_requested"], 
+      enum: ['pending', 'shipped', 'delivered', 'cancelled','cancel_requested',"returned","return_requested","incomplete"], 
       default: 'pending',
     },
     orderDate: { type: Date, default: Date.now  }, 
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed'],
+      enum: ['pending', 'completed','failed'],
       default: 'pending', 
     },
     cancelRequest: { type: Boolean, default: false },
+    razorpayOrderId:{type:String},
   cancelReason: { type: String }, 
   couponDiscount:{type:Number},
   offerDiscount:{type:Number}

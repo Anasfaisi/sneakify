@@ -8,8 +8,13 @@ const Product = require("../model/products");
 
 router.get("/login", controller.getLogin);
 router.post("/login", controller.postLogin);
-router.get("/dashboard", isAdmin, controller.getDashboard);
 router.get("/logout", controller.logout);
+
+router.get("/dashboard", isAdmin, controller.getDashboard);
+router.get("/dashboardrouter/charData",isAdmin,controller.getChart)
+router.get("/dashboardStats",isAdmin,controller.getDashboardStats)
+router.get("/dashboardData",isAdmin,controller.getDashboardData)
+router.get("/chartData",isAdmin,controller.getChart)
 
 router.get("/users", isAdmin, controller.listUsers);
 router.post("/users/:id/status", controller.updateUserStatus);
@@ -55,7 +60,6 @@ router.post('/offer/:id/deleted', isAdmin,controller.reuseOffer);
 router.get("/salesReport",isAdmin,controller.loadSalesReport)
 router.get('/export/excel',isAdmin,controller.exportExcel);
 router.get('/export/pdf',isAdmin ,controller.exportPDF);
-router.get('/salesReport',isAdmin,controller.salesReport)
 
 
 

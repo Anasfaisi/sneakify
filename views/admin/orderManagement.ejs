@@ -95,7 +95,7 @@
             <thead>
               <tr>
                 <th scope="col">Order ID</th>
-                <th scope="col">User Name</th>
+                <th scope="col">User Email</th>
                 <th scope="col">Order Status</th>
                 <th scope="col">Total Amount</th>
                 <th scope="col">Date Ordered</th>
@@ -108,7 +108,7 @@
                   <td><%= order.orderId %></td>
                   <td><%= order.userId.email %></td> <!-- Assuming user name is populated -->
                   <td><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></td>
-                  <td>$<%= order.grandTotal.toFixed(2) %></td>
+                  <td>₹<%= order.grandTotal.toFixed(2) %></td>
                   <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                   <td>
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal" onclick="viewOrderDetails('<%= order._id %>')">View Details</button>
