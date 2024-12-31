@@ -8,7 +8,7 @@ const Product = require("../model/products");
 
 router.get("/login", controller.getLogin);
 router.post("/login", controller.postLogin);
-router.get("/logout", controller.logout);
+router.post("/logout",isAdmin, controller.logout);
 
 router.get("/dashboard", isAdmin, controller.getDashboard);
 router.get("/dashboardrouter/charData",isAdmin,controller.getChart)

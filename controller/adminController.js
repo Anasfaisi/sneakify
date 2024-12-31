@@ -18,20 +18,19 @@ const { v4: uuidv4 } = require("uuid");
 
 exports.getLogin = async (req, res) => {
   if (req.session.admin) {
-    console.log(12345);
-
     return res.redirect("/admin/dashboard");
   }
-
   return res.render("admin/admin-login");
 };
 
 exports.postLogin = async (req, res) => {
+  console.log("it is reaching in post login")
   const { email, password } = req.body;
-
+  console.log(email,password)
   try {
     const admin = await Admin.findOne({ email });
     const check = await bcrypt.compare(password, admin.password);
+    console.log(check)
     if (!check) {
       return res.status(404).json({ message: "Incorrect credentials" });
     }
@@ -54,6 +53,7 @@ exports.postLogin = async (req, res) => {
 
 
 exports.logout = async (req, res) => {
+  console.log("first",req.session)
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({
@@ -61,8 +61,11 @@ exports.logout = async (req, res) => {
         message: "Could not log out",
       });
     }
-    return res.status(200).json({ message: "logged out succesfully" });
+    else{
+      return res.redirect("/admin/login")
+    }
   });
+  console.log("second",req?.session)
 };
 
 
@@ -285,6 +288,9 @@ exports.addProducts = async (req, res) => {
 
     
     const imageUrls = req.files.map((file) => file.filename); 
+    if(imageUrls.length>3){
+      return res.status(500).json({message:"only 3 images are allowed please retry process"})
+    }
     if (!name || !description || !price || !category) {
       return res
         .status(400)
@@ -1181,6 +1187,9 @@ exports.reuseOffer = async (req, res) => {
 
 
     //===================================================
+  
+
+
     exports.loadSalesReport = async (req, res) => {
       console.log("it is reaching in sales report");
   
@@ -1252,39 +1261,96 @@ exports.reuseOffer = async (req, res) => {
   
     
 
+  function getDateFilter(dateRange) {
+      const currentDate = moment();
+      let dateFilter = { status: "delivered" }; // Default filter for delivered orders
+  
+      if (dateRange === "1-day") {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, "days").toDate() };
+      } else if (dateRange === "1-week") {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, "weeks").toDate() };
+      } else if (dateRange === "1-month") {
+          dateFilter.createdAt = { $gte: currentDate.subtract(1, "months").toDate() };
+      }
+  
+      return dateFilter;
+  }
+  
+;
+  
 
 exports.exportExcel = async (req, res) => {
   try {
-    // Fetch sales data
-    const salesData = await Order.find(); // Replace with your logic to fetch sales data
+    const { dateRange = '1-week' } = req.query; // Get the selected date range from the query parameters
+
+    // Get the date filter using the utility function
+    const dateFilter = getDateFilter(dateRange);
+
+    // Fetch the filtered sales data
+    const salesData = await Order.find(dateFilter).populate('userId');
 
     // Create a new workbook and worksheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sales Report');
 
-    // Add columns
+    // Add title row with merged cells
+    worksheet.mergeCells('A1:F1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'SNEAKIFY SALES REPORT';
+    titleCell.font = {
+      bold: true,
+      size: 16,
+      color: { argb: '000000' }
+    };
+    titleCell.alignment = {
+      horizontal: 'center',
+      vertical: 'middle'
+    };
+    titleCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'E0E0E0' }
+    };
+
+    // Add spacing row
+    worksheet.addRow([]);
+
+    // Define columns with styling
     worksheet.columns = [
       { header: 'Order ID', key: 'orderId', width: 20 },
       { header: 'Total Amount', key: 'grandTotal', width: 15 },
       { header: 'Coupon Discount', key: 'couponDiscount', width: 15 },
       { header: 'Offer Discount', key: 'offerDiscount', width: 15 },
       { header: 'User Name', key: 'userName', width: 20 },
-      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Date', key: 'date', width: 15 }
     ];
 
-    // Add rows
+    // Style header row
+    worksheet.getRow(3).font = { bold: true };
+    worksheet.getRow(3).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'F0F0F0' }
+    };
+
+    // Add data rows
     salesData.forEach(order => {
       worksheet.addRow({
         orderId: order.orderId,
         grandTotal: order.grandTotal,
         couponDiscount: order.couponDiscount || 'No coupon applied',
         offerDiscount: order.offerDiscount || 'No offers',
-        userName: order.addressDetails.firstName,
-        date: new Date(order.createdAt).toLocaleDateString(),
+        userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
+        date: new Date(order.createdAt).toLocaleDateString()
       });
     });
 
-    // Write to file and send to the user
+    // Auto-fit columns
+    worksheet.columns.forEach(column => {
+      column.alignment = { horizontal: 'left' };
+    });
+
+    // Generate the Excel file and send it as a response
     const filePath = path.join(__dirname, 'sales-report.xlsx');
     await workbook.xlsx.writeFile(filePath);
 
@@ -1304,41 +1370,22 @@ exports.exportExcel = async (req, res) => {
 
 
 
-
-exports.exportPDF =  async (req, res) => {
+exports.exportPDF = async (req, res) => {
   try {
-      const { dateRange } = req.query; // Get the selected date range from the query parameters
+      const { dateRange = "1-week" } = req.query; // Get the selected date range from the query parameters
 
-      // Initialize a filter object
-      let dateFilter = {};
-
-      // Get the current date
-      const currentDate = new Date();
-
-      // Apply the filtering logic based on the selected date range
-      if (dateRange === '1-day') {
-          const startOfDay = new Date();
-          startOfDay.setHours(0, 0, 0, 0);
-          dateFilter.createdAt = { $gte: startOfDay };  // Filter orders from today onwards
-      } else if (dateRange === '1-week') {
-          const startOfWeek = new Date();
-          startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());  // Start of the week (Sunday)
-          dateFilter.createdAt = { $gte: startOfWeek };  // Filter orders from the start of the week
-      } else if (dateRange === '1-month') {
-          const startOfMonth = new Date();
-          startOfMonth.setDate(1);  // First day of the month
-          dateFilter.createdAt = { $gte: startOfMonth };  // Filter orders from the start of the month
-      }
+      // Get the date filter using the utility function
+      const dateFilter = getDateFilter(dateRange);
 
       // Fetch the orders based on the date filter
-      const orders = await Order.find(dateFilter).populate('userId').exec();
+      const orders = await Order.find(dateFilter).populate("userId").exec();
 
       // Map the orders data
-      const data = orders.map(order => ({
+      const data = orders.map((order) => ({
           orderId: order.orderId,
           totalAmount: order.totalAmount,
-          couponDiscount: order.couponDiscount || 'No coupon applied',
-          offerDiscount: order.offerDiscount || 'No offers',
+          couponDiscount: order.couponDiscount || "No coupon applied",
+          offerDiscount: order.offerDiscount || "No offers",
           userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
           date: new Date(order.createdAt).toLocaleDateString(),
       }));
@@ -1346,15 +1393,15 @@ exports.exportPDF =  async (req, res) => {
       // Calculate summary values
       const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
       const totalSales = orders.length;
-      const totalDiscount = orders.reduce((sum, order) => sum + (order.couponDiscount || 0) + (order.offerDiscount || 0), 0);
+      const totalDiscount = orders.reduce((sum, order) => sum + (order.totalDiscount || 0), 0);
 
-      // Generate the PDF document (similar to the previous logic)
+      // Generate the PDF document (as before)
       const doc = new PDFDocument();
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=Sneakify-sales-report.pdf');
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=Sneakify-sales-report.pdf");
       doc.pipe(res);
 
-      doc.fontSize(16).text('Sales Report', { align: 'center' });
+      doc.fontSize(16).text("Sales Report", { align: "center" });
       doc.moveDown(1.5);
 
       const pageHeight = 700;
@@ -1371,13 +1418,13 @@ exports.exportPDF =  async (req, res) => {
 
       // Add headers to the table
       headers.forEach((header) => {
-          doc.fontSize(10).text(header, x, y, { width: columnWidth, align: 'center' });
+          doc.fontSize(10).text(header, x, y, { width: columnWidth, align: "center" });
           x += columnWidth + columnSpacing;
       });
 
       doc.moveTo(50, y + rowHeight - 10)
-         .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y + rowHeight - 10)
-         .stroke();
+          .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y + rowHeight - 10)
+          .stroke();
 
       y += rowHeight;
 
@@ -1396,31 +1443,30 @@ exports.exportPDF =  async (req, res) => {
           x = 50;
 
           Object.values(row).forEach((cell) => {
-              doc.fontSize(8).text(String(cell), x, y, { width: columnWidth, align: 'center', ellipsis: true });
+              doc.fontSize(8).text(String(cell), x, y, { width: columnWidth, align: "center", ellipsis: true });
               x += columnWidth + columnSpacing;
           });
 
           y += rowHeight;
 
           doc.moveTo(50, y - 10)
-             .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y - 10)
-             .stroke();
+              .lineTo(50 + headers.length * (columnWidth + columnSpacing) - columnSpacing, y - 10)
+              .stroke();
       });
 
       // Add summary to the PDF
       y = checkPageSpace(doc, y, 100);
-      doc.fontSize(12).text('Summary', 50, y);
+      doc.fontSize(12).text("Summary", 50, y);
       y += 20;
 
       doc.fontSize(10)
-         .text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50, y)
-         .text(`Total Sales: ${totalSales}`, 50, y + 15)
-         .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50, y + 30);
+          .text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50, y)
+          .text(`Total Sales: ${totalSales}`, 50, y + 15)
+          .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50, y + 30);
 
       doc.end();
   } catch (error) {
       console.log(`Error in downloadPDF: ${error}`);
-      res.status(500).send('Error generating PDF');
+      res.status(500).send("Error generating PDF");
   }
 };
-

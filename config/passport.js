@@ -14,7 +14,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/users/auth/google/callback",
+      callbackURL: "https://sneakify.ddns.net/users/auth/google/callback",
     },
     async (accesstoken, refreshToken, profile, done) => {
       try {

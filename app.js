@@ -57,20 +57,7 @@ app.use((req, res, next) => {
   console.log(`${req.method}  and the url is ${req.url}`);
   next();
 });
-// Error Handling Middleware
-// app.use((err, req, res, next) => {
-//   console.error(err.stack); // Log the error for debugging
-//   res.status(err.status || 500).render("users/errorPage", {
-//     message: err.message || "Internal Server Error",
-//   });
-// });
 
-// // 404 Error Handler for Unknown Routes
-// app.use((req, res) => {
-//   res.status(404).render("users/errorPage", {
-//     message: "Page Not Found",
-//   });
-// });
 
 app.use((req, res, next) => {
   res.locals.isAuthenticate = req.session.passport?.user ? true : false;

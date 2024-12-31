@@ -400,7 +400,21 @@ exports.resetPassword = async (req, res) => {
 
 exports.home = async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true });
+    const products = await Product.aggregate([{
+      $lookup : {
+        from:"categories",
+        localField:"categoryId",
+        foreignField:"_id",
+        as:"categoryy",
+      }
+    },
+      {
+        $match:{
+         "categoryy.isActive":true
+        }
+      }
+    ])
+    console.log(products);
     const users = await User.find({ isBlocked: false });
     res.render("users/home", { products, users });
   } catch (error) {
@@ -425,14 +439,23 @@ exports.listingProducts = async (req, res) => {
       limit = 5, 
       search 
     } = req.query;
+    console.log(category)
 
+    // First get active categories
+    const activeCategories = await Category.find({ isActive: true }).select('_id');
+    const activeCategoryIds = activeCategories.map(cat => cat._id);
 
-    // Base filter for active products
-    let filter = { isActive: true };
+    // Base filter for active products AND active categories
+    let filter = { 
+      isActive: true,
+      categoryId: { $in: activeCategoryIds } // Add this to base filter
+    };
+
+    console.log(filter)
 
     // Search filter
     if (search) {
-      const searchRegex = new RegExp(search, "i"); // Case-insensitive search
+      const searchRegex = new RegExp(search, "i"); 
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } }
@@ -445,10 +468,17 @@ exports.listingProducts = async (req, res) => {
       filter.sizes = { $elemMatch: { size: { $in: sizeArray } } };
     }
 
-    // Category filter
+    // Category filter - modified to use categoryId
     if (category) {
+      console.log(category)
       const categories = category.split(",").map((cat) => cat.trim());
-      filter.category = { $in: categories };
+      // Find the category IDs that match both the user's selection AND are active
+      const selectedCategories = await Category.find({
+        name: { $in: categories },
+        isActive: true
+      }).select('_id');
+      const selectedCategoryIds = selectedCategories.map(cat => cat._id);
+      filter.categoryId = { $in: selectedCategoryIds };
     }
 
     // Price range filter
@@ -463,27 +493,27 @@ exports.listingProducts = async (req, res) => {
       filter.featured = true;
     }
 
-    // Sorting options
+    // Sorting options remain the same
     let sortOptions = {};
     if (sort) {
       switch (sort) {
         case 'price-asc':
-          sortOptions.price = 1; // Ascending price
+          sortOptions.price = 1; 
           break;
         case 'price-desc':
-          sortOptions.price = -1; // Descending price
+          sortOptions.price = -1; 
           break;
         case 'popularity':
-          sortOptions.popularity = -1; // Descending popularity
+          sortOptions.popularity = -1; 
           break;
         case 'newArrivals':
-          sortOptions.createdAt = -1; // New arrivals
+          sortOptions.createdAt = -1; 
           break;
         case 'name-asc':
-          sortOptions.name = 1; // Alphabetical order (ascending)
+          sortOptions.name = 1; 
           break;
         case 'name-desc':
-          sortOptions.name = -1; // Alphabetical order (descending)
+          sortOptions.name = -1; 
           break;
         default:
           break;
@@ -492,17 +522,15 @@ exports.listingProducts = async (req, res) => {
 
     // Pagination calculations
     const skip = (page - 1) * limit;
-    console.log("filter",filter)
-    const totalProducts = await Product.countDocuments(filter); // Total matching products
+    const totalProducts = await Product.countDocuments(filter); 
     const totalPages = Math.ceil(totalProducts / limit);
 
     // Fetching products with the applied filters and sort options
-    let productsQuery = Product.find(filter)
+    const products = await Product.find(filter)
       .sort(sortOptions)
       .skip(skip)
-      .limit(Number(limit));
-
-    const products = await productsQuery;
+      .limit(Number(limit))
+      .populate('categoryId'); // Simple populate since we've already filtered active categories
 
     // Filtering in-stock products
     const inStockProducts = products.filter((product) =>
@@ -516,16 +544,15 @@ exports.listingProducts = async (req, res) => {
       });
     });
 
-    // Fetch active categories for filtering
+    // Fetch active categories for filtering UI
     const categoriesList = await Category.find({ isActive: true });
-    let shopPage = 1; 
+    let shopPage = 1;
 
     const queryParams = { ...req.query };
-    delete queryParams.page; // Remove page to avoid duplication
-    delete queryParams.limit; // Remove limit since it's already included in links
+    delete queryParams.page;
+    delete queryParams.limit;
     const queryString = new URLSearchParams(queryParams).toString();
 
-    // Rendering the view
     res.render("users/shop", {
       products: inStockProducts,
       categories: categoriesList,
@@ -538,40 +565,24 @@ exports.listingProducts = async (req, res) => {
       limit: Number(limit)
     });
   } catch (error) {
-    console.error(error);
-    next(error)  }
+    console.log(error);
+    return res.render("users/errorPage");
+  }
 };
 
 
 
 
-exports.filter = async (req, res) => {
-  console.log("it is reached in filter");
-  const { sizes } = req.query; // sizes=5,6,7
-  let filter = {};
-
-  if (sizes) {
-    const sizeArray = sizes.split(",").map(String); // Convert to ["5", "6", "7"]
-    filter["sizes"] = { $elemMatch: { size: { $in: sizeArray } } }; // Check if any size matches
-}
-
-  try {
-      const products = await Product.find(filter);
-      res.json(products); // Return filtered products
-  } catch (error) {
-      console.error("Error fetching products:", error);
-      res.status(500).send("Server error");
-  }
-}
-
 //=========================================================
 exports.productDetails = async (req, res) => {
   try {
+    console.log("it is reaching in product details")
     const productId = req.params.id;
-
+  console.log(productId)
     const product = await Product.findById(productId).populate("offer");
+    console.log(product)
      if (!product) {
-      return res.status(404).render("users/error", {
+      return res.status(500).render("users/errorPage", {
         message: "Product not found",
       });
     }
@@ -1197,3 +1208,13 @@ exports.loadWallet = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+
+exports.getAbout = async (req,res)=>{
+  console.log("it is reaching in about ")
+  try {
+    res.render("users/about")
+  } catch (error) {
+    console.log(error)
+  }
+}

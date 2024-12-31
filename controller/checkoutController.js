@@ -87,12 +87,9 @@ exports.placeOrder = async (req, res) => {
         .status(400)
         .json({ message: "Missing customer details or payment method." });
     }
-    console.log(0.4 );
 
     const userId = req.session.passport.user;
-    console.log("1");
     const cart = await Cart.findOne({ userId }).populate("products.productId");
-    console.log("2");
     
     if (!cart || cart.products.length === 0) {
       return res.status(400).json({ message: "Your cart is empty." });
@@ -108,7 +105,6 @@ exports.placeOrder = async (req, res) => {
           message: `Insufficient stock for ${product.name} in size ${item.size}.`,
         });
       }
-    console.log("3");
 
 
       products.push({
@@ -128,7 +124,6 @@ exports.placeOrder = async (req, res) => {
         { new: true }
       );
     }
-    console.log("4");
 
     if (paymentMethod === "cashOnDelivery") {
        if(cart.totalPrice > 1000){
@@ -278,7 +273,7 @@ exports.handleFailure = async (req, res) => {
 
     await order.save();
 
-    res.status(200).json({ success: true, message: "you can retry this payment of on myorders ", orderId: order._id });
+    res.status(200).json({ success: true, message: "you can retry this payment of on myorders in profile ", orderId: order._id });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ message: "An error occurred while updating the order" });

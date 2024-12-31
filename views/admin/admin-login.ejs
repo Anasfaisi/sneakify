@@ -180,9 +180,7 @@
         <div class="error-text " style="display: none;" id="generalError" ></div>
 
 
-        <!-- <div class="forgot-password">
-            <a href="/admin/forgot-password">Forgot Password?</a>
-        </div> -->
+
     </div>
 
 
@@ -193,7 +191,7 @@
         const email = document.getElementById('email').value
         const password = document.getElementById('password').value
         const generalError = document.getElementById('generalError');
-        
+        generalError.innerHTML=""
         const emailPattern =  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if(!emailPattern.test(email)){
@@ -220,7 +218,7 @@
         console.log(response)
         const data = await response.json()
         console.log("this is ",data)
-        if(data.success){
+        if(response.ok){
             window.location.href = "/admin/dashboard"
         }
         else{

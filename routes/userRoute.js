@@ -24,10 +24,11 @@ router.get("/resetPassword",controller.showResetPasswordForm)
 router.post("/resetPasswordForm",controller.resetPassword)
 
 router.get("/home",controller.home);
+router.get("/about",controller.getAbout)
 
 
 router.get("/shop",controller.listingProducts)
-router.get("/products",controller.filter)
+
 
 
 router.get("/productDetails/:id",controller.productDetails)
@@ -62,7 +63,7 @@ router.get("/invoiceDownload/:id",controller.invoiceDownload)
 router.get("/cart",isAuthenticated,cartController.getCart)
 router.post("/cart/add",cartController.addToCart)
 router.put("/cart/quantityUpdate/:id",cartController.quantityUpdate)
-router.delete("/cart/removeProduct/:id",cartController.removeProduct)
+router.delete("/cart/removeProduct/:id",isAuthenticated,cartController.removeProduct)
 
 router.post("/applyCoupon",cartController.applyCoupon)
 router.post("/removeCoupon",cartController.removeCoupon)

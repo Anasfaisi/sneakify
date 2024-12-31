@@ -4,132 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Users List</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-        }
-    
-        .sidebar {
-            height: 100vh;
-            padding-top: 20px;
-            position: fixed;
-            width: 250px;  /* Sidebar width */
-        }
-    
-        .sidebar a {
-            color: #000;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 15px;
-            display: block;
-        }
-    
-        .sidebar a.active {
-            color: #007bff;
-        }
-    
-        .content {
-            margin-left: 250px;  /* Sidebar width */
-            width: calc(100% - 250px);  /* Remaining width for content */
-            padding: 20px;
-            overflow-y: auto;
-        }
-    
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: #f0f0f0;
-        }
-    
-        .table-container {
-            border: 1px solid #007bff;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #ffffff;
-        }
-    
-        .btn-block {
-            background-color: #ffcccc;
-        }
-    
-        .btn-unblock {
-            background-color: #ccffcc;
-        }
-    
-        .d-flex {
-            display: flex;
-        }
-    
-        .d-flex.flex-column {
-            flex-direction: column;
-        }
-    
-        .d-flex.justify-content-center {
-            justify-content: center;
-        }
-    
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-    
-        .table-light th, .table-light td {
-            padding: 8px 12px;
-            text-align: left;
-        }
-    
-        .table-bordered {
-            border: 1px solid #ddd;
-        }
-    
-        .table-light {
-            background-color: #f8f9fa;
-        }
-    </style>
-    <!-- Include SweetAlert2 CSS and JS from CDN -->
-<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.min.css" rel="stylesheet">
-
-
+    <title>Sneakify - User Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="bg-gray-100">
     <%- include("partials/sidebar") %>
-    <div class="d-flex">
-       
-        <!-- Main Content -->
-        <div class="content">
-            
-            <div class="top-bar">
-                <h2>Users List</h2>
-                <div class="user-profile">
-                    <span class="me-2">Anas (Admin)</span>
-                    <img src="#" alt="Admin" class="rounded-circle" width="40">
-                    <i class="fas fa-bell ms-3"></i>
-                </div>
+    <div class="w-75">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+                <h1 class="fs-5 fw-semibold">Users</h1>
             </div>
+        </header>
 
-            <div class="table-container d-flex flex-column mt-4">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>S.No</th>
-                            <th>FirstName</th>
-                            <th>LastName</th>
-                            <th>Email</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% users.forEach((user, index) => { %>
+        <!-- User Table -->
+        <div class="p-4">
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">S.No</th>
+                                <th scope="col">FirstName</th>
+                                <th scope="col">LastName</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% users.forEach((user, index) => { %>
                             <tr>
                                 <td><%= index + 1 %></td>
                                 <td><%= user.firstName %></td>
@@ -146,89 +50,82 @@
                                     </button>
                                 </td>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-                
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="d-flex justify-content-center mt-3">
-        <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&limit=10" class="btn btn-secondary mx-1">&lt;</a>
-        <% } %>
-    
-        <% for (let i = 1; i <= totalPages; i++) { %>
-            <a 
-                href="?page=<%= i %>&limit=10" 
-                class="btn <%= i === currentPage ? 'btn-primary' : 'btn-secondary' %> mx-1"
-            >
-                <%= i %>
-            </a>
-        <% } %>
-    
-        <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&limit=10" class="btn btn-secondary mx-1">&gt;</a>
-        <% } %>
-    </div>
-    
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center mt-3">
+            <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>&limit=10" class="btn btn-secondary mx-1">&lt; Prev</a>
+            <% } %>
+        
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a 
+                    href="?page=<%= i %>&limit=10" 
+                    class="btn <%= i === currentPage ? 'btn-primary' : 'btn-secondary' %> mx-1"
+                >
+                    <%= i %>
+                </a>
+            <% } %>
+        
+            <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>&limit=10" class="btn btn-secondary mx-1">Next &gt;</a>
+            <% } %>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-       
-       document.querySelectorAll("#statusButton").forEach((button) => {
-  button.addEventListener("click", async (e) => {
-    e.preventDefault();
+        document.querySelectorAll("#statusButton").forEach((button) => {
+            button.addEventListener("click", async (e) => {
+                e.preventDefault();
 
-    const buttonElement = e.currentTarget;
+                const buttonElement = e.currentTarget;
+                const userId = buttonElement.dataset.userId;
+                const isBlocked = buttonElement.classList.contains("btn-success");
 
-    const userId = buttonElement.dataset.userId; 
-    const isBlocked = buttonElement.classList.contains("btn-success"); 
+                try {
+                    const response = await fetch(`/admin/users/${userId}/status`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ isBlocked: !isBlocked }),
+                    });
 
-    try {
-      const response = await fetch(`/admin/users/${userId}/status`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ isBlocked: !isBlocked }), 
-      });
+                    const result = await response.json();
+                    if (result.success) {
+                        buttonElement.classList.toggle("btn-success");
+                        buttonElement.classList.toggle("btn-danger");
+                        buttonElement.textContent = isBlocked ? "Block" : "Unblock";
 
-      const result = await response.json();
-      if (result.success) {
-        
-        buttonElement.classList.toggle("btn-success");
-        buttonElement.classList.toggle("btn-danger");
-        buttonElement.textContent = isBlocked ? "Block" : "Unblock";
-
-        
-        Swal.fire({
-          icon: "success",
-          title: result.message,
-          showConfirmButton: true,
+                        Swal.fire({
+                            icon: "success",
+                            title: result.message,
+                            showConfirmButton: true,
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: result.message,
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "An error occurred while processing your request.",
+                    });
+                }
+            });
         });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: result.message,
-        });
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while processing your request.",
-      });
-    }
-  });
-});
-
-
     </script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.9/dist/sweetalert2.all.min.js"></script>
-
 </body>
-
 </html>

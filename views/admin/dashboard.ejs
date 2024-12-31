@@ -7,15 +7,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-html
-Copy code
 <body>
   <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Sneakify Admin</a>
     <div class="d-flex align-items-center">
+      <form action="/admin/logout" method="POST">
       <button class="btn btn-outline-light" id="logoutButton">
         <i class="fas fa-sign-out-alt mr-1"></i>Logout
       </button>
+    </form>
     </div>
   </nav>
 
@@ -89,6 +89,7 @@ Copy code
           backgroundColor: 'rgba(75, 192, 192, 0.2)',  // Adjust the color
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1,
+          barThickness: 100
         }]
       },
       options: {
