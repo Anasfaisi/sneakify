@@ -163,31 +163,33 @@
   }
 </script>
 <script>
-    document.getElementById("addToCart").addEventListener("click", async () => {
-  const productId = document.getElementById("addToCart").getAttribute("data-product-id");
-  const sizeElement = document.getElementById("size").getAttribute("data-size")
-  console.log(sizeElement)
-  const selectedSize = sizeElement; 
-  const quantity = 1;
+    document.querySelectorAll(".addToCartButton").forEach((button) => {
+  button.addEventListener("click", async (event) => {
+    const productId = button.getAttribute("data-product-id");
+    const sizeElement = document.getElementById("size"); // Replace with the correct way to get the size
+    const selectedSize = sizeElement ? sizeElement.getAttribute("data-size") : null;
+    const quantity = 1;
 
-  if (quantity <= 0) {
-    return Swal.fire({
-      icon: "warning",
-      title: "Invalid Quantity",
-      text: "Please select a valid quantity.",
-    });
-  }
+    if (quantity <= 0) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Invalid Quantity",
+        text: "Please select a valid quantity.",
+      });
+    }
 
-  if (!selectedSize) {
-    return Swal.fire({
-      icon: "warning",
-      title: "Invalid Size",
-      text: "Please select a size before adding to the cart.",
-    });
-  }
+    if (!selectedSize) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Invalid Size",
+        text: "Please select a size before adding to the cart.",
+      });
+    }
 
-  addToCart(productId, selectedSize, quantity);
+    addToCart(productId, selectedSize, quantity);
+  });
 });
+
 
 async function addToCart(productId, size, quantity) {
   try {

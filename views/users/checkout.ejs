@@ -303,10 +303,12 @@
   });
 </script>
 <script>
-  const index = document.getElementById(selectedindex).getAttribute("data-index")
+const selectedAddress = document.querySelector('.select-address.active');
+const index = selectedAddress ? selectedAddress.getAttribute('data-index') : null;
   function validateAddressFields(index) {
     console.log(index)
-
+   
+}
   const nameRegex = /^[a-zA-Z\s]+$/;
   const numberRegex = /^\d+$/;
 
@@ -386,7 +388,23 @@
 <script>
   document.getElementById("placeOrder").addEventListener("click", async (event) => {
     event.preventDefault();
-
+    if (!document.getElementById("firstName").value || 
+        !document.getElementById("lastName").value ||
+        !document.getElementById("addressLine1").value ||
+        !document.getElementById("city").value ||
+        !document.getElementById("state").value ||
+        !document.getElementById("pincode").value ||
+        !document.getElementById("phone").value) {
+        
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Address Details',
+            text: 'Please fill in all address fields',
+            showConfirmButton: false,
+            timer: 1500
+        });
+        return;
+    }
     const amount = "<%=grandTotal%>"; // Fetch the grand total dynamically
     console.log(amount, "total amount");
 
