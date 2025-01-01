@@ -46,7 +46,7 @@ exports.getSignuppage = async (req, res) => {
 exports.signup = async (req, res) => {
   console.log("reached in post signup route");
   const { firstName, lastName, email, password, referralCode} = req.body;
-  console.log(referralCode)
+
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -78,22 +78,17 @@ exports.signup = async (req, res) => {
     }
 
     if (referralCode) {
-      // Find the user who referred
       const referrer = await User.findOne({ referralCode });
 
       if (referrer) {
-        // Check if the referrer is not blocked
         if (referrer.isBlocked) {
           console.log('Referrer is blocked');
         } else {
-          // Add 100 Rs to the referrer's wallet
           const wallet = await Wallet.findOne({ userId: referrer._id });
 
           if (!wallet) {
-            // If the referrer doesn't have a wallet, create one
             await Wallet.create({ userId: referrer._id, balance: 100 });
           } else {
-            // Add 100 Rs to the wallet balance
             wallet.balance += 100;
             await wallet.save();
           }
@@ -317,14 +312,13 @@ exports.forgetPassword = async (req, res) => {
 
     // Encode the email (use any secure encoding mechanism)
     const encodedEmail = Buffer.from(email).toString("base64");
-
-    // Generate the reset password URL
-    const resetUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/users/resetPassword?email=${encodedEmail}`;
-
-    const expiryTime = Date.now() + 10 * 60 * 1000; // 15 minutes
+    const hostedDomain = 'sneakify.ddns.net';
+    const resetUrl = `https://${hostedDomain}/users/resetPassword?email=${encodedEmail}`;
+    const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
     user.resetPasswordExpiry = expiryTime;
+
+
+   
 
     // Send the email (mock email sending)
     const emailSent = await emailService.sendPasswordResetEmail(
@@ -968,8 +962,23 @@ exports.cancelOrder = async (req, res) => {
         );
       }
     }
-   
 
+     if (order.paymentMethod !== "Cash on Delivery") {
+          const wallet = await Wallet.findOne({ userId: order.userId._id }) || new Wallet({ userId: order.userId._id, balance: 0, transactions: [] });
+    
+          // Credit refund amount
+          wallet.balance += order.totalAmount;
+          wallet.transactions.push({
+            type: "credit",
+            amount: order.totalAmount,
+            description: `Refund for cancelled order ${order.orderId}`,
+            date: new Date(),
+          });
+        
+    
+          await wallet.save();
+   
+        }
 
     // Notify user of cancellation request
     res.status(200).json({
@@ -1177,29 +1186,31 @@ exports.loadWallet = async (req, res) => {
     const limit = 10; // Transactions per page
     const skip = (page - 1) * limit;
 
+    // Fetch the wallet, including all transactions
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       return res.render("users/wallet", {
         wallet: {
           balance: 0,
-          transactions: [],
+          transactions: [], // No transactions if wallet not found
         },
         currentPage: 1,
         totalPages: 0,
       });
     }
 
-    // Paginate transactions
+    // Pagination logic for transactions
     const totalTransactions = wallet.transactions.length;
-    const paginatedTransactions = wallet.transactions
-      .slice(skip, skip + limit)
-      .reverse(); // Reverse to show latest transactions first
+    const allTransactions = wallet.transactions.reverse(); // Reverse to show the latest first
+    const paginatedTransactions = allTransactions.slice(skip, skip + limit);
 
+    // Render the wallet with paginated data
     res.render("users/wallet", {
       wallet: {
         balance: wallet.balance,
-        transactions: paginatedTransactions,
+        transactions: paginatedTransactions, // Paginated transactions for current page
       },
+      allTransactions, // Optional: Send full transaction data if needed elsewhere
       currentPage: page,
       totalPages: Math.ceil(totalTransactions / limit),
     });
@@ -1208,6 +1219,7 @@ exports.loadWallet = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+;
 
 
 exports.getAbout = async (req,res)=>{

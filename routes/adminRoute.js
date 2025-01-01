@@ -17,21 +17,21 @@ router.get("/dashboardData",isAdmin,controller.getDashboardData)
 router.get("/chartData",isAdmin,controller.getChart)
 
 router.get("/users", isAdmin, controller.listUsers);
-router.post("/users/:id/status", controller.updateUserStatus);
+router.post("/users/:id/status",isAdmin, controller.updateUserStatus);
 
 router.get("/category", isAdmin, controller.getAllCategories);
-router.post("/category/add", controller.addCategory);
-router.post("/category/edit/:id", controller.updateCategory);
-router.post("/category/:id/activate", controller.activateCategory);
+router.post("/category/add",isAdmin, controller.addCategory);
+router.post("/category/edit/:id",isAdmin, controller.updateCategory);
+router.post("/category/:id/activate",isAdmin, controller.activateCategory);
 router.post("/category/:id/deactivate", controller.deactivateCategory);
 
 router.get("/products", isAdmin, controller.getProducts);
 router.post("/products/add",upload.array("croppedImages"),controller.addProducts);
 
-router.patch("/products/:id/:action", controller.listProducts);
-router.patch("/products/:id/:action", controller.unListProducts);
+router.patch("/products/:id/:action",isAdmin, controller.listProducts);
+router.patch("/products/:id/:action",isAdmin, controller.unListProducts);
 
-router.get('/editProduct/:id',controller.getEditProducts)
+router.get('/editProduct/:id',isAdmin,controller.getEditProducts)
 router.post('/products/edit/:productId', upload.any(),controller.editProducts)
 
 
@@ -53,8 +53,8 @@ router.get("/offers",isAdmin,controller.getOffers)
 router.post("/addOffer",isAdmin,controller.addOffer)
 router.get("/getOffer/:id",isAdmin,controller.getSingleOffer)
 router.put("/editOffer/:id",isAdmin,controller.editOffer)
-router.post('/offer/:id/delete', isAdmin,controller.deleteOffer);
-router.post('/offer/:id/deleted', isAdmin,controller.reuseOffer);
+router.post('/offer/:id/delete',isAdmin,controller.deleteOffer);
+router.post('/offer/:id/deleted',isAdmin,controller.reuseOffer);
 
 
 router.get("/salesReport",isAdmin,controller.loadSalesReport)

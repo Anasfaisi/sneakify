@@ -16,62 +16,59 @@
 </head>
 <body>
 
-<div class="container">
-  <div class="signup-container">
-    <h2 class="text-center mb-4">Create an Account</h2>
-
-    <!-- General Success Message -->
-    <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
-
-    <form id="signupForm">
-      <!-- First Name -->
-      <div class="mb-3">
-        <label for="firstName" class="form-label">First Name</label>
-        <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your First Name" autofocus required>
-        <div id="errorFirstName" class="text-danger"></div>
+  <body>
+    <div class="container">
+      <div class="signup-container">
+        <h2 class="text-center mb-4">Create an Account</h2>
+  
+        <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
+  
+        <form id="signupForm">
+          <div class="mb-3">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your First Name" autofocus required>
+            <div id="errorFirstName" class="text-danger"></div>
+          </div>
+  
+          <div class="mb-3">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your Last Name" required>
+            <div id="errorLastName" class="text-danger"></div>
+          </div>
+  
+          <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your Email" required>
+            <div id="errorEmail" class="text-danger"></div>
+          </div>
+  
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Enter a strong password" required>
+            <div id="errorPassword" class="text-danger"></div>
+          </div>
+  
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required>
+            <div id="errorConfirmPassword" class="text-danger"></div>
+          </div>
+          <input type="hidden" name="referralCode" id="referralCode">
+  
+          <button type="submit" class="btn btn-primary">Sign Up</button>
+        </form>
+  
+        <div class="text-center mt-3">
+          <p>Already have an account? <a href="/users/login">Login here</a></p>
+        </div>
+        <div class="text-center mt-3">
+          <button class="google-btn">
+            <a href="/users/auth/google" id="googleSignup"> <i class="fa-brands fa-google"></i>Sign up with Google</a>
+          </button>
+        </div>
       </div>
-
-      <!-- Last Name -->
-      <div class="mb-3">
-        <label for="lastName" class="form-label">Last Name</label>
-        <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your Last Name" required>
-        <div id="errorLastName" class="text-danger"></div>
-      </div>
-
-      <!-- Email -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your Email" required>
-        <div id="errorEmail" class="text-danger"></div>
-      </div>
-
-      <!-- Password -->
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Enter a strong password" required>
-        <div id="errorPassword" class="text-danger"></div>
-      </div>
-
-      <!-- Confirm Password -->
-      <div class="mb-3">
-        <label for="confirmPassword" class="form-label">Confirm Password</label>
-        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required >
-        <div id="errorConfirmPassword" class="text-danger"></div>
-      </div>
-      <input type="hidden" name="referralCode" id="referralCode">
-
-      <button type="submit" class="btn btn-primary w-100">Sign Up</button>
-    </form>
-
-    <div class="text-center mt-3">
-      <p>Already have an account? <a href="/users/login">Login here</a></p>
     </div>
-    <div class ="text-center mt-3">
-      <button><a  class ="text-center mt-3" href="/users/auth/google" id="googleSignup">signup with google</a></button>  
-    </div>
-  </div>
-</div>
-
+  
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const referralCode = urlParams.get('ref');
@@ -137,12 +134,11 @@
 
   if (
     !password ||
-    password.length < 6 
-    // ||
-    // !hasUpperCase ||
-    // !hasLowerCase ||
-    // !hasNumber ||
-    // !hasSpecialChar
+    password.length < 6 ||
+    !hasUpperCase ||
+    !hasLowerCase ||
+    !hasNumber ||
+    !hasSpecialChar
   ) {
     errorPassword.textContent =
       'Password must be at least 6 characters long and include uppercase, lowercase, a number, and a special character.';
@@ -175,18 +171,24 @@
       successMessage.classList.remove('d-none');
       setTimeout(() => {
         window.location.href = '/users/otp-verify';
-      }, 1500);
+      }, 500);
     } else {
       successMessage.textContent = data.message || 'An error occurred. Please try again.';
       successMessage.classList.remove('alert-success');
       successMessage.classList.add('alert-danger');
       successMessage.classList.remove('d-none');
-    }
+      setTimeout(() => {
+        location.reload();
+      }, 500);    }
   } catch (error) {
     successMessage.textContent = 'An unexpected error occurred. Please try again.';
     successMessage.classList.add('alert-danger');
     successMessage.classList.remove('d-none');
+    setTimeout(() => {
+        location.reload();
+      }, 500); 
   }
+
 });
 
 </script> 
@@ -196,4 +198,5 @@
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
 
-<%-include("partials/footer") %>
+  </body>
+</html>

@@ -55,30 +55,30 @@ router.delete("/address/delete/:id", controller.deleteAddress);
 
 router.get("/orders",isAuthenticated,controller.getorderHistory)
 router.get("/orderDetails/:id",isAuthenticated,controller.getOrderDetails)
-router.post("/orderCancel/:id",controller.cancelOrder)
-router.post("/orderReturn/:id",controller.returnOrder)
-router.get("/invoiceDownload/:id",controller.invoiceDownload)
+router.post("/orderCancel/:id",isAuthenticated,controller.cancelOrder)
+router.post("/orderReturn/:id",isAuthenticated,controller.returnOrder)
+router.get("/invoiceDownload/:id",isAuthenticated,controller.invoiceDownload)
 
 
 router.get("/cart",isAuthenticated,cartController.getCart)
-router.post("/cart/add",cartController.addToCart)
-router.put("/cart/quantityUpdate/:id",cartController.quantityUpdate)
+router.post("/cart/add",isAuthenticated,cartController.addToCart)
+router.put("/cart/quantityUpdate/:id",isAuthenticated,cartController.quantityUpdate)
 router.delete("/cart/removeProduct/:id",isAuthenticated,cartController.removeProduct)
 
-router.post("/applyCoupon",cartController.applyCoupon)
-router.post("/removeCoupon",cartController.removeCoupon)
+router.post("/applyCoupon",isAuthenticated,cartController.applyCoupon)
+router.post("/removeCoupon",isAuthenticated,cartController.removeCoupon)
 
 
 
 router.get("/wishlist",isAuthenticated,wishlistController.getWishList)
 router.post("/addToWishlist",isAuthenticated,wishlistController.addToWishlist)
-router.delete("/removeItem",wishlistController.removeItem)
+router.delete("/removeItem",isAuthenticated,wishlistController.removeItem)
 
 router.get("/wallet",isAuthenticated,controller.loadWallet)
 
 router.get("/checkout",isAuthenticated,checkoutController.getCheckout)
-router.post("/placeOrder",checkoutController.placeOrder)
-router.get("/orderPlaced",checkoutController.orderPlaced)
+router.post("/placeOrder",isAuthenticated,checkoutController.placeOrder)
+router.get("/orderPlaced",isAuthenticated,checkoutController.orderPlaced)
 router.post("/razorPay/createOrder",checkoutController.placeOrder)
 router.post("/razorPay/verifyPayment",checkoutController.verifyPayment)
 router.post("/handlePaymentFailure",checkoutController.handleFailure)
