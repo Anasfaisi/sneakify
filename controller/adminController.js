@@ -411,11 +411,12 @@ exports.getOrders = async (req, res) => {
       .populate("userId")
       .skip(skip)
       .limit(itemsPerPage);
+      console.log(orders)
 
     const totalOrders = await Order.countDocuments();
     const totalPages = Math.ceil(totalOrders / itemsPerPage);
     const notifications = await Notification.find({})
-      .sort({ createdAt: -1 })
+      .sort({ orderDate: -1 })
       .populate({ path: "orderId" });
 
     res.render("admin/orderManagement", {
@@ -966,8 +967,7 @@ exports.getOffers = async (req, res) => {
       .populate("applicableCategories", "name")
       .skip(startIndex)
       .limit(limit);
-    console.log(offers[0].m);
-    // Fetch all applicable products and categories (not paginated)
+      // Fetch all applicable products and categories (not paginated)
     const applicableProducts = await Product.find({}, "name");
     const applicableCategories = await Category.find({}, "name");
 
@@ -1126,6 +1126,7 @@ exports.editOffer = async (req, res) => {
     }
 
     const { data } = req.body;
+    console.log(data);
     if (!data) {
       return res.status(400).json({ message: "No data received for update" });
     }
@@ -1218,7 +1219,7 @@ exports.loadSalesReport = async (req, res) => {
 
     if (dateRange === "custom" && startDate && endDate) {
       // Custom date range filter
-      dateFilter.createdAt = {
+      dateFilter.orderDate = {
         $gte: new Date(startDate),
         $lte: new Date(endDate + "T23:59:59.999Z"), // Include the entire end date
       };
@@ -1232,15 +1233,15 @@ exports.loadSalesReport = async (req, res) => {
 
       switch (dateRange) {
         case "1-day":
-          dateFilter.createdAt = { $gte: calculatePreviousDate(1) };
+          dateFilter.orderDate = { $gte: calculatePreviousDate(1) };
           break;
         case "1-week":
-          dateFilter.createdAt = { $gte: calculatePreviousDate(7) };
+          dateFilter.orderDate = { $gte: calculatePreviousDate(7) };
           break;
         case "1-month":
           const previousMonth = new Date();
           previousMonth.setMonth(previousMonth.getMonth() - 1);
-          dateFilter.createdAt = { $gte: previousMonth };
+          dateFilter.orderDate = { $gte: previousMonth };
           break;
       }
     }
@@ -1264,7 +1265,7 @@ exports.loadSalesReport = async (req, res) => {
 
     // Fetch paginated sales data
     const salesData = await Order.find(dateFilter)
-      .sort({ createdAt: -1 })
+      .sort({ orderDate: -1 })
       .skip((currentPage - 1) * itemsPerPage)
       .limit(itemsPerPage);
       
@@ -1303,7 +1304,7 @@ function getDateFilter(dateRange, startDate, endDate) {
 
   if (dateRange === "custom" && startDate && endDate) {
       // Handle custom date range
-      dateFilter.createdAt = {
+      dateFilter.orderDate = {
           $gte: new Date(startDate),
           $lte: new Date(endDate + 'T23:59:59.999Z') // Include the entire end date
       };
@@ -1315,19 +1316,19 @@ function getDateFilter(dateRange, startDate, endDate) {
           case "1-day":
               const oneDayAgo = new Date(currentDate);
               oneDayAgo.setDate(currentDate.getDate() - 1);
-              dateFilter.createdAt = { $gte: oneDayAgo };
+              dateFilter.orderDate = { $gte: oneDayAgo };
               break;
               
           case "1-week":
               const oneWeekAgo = new Date(currentDate);
               oneWeekAgo.setDate(currentDate.getDate() - 7);
-              dateFilter.createdAt = { $gte: oneWeekAgo };
+              dateFilter.orderDate = { $gte: oneWeekAgo };
               break;
               
           case "1-month":
               const oneMonthAgo = new Date(currentDate);
               oneMonthAgo.setMonth(currentDate.getMonth() - 1);
-              dateFilter.createdAt = { $gte: oneMonthAgo };
+              dateFilter.orderDate = { $gte: oneMonthAgo };
               break;
       }
   }
@@ -1415,7 +1416,7 @@ exports.exportExcel = async (req, res) => {
               couponDiscount: order.couponDiscount || "No coupon applied",
               offerDiscount: order.offerDiscount || "No offers",
               userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
-              date: new Date(order.createdAt).toLocaleDateString(),
+              date: new Date(order.orderDate).toLocaleDateString(),
           });
       });
 
@@ -1461,7 +1462,7 @@ exports.exportPDF = async (req, res) => {
           couponDiscount: order.couponDiscount || "No coupon applied",
           offerDiscount: order.offerDiscount || "No offers",
           userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
-          date: new Date(order.createdAt).toLocaleDateString(),
+          date: new Date(order.orderDate).toLocaleDateString(),
       }));
 
       // Calculate summary values

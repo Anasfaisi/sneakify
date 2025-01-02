@@ -76,7 +76,7 @@
                         <% } %>
                     </td>  
                                    <td><%= order.addressDetails.firstName + ' ' + order.addressDetails.lastName %></td>
-                    <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                    <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                 </tr>
             <% }) %>
         </tbody>

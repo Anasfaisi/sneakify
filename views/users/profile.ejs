@@ -96,10 +96,18 @@
         </div>
         <div class="modal-body">
           <form id="editPassword">
+            <% if(user.googleId){  %>
+            <div class="mb-3 " id="pd">
+              <label for="currentPassword" class="form-label">Current Password</label>
+              <input type="password" value="<%=user.password%>"  class="form-control" id="currentPassword" placeholder="current password" name="currentPassword" readonly>
+              <p style="color: rgb(227, 174, 50);">if you need to change password login with this default password "123456"</p>
+            </div>
+           <% }else {  %>
             <div class="mb-3 " id="pd">
               <label for="currentPassword" class="form-label">Current Password</label>
               <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
             </div>
+           <% } %>
             <div class="mb-3">
               <label for="newPassword" class="form-label">New Password</label>
               <input type="password" class="form-control" id="newPassword" name="newPassword" required>
@@ -211,11 +219,11 @@ editProfileForm.addEventListener("submit", async (e) => {
     pd.append(errorMessages)
 
     //  // Password Validation
-    // const hasUpperCase = /[A-Z]/.test(confirmPassword);
-    // const hasLowerCase = /[a-z]/.test(confirmPassword);
-    // const hasNumbers = /\d/.test(confirmPassword);
-    // const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(confirmPassword);
-    // const isLongEnough = confirmPassword.length >= 6;
+    const hasUpperCase = /[A-Z]/.test(confirmPassword);
+    const hasLowerCase = /[a-z]/.test(confirmPassword);
+    const hasNumbers = /\d/.test(confirmPassword);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(confirmPassword);
+    const isLongEnough = confirmPassword.length >= 6;
     let  validpassword = true
  
 
@@ -225,11 +233,11 @@ editProfileForm.addEventListener("submit", async (e) => {
      validpassword=false
 
     } 
-    // else if (!hasUpperCase||!hasLowerCase||!hasNumbers||!hasSpecialChar||!isLongEnough) {
-    //   console.log("in second");
-    //   errorMessages.innerHTML='password must be a combination of uppercase,lowecase,number,special character and atleast 6 digit';
-    //   validpassword=false
-    // }
+    else if (!hasUpperCase||!hasLowerCase||!hasNumbers||!hasSpecialChar||!isLongEnough) {
+      console.log("in second");
+      errorMessages.innerHTML='password must be a combination of uppercase,lowecase,number,special character and atleast 6 digit';
+      validpassword=false
+    }
     if(currentPassword===newPassword){
       errorMessages.innerHTML="new password should be different from your previous password"
       validpassword=false;

@@ -574,7 +574,6 @@ exports.productDetails = async (req, res) => {
     const productId = req.params.id;
   console.log(productId)
     const product = await Product.findById(productId).populate("offer");
-    console.log(product)
      if (!product) {
       return res.status(500).render("users/errorPage", {
         message: "Product not found",
@@ -587,10 +586,12 @@ exports.productDetails = async (req, res) => {
  
     if (product.offer?._id) {
      const offer = await Offer.findById(product.offer?._id);
-     
+     console.log("hgfdsdfghj");
+      console.log(new Date().getDate() <= offer.validUntil.getDate(),"==============")
       if (offer && offer.isActive) {
         const discount = (product.price * offer.percentage) / 100;
         discountedPrice = product.price - Math.min(discount, offer.maximumDiscount);
+        
         product.offerDiscount = discountedPrice;
        
       }
@@ -602,7 +603,6 @@ exports.productDetails = async (req, res) => {
       validFrom: { $lte: new Date() },
       validUntil: { $gte: new Date() },
     });
-    console.log(categoryOffer)
       if(categoryOffer && categoryOffer.applicableCategories.equals(product.categoryId._id)){
       const discount = (product.price * categoryOffer.percentage)/100;
       const discountedPrice = product.price - Math.min(discount,categoryOffer.maximumDiscount);

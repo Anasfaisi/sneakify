@@ -106,7 +106,7 @@
               <% orders.forEach((order) => { %>
                 <tr>
                   <td><%= order.orderId %></td>
-                  <td><%= order.userId.email %></td> <!-- Assuming user name is populated -->
+                  <td><%= order.userId.email %></td> 
                   <td><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></td>
                   <td>₹<%= order.grandTotal.toFixed(2) %></td>
                   <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
@@ -256,7 +256,7 @@
 <script>
   function updateOrderStatus(orderId, currentStatus) {
     // Check if the status is already "final" (e.g., Delivered, Cancelled)
-    const finalStatuses = ['delivered', 'cancelled'];
+    const finalStatuses = ['delivered', 'cancelled' ,'returned','shipped'];
 
     if (finalStatuses.includes(currentStatus)) {
       Swal.fire({
