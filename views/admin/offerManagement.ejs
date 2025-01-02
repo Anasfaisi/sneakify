@@ -161,88 +161,90 @@
 
 
     <!-- Edit Offer Modal -->
-    <!-- Edit Offer Modal Template -->
-<div class="editOfferModal modal fade" data-offer-id="<%= offer._id %>" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Offer</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form class="editOfferForm">
-          <div class="errorContainer mb-3 alert alert-danger" style="display: none;"></div>
-
-          <!-- Offer Type -->
-          <div class="mb-3">
-            <label for="offerType-<%= offer._id %>" class="form-label">Offer Type:</label>
-            <select name="offerType" class="offerType form-select" id="offerType-<%= offer._id %>" required>
-              <option value="" disabled>Select Offer Type</option>
-              <option value="product">Product Offer</option>
-              <option value="category">Category Offer</option>
-            </select>
+    <div id="editOfferModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Offer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+          <div class="modal-body">
+            <form id="editOfferForm">
+              <div id="editErrorContainer" class="mb-3 alert alert-danger" style="display: none;"></div>
 
-          <!-- Offer Name -->
-          <div class="mb-3">
-            <label for="offerName-<%= offer._id %>" class="form-label">Offer Name:</label>
-            <input type="text" name="offerName" class="offerName form-control" id="offerName-<%= offer._id %>" required>
-          </div>
+              <!-- Offer Type -->
+              <div class="mb-3">
+                <label for="editOfferType" class="form-label">Offer Type:</label>
+                <select name="offerType" id="editOfferType" class="form-select" required>
+                  <option value="" disabled>Select Offer Type</option>
+                  <option value="product">Product Offer</option>
+                  <option value="category">Category Offer</option>
+            
+                </select>
+              </div>
 
-          <!-- Discount Percentage -->
-          <div class="mb-3">
-            <label for="percentage-<%= offer._id %>" class="form-label">Discount (%)</label>
-            <input type="number" name="percentage" class="percentage form-control" id="percentage-<%= offer._id %>" min="0" max="100" required>
-          </div>
+              <!-- Offer Name -->
+              <div class="mb-3">
+                <label for="editOfferName" class="form-label">Offer Name:</label>
+                <input type="text" name="offerName" id="editOfferName" class="form-control" required>
+              </div>
 
-          <!-- Maximum Discount -->
-          <div class="maximumDiscountField mb-3">
-            <label for="maximumDiscount-<%= offer._id %>" class="form-label">Maximum Discount (₹):</label>
-            <input type="number" name="maximumDiscount" class="maximumDiscount form-control" id="maximumDiscount-<%= offer._id %>" min="0">
-          </div>
+              <!-- Discount Percentage -->
+              <div class="mb-3">
+                <label for="editPercentage" class="form-label">Discount (%)</label>
+                <input type="number" name="percentage" id="editPercentage" class="form-control" min="0" max="100" required>
+              </div>
 
-          <!-- Valid From -->
-          <div class="mb-3">
-            <label for="validFrom-<%= offer._id %>" class="form-label">Valid From:</label>
-            <input type="date" name="validFrom" class="validFrom form-control" id="validFrom-<%= offer._id %>" required>
-          </div>
+              <!-- Maximum Discount -->
+              <div id="editMaximumDiscountField" class="mb-3">
+                <label for="editMaximumDiscount" class="form-label">Maximum Discount (₹):</label>
+                <input type="number" name="maximumDiscount" id="editMaximumDiscount" class="form-control" min="0">
+              </div>
 
-          <!-- Valid Until -->
-          <div class="mb-3">
-            <label for="validUntil-<%= offer._id %>" class="form-label">Valid Until:</label>
-            <input type="date" name="validUntil" class="validUntil form-control" id="validUntil-<%= offer._id %>" required>
-          </div>
+              <!-- Valid From -->
+              <div class="mb-3">
+                <label for="editValidFrom" class="form-label">Valid From:</label>
+                <input type="date" name="validFrom" id="editValidFrom" class="form-control" required>
+              </div>
 
-          <!-- Apply To (Product) -->
-          <div class="appliedToField mb-3" style="display: none;">
-            <label for="appliedToProduct-<%= offer._id %>" class="form-label">Apply To:</label>
-            <select name="applicableProducts" class="appliedToProduct form-select" id="appliedToProduct-<%= offer._id %>">
-              <% applicableProducts.forEach(function(item) { %>
-              <option value="<%= item._id %>"><%= item.name %></option>
-              <% }); %>
-            </select>
-          </div>
+              <!-- Valid Until -->
+              <div class="mb-3">
+                <label for="editValidUntil" class="form-label">Valid Until:</label>
+                <input type="date" name="validUntil" id="editValidUntil" class="form-control" required>
+              </div>
 
-          <!-- Apply To (Category) -->
-          <div class="appliedToCategoryField mb-3" style="display: none;">
-            <label for="appliedToCategory-<%= offer._id %>" class="form-label">Apply To (Category):</label>
-            <select name="applicableCategories" class="appliedToCategory form-select" id="appliedToCategory-<%= offer._id %>">
-              <% applicableCategories.forEach(function(item) { %>
-              <option value="<%= item._id %>"><%= item.name %></option>
-              <% }); %>
-            </select>
-          </div>
+              <!-- Apply To (Product) -->
+              <div id="editAppliedToField" class="mb-3" style="display: none;">
+                <label for="editAppliedTo" class="form-label">Apply To:</label>
+                <select name="applicableProducts" id="editappliedToProduct" class="form-select">
+                  <% applicableProducts.forEach(function(item) { %>
+                  <option value="<%= item._id %>"><%= item.name %></option>
+                  <% }); %>
+                </select>
+              </div>
 
-          <!-- Buttons -->
-          <div class="d-flex justify-content-end">
-            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Offer</button>
+              <!-- Apply To (Category) -->
+              <div id="editAppliedToCategoryField" class="mb-3" style="display: none;">
+                <label for="editAppliedToCategory" class="form-label">Apply To (Category):</label>
+                <select name="applicableCategories" id="editAppliedToCategory" class="form-select">
+                  <% applicableCategories.forEach(function(item) { %>
+                  <option value="<%= item._id %>"><%= item.name %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+
+
+              <!-- Buttons -->
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Offer</button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
 
 
