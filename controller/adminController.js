@@ -543,7 +543,7 @@ exports.approveReturnOrder = async (req, res) => {
     wallet.transactions.push({
       type: "credit",
       amount: order.totalAmount,
-      description: `Refund for cancelled order ${order.orderId}`,
+      description: `Refund for return order ${order.orderId}`,
       date: new Date(),
     });
 
