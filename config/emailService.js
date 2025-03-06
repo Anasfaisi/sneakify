@@ -1,3 +1,4 @@
+//Node mailer sending otp &reset password link
 const nodeMailer =  require("nodemailer")
 require('dotenv').config()
 
@@ -32,7 +33,7 @@ catch(error){
 }
 }
 
-
+//send a link to reset password
 exports.sendPasswordResetEmail = async (email, resetLink) => {
     console.log(email, "email in sendPasswordResetEmail");
 

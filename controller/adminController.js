@@ -37,10 +37,7 @@ exports.postLogin = async (req, res) => {
 
     req.session.admin = admin._id;
     res.status(200).json({ success: true, message: "Login successful" });
-    // } else {
-    // Invalid credentials
-    //   res.status(401).json({ success: false, message: "Invalid Credentials" });
-    // }
+   
   } catch (error) {
     console.error("Error in admin login:", error);
     res.status(500).json({
@@ -411,7 +408,7 @@ exports.getOrders = async (req, res) => {
       .populate("userId")
       .skip(skip)
       .limit(itemsPerPage);
-      console.log(orders)
+    console.log(orders);
 
     const totalOrders = await Order.countDocuments();
     const totalPages = Math.ceil(totalOrders / itemsPerPage);
@@ -967,7 +964,7 @@ exports.getOffers = async (req, res) => {
       .populate("applicableCategories", "name")
       .skip(startIndex)
       .limit(limit);
-      // Fetch all applicable products and categories (not paginated)
+    // Fetch all applicable products and categories (not paginated)
     const applicableProducts = await Product.find({}, "name");
     const applicableCategories = await Category.find({}, "name");
 
@@ -1245,7 +1242,6 @@ exports.loadSalesReport = async (req, res) => {
           break;
       }
     }
-   
 
     // Fetch total sales data
     const totalSalesData = await Order.find(dateFilter);
@@ -1268,19 +1264,19 @@ exports.loadSalesReport = async (req, res) => {
       .sort({ orderDate: -1 })
       .skip((currentPage - 1) * itemsPerPage)
       .limit(itemsPerPage);
-      
-      console.log(salesData);
-      if (!salesData || salesData.length === 0) {
-        return res.render("admin/salesReport", {
-          totalSales,
-          totalAmount,
-          totalDiscount,
-          salesData: [],
-          currentPage,
-          totalPages,
-          dateRange,
-        });
-      }
+
+    console.log(salesData);
+    if (!salesData || salesData.length === 0) {
+      return res.render("admin/salesReport", {
+        totalSales,
+        totalAmount,
+        totalDiscount,
+        salesData: [],
+        currentPage,
+        totalPages,
+        dateRange,
+      });
+    }
 
     res.render("admin/salesReport", {
       totalSales,
@@ -1303,280 +1299,276 @@ function getDateFilter(dateRange, startDate, endDate) {
   let dateFilter = { status: "delivered" }; // Default filter for delivered orders
 
   if (dateRange === "custom" && startDate && endDate) {
-      // Handle custom date range
-      dateFilter.orderDate = {
-          $gte: new Date(startDate),
-          $lte: new Date(endDate + 'T23:59:59.999Z') // Include the entire end date
-      };
+    // Handle custom date range
+    dateFilter.orderDate = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate + "T23:59:59.999Z"), // Include the entire end date
+    };
   } else {
-      // Handle preset ranges without moment
-      const currentDate = new Date();
-      
-      switch (dateRange) {
-          case "1-day":
-              const oneDayAgo = new Date(currentDate);
-              oneDayAgo.setDate(currentDate.getDate() - 1);
-              dateFilter.orderDate = { $gte: oneDayAgo };
-              break;
-              
-          case "1-week":
-              const oneWeekAgo = new Date(currentDate);
-              oneWeekAgo.setDate(currentDate.getDate() - 7);
-              dateFilter.orderDate = { $gte: oneWeekAgo };
-              break;
-              
-          case "1-month":
-              const oneMonthAgo = new Date(currentDate);
-              oneMonthAgo.setMonth(currentDate.getMonth() - 1);
-              dateFilter.orderDate = { $gte: oneMonthAgo };
-              break;
-      }
+    // Handle preset ranges without moment
+    const currentDate = new Date();
+
+    switch (dateRange) {
+      case "1-day":
+        const oneDayAgo = new Date(currentDate);
+        oneDayAgo.setDate(currentDate.getDate() - 1);
+        dateFilter.orderDate = { $gte: oneDayAgo };
+        break;
+
+      case "1-week":
+        const oneWeekAgo = new Date(currentDate);
+        oneWeekAgo.setDate(currentDate.getDate() - 7);
+        dateFilter.orderDate = { $gte: oneWeekAgo };
+        break;
+
+      case "1-month":
+        const oneMonthAgo = new Date(currentDate);
+        oneMonthAgo.setMonth(currentDate.getMonth() - 1);
+        dateFilter.orderDate = { $gte: oneMonthAgo };
+        break;
+    }
   }
 
   return dateFilter;
 }
 exports.exportExcel = async (req, res) => {
   try {
-      const { 
-          dateRange = "1-week",
-          startDate,
-          endDate 
-      } = req.query; // Get all filter parameters
+    const { dateRange = "1-week", startDate, endDate } = req.query; // Get all filter parameters
 
-      // Get the date filter using the updated utility function
-      const dateFilter = getDateFilter(dateRange, startDate, endDate);
+    // Get the date filter using the updated utility function
+    const dateFilter = getDateFilter(dateRange, startDate, endDate);
 
-      // Rest of your export code remains the same
-      const salesData = await Order.find(dateFilter).populate("userId");
+    // Rest of your export code remains the same
+    const salesData = await Order.find(dateFilter).populate("userId");
 
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Sales Report");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sales Report");
 
-      // Add title row with merged cells
-      worksheet.mergeCells("A1:F1");
-      const titleCell = worksheet.getCell("A1");
-      titleCell.value = "SNEAKIFY SALES REPORT";
-      titleCell.font = {
-          bold: true,
-          size: 16,
-          color: { argb: "000000" },
-      };
-      titleCell.alignment = {
-          horizontal: "center",
-          vertical: "middle",
-      };
-      titleCell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "E0E0E0" },
-      };
+    // Add title row with merged cells
+    worksheet.mergeCells("A1:F1");
+    const titleCell = worksheet.getCell("A1");
+    titleCell.value = "SNEAKIFY SALES REPORT";
+    titleCell.font = {
+      bold: true,
+      size: 16,
+      color: { argb: "000000" },
+    };
+    titleCell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    titleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "E0E0E0" },
+    };
 
-      // Add date range info
-      let dateRangeText = "";
-      if (dateRange === "custom" && startDate && endDate) {
-          dateRangeText = `Date Range: ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
-      } else {
-          dateRangeText = `Date Range: ${dateRange}`;
+    // Add date range info
+    let dateRangeText = "";
+    if (dateRange === "custom" && startDate && endDate) {
+      dateRangeText = `Date Range: ${new Date(
+        startDate
+      ).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
+    } else {
+      dateRangeText = `Date Range: ${dateRange}`;
+    }
+
+    worksheet.mergeCells("A2:F2");
+    const dateRangeCell = worksheet.getCell("A2");
+    dateRangeCell.value = dateRangeText;
+    dateRangeCell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    // Add spacing row
+    worksheet.addRow([]);
+
+    // Define columns with styling
+    worksheet.columns = [
+      { header: "Order ID", key: "orderId", width: 20 },
+      { header: "Total Amount", key: "grandTotal", width: 15 },
+      { header: "Coupon Discount", key: "couponDiscount", width: 15 },
+      { header: "Offer Discount", key: "offerDiscount", width: 15 },
+      { header: "User Name", key: "userName", width: 20 },
+      { header: "Date", key: "date", width: 15 },
+    ];
+
+    // Style header row
+    worksheet.getRow(4).font = { bold: true }; // Updated to row 4 due to date range info
+    worksheet.getRow(4).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "F0F0F0" },
+    };
+
+    // Add data rows
+    salesData.forEach((order) => {
+      worksheet.addRow({
+        orderId: order.orderId,
+        grandTotal: order.grandTotal,
+        couponDiscount: order.couponDiscount || "No coupon applied",
+        offerDiscount: order.offerDiscount || "No offers",
+        userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
+        date: new Date(order.orderDate).toLocaleDateString(),
+      });
+    });
+
+    // Auto-fit columns
+    worksheet.columns.forEach((column) => {
+      column.alignment = { horizontal: "left" };
+    });
+
+    // Generate the Excel file and send it as a response
+    const filePath = path.join(__dirname, "sales-report.xlsx");
+    await workbook.xlsx.writeFile(filePath);
+
+    res.download(filePath, "sales-report.xlsx", (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error downloading file.");
       }
-      
-      worksheet.mergeCells("A2:F2");
-      const dateRangeCell = worksheet.getCell("A2");
-      dateRangeCell.value = dateRangeText;
-      dateRangeCell.alignment = {
-          horizontal: "center",
-          vertical: "middle",
-      };
-
-      // Add spacing row
-      worksheet.addRow([]);
-
-      // Define columns with styling
-      worksheet.columns = [
-          { header: "Order ID", key: "orderId", width: 20 },
-          { header: "Total Amount", key: "grandTotal", width: 15 },
-          { header: "Coupon Discount", key: "couponDiscount", width: 15 },
-          { header: "Offer Discount", key: "offerDiscount", width: 15 },
-          { header: "User Name", key: "userName", width: 20 },
-          { header: "Date", key: "date", width: 15 },
-      ];
-
-      // Style header row
-      worksheet.getRow(4).font = { bold: true }; // Updated to row 4 due to date range info
-      worksheet.getRow(4).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "F0F0F0" },
-      };
-
-      // Add data rows
-      salesData.forEach((order) => {
-          worksheet.addRow({
-              orderId: order.orderId,
-              grandTotal: order.grandTotal,
-              couponDiscount: order.couponDiscount || "No coupon applied",
-              offerDiscount: order.offerDiscount || "No offers",
-              userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
-              date: new Date(order.orderDate).toLocaleDateString(),
-          });
-      });
-
-      // Auto-fit columns
-      worksheet.columns.forEach((column) => {
-          column.alignment = { horizontal: "left" };
-      });
-
-      // Generate the Excel file and send it as a response
-      const filePath = path.join(__dirname, "sales-report.xlsx");
-      await workbook.xlsx.writeFile(filePath);
-
-      res.download(filePath, "sales-report.xlsx", (err) => {
-          if (err) {
-              console.error(err);
-              res.status(500).send("Error downloading file.");
-          }
-      });
+    });
   } catch (error) {
-      console.error(error);
-      res.status(500).send("Error generating Excel report.");
+    console.error(error);
+    res.status(500).send("Error generating Excel report.");
   }
 };
 
 exports.exportPDF = async (req, res) => {
   try {
-      const { 
-          dateRange = "1-week",
-          startDate,
-          endDate 
-      } = req.query; // Get all filter parameters
+    const { dateRange = "1-week", startDate, endDate } = req.query; // Get all filter parameters
 
-      // Get the date filter using the updated utility function
-      const dateFilter = getDateFilter(dateRange, startDate, endDate);
+    // Get the date filter using the updated utility function
+    const dateFilter = getDateFilter(dateRange, startDate, endDate);
 
-      // Fetch the orders based on the date filter
-      const orders = await Order.find(dateFilter).populate("userId").exec();
+    // Fetch the orders based on the date filter
+    const orders = await Order.find(dateFilter).populate("userId").exec();
 
-      // Map the orders data
-      const data = orders.map((order) => ({
-          orderId: order.orderId,
-          totalAmount: order.totalAmount,
-          couponDiscount: order.couponDiscount || "No coupon applied",
-          offerDiscount: order.offerDiscount || "No offers",
-          userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
-          date: new Date(order.orderDate).toLocaleDateString(),
-      }));
+    // Map the orders data
+    const data = orders.map((order) => ({
+      orderId: order.orderId,
+      totalAmount: order.totalAmount,
+      couponDiscount: order.couponDiscount || "No coupon applied",
+      offerDiscount: order.offerDiscount || "No offers",
+      userName: `${order.addressDetails.firstName} ${order.addressDetails.lastName}`,
+      date: new Date(order.orderDate).toLocaleDateString(),
+    }));
 
-      // Calculate summary values
-      const totalAmount = orders.reduce(
-          (sum, order) => sum + order.totalAmount,
-          0
-      );
-      const totalSales = orders.length;
-      const totalDiscount = orders.reduce(
-          (sum, order) => sum + (order.totalDiscount || 0),
-          0
-      );
+    // Calculate summary values
+    const totalAmount = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const totalSales = orders.length;
+    const totalDiscount = orders.reduce(
+      (sum, order) => sum + (order.totalDiscount || 0),
+      0
+    );
 
-      // Generate PDF
-      const doc = new PDFDocument();
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-          "Content-Disposition",
-          "attachment; filename=Sneakify-sales-report.pdf"
-      );
-      doc.pipe(res);
+    // Generate PDF
+    const doc = new PDFDocument();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Sneakify-sales-report.pdf"
+    );
+    doc.pipe(res);
 
-      // Add title
-      doc.fontSize(16).text("Sales Report", { align: "center" });
-      doc.moveDown(0.5);
+    // Add title
+    doc.fontSize(16).text("Sales Report", { align: "center" });
+    doc.moveDown(0.5);
 
-      // Add date range information
-      let dateRangeText = "Date Range: ";
-      if (dateRange === "custom" && startDate && endDate) {
-          dateRangeText += `${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
-      } else {
-          dateRangeText += dateRange;
-      }
-      doc.fontSize(10).text(dateRangeText, { align: "center" });
-      doc.moveDown(1);
+    // Add date range information
+    let dateRangeText = "Date Range: ";
+    if (dateRange === "custom" && startDate && endDate) {
+      dateRangeText += `${new Date(
+        startDate
+      ).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
+    } else {
+      dateRangeText += dateRange;
+    }
+    doc.fontSize(10).text(dateRangeText, { align: "center" });
+    doc.moveDown(1);
 
-      const pageHeight = 700;
-      const marginTop = 50;
-      const marginBottom = 50;
-      const tableTop = 120; // Adjusted to accommodate date range text
-      const rowHeight = 25;
-      const columnSpacing = 5;
-      const columnWidth = 80;
-      let y = tableTop;
+    const pageHeight = 700;
+    const marginTop = 50;
+    const marginBottom = 50;
+    const tableTop = 120; // Adjusted to accommodate date range text
+    const rowHeight = 25;
+    const columnSpacing = 5;
+    const columnWidth = 80;
+    let y = tableTop;
 
-      const headers = Object.keys(data[0]);
-      let x = 50;
+    const headers = Object.keys(data[0]);
+    let x = 50;
 
-      // Add headers to the table
-      headers.forEach((header) => {
-          doc
-              .fontSize(10)
-              .text(header, x, y, { width: columnWidth, align: "center" });
-          x += columnWidth + columnSpacing;
-      });
-
+    // Add headers to the table
+    headers.forEach((header) => {
       doc
-          .moveTo(50, y + rowHeight - 10)
-          .lineTo(
-              50 + headers.length * (columnWidth + columnSpacing) - columnSpacing,
-              y + rowHeight - 10
-          )
-          .stroke();
+        .fontSize(10)
+        .text(header, x, y, { width: columnWidth, align: "center" });
+      x += columnWidth + columnSpacing;
+    });
+
+    doc
+      .moveTo(50, y + rowHeight - 10)
+      .lineTo(
+        50 + headers.length * (columnWidth + columnSpacing) - columnSpacing,
+        y + rowHeight - 10
+      )
+      .stroke();
+
+    y += rowHeight;
+
+    // Check page space before adding each row of data
+    function checkPageSpace(doc, currentY, heightNeeded) {
+      if (currentY + heightNeeded > pageHeight - marginBottom) {
+        doc.addPage();
+        return marginTop;
+      }
+      return currentY;
+    }
+
+    // Add data rows to the table
+    data.forEach((row) => {
+      y = checkPageSpace(doc, y, rowHeight);
+      x = 50;
+
+      Object.values(row).forEach((cell) => {
+        doc.fontSize(8).text(String(cell), x, y, {
+          width: columnWidth,
+          align: "center",
+          ellipsis: true,
+        });
+        x += columnWidth + columnSpacing;
+      });
 
       y += rowHeight;
 
-      // Check page space before adding each row of data
-      function checkPageSpace(doc, currentY, heightNeeded) {
-          if (currentY + heightNeeded > pageHeight - marginBottom) {
-              doc.addPage();
-              return marginTop;
-          }
-          return currentY;
-      }
-
-      // Add data rows to the table
-      data.forEach((row) => {
-          y = checkPageSpace(doc, y, rowHeight);
-          x = 50;
-
-          Object.values(row).forEach((cell) => {
-              doc.fontSize(8).text(String(cell), x, y, {
-                  width: columnWidth,
-                  align: "center",
-                  ellipsis: true,
-              });
-              x += columnWidth + columnSpacing;
-          });
-
-          y += rowHeight;
-
-          doc
-              .moveTo(50, y - 10)
-              .lineTo(
-                  50 + headers.length * (columnWidth + columnSpacing) - columnSpacing,
-                  y - 10
-              )
-              .stroke();
-      });
-
-      // Add summary to the PDF
-      y = checkPageSpace(doc, y, 100);
-      doc.fontSize(12).text("Summary", 50, y);
-      y += 20;
-
       doc
-          .fontSize(10)
-          .text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50, y)
-          .text(`Total Sales: ${totalSales}`, 50, y + 15)
-          .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50, y + 30);
+        .moveTo(50, y - 10)
+        .lineTo(
+          50 + headers.length * (columnWidth + columnSpacing) - columnSpacing,
+          y - 10
+        )
+        .stroke();
+    });
 
-      doc.end();
+    // Add summary to the PDF
+    y = checkPageSpace(doc, y, 100);
+    doc.fontSize(12).text("Summary", 50, y);
+    y += 20;
+
+    doc
+      .fontSize(10)
+      .text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50, y)
+      .text(`Total Sales: ${totalSales}`, 50, y + 15)
+      .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50, y + 30);
+
+    doc.end();
   } catch (error) {
-      console.log(`Error in downloadPDF: ${error}`);
-      res.status(500).send("Error generating PDF");
+    console.log(`Error in downloadPDF: ${error}`);
+    res.status(500).send("Error generating PDF");
   }
 };

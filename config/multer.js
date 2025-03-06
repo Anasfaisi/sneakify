@@ -1,20 +1,19 @@
-
+//for parsing the images of the form data(where node js cannot handle)
 
 const multer = require('multer');
 const path = require('path');
 
 // Define storage for multer
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
 
-    // Set the destination folder for uploaded files
-    cb(null, path.join(__dirname, '../uploads'));
+// Set the destination folder for uploaded files
+ cb(null, path.join(__dirname, '../uploads'));
   },
   filename: function (req, file, cb) {
-    // Set the filename to include a timestamp for uniqueness
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+  // Set the filename to include a timestamp for uniqueness
+  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+   cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
 

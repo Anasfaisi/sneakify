@@ -1,4 +1,4 @@
-// config/db.js
+// Databaes configuration
 const mongoose = require('mongoose');
 require('dotenv').config();
 
