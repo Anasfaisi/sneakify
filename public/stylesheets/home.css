@@ -1,7 +1,7 @@
 /* Enhanced Home Page Styles */
 
 :root {
-    --primary-color: #007bff;
+    /* --primary-color: #007bff; */
     --secondary-color: #6c757d;
     --light-background: #f8f9fa;
     --dark-text: #333;
@@ -190,7 +190,7 @@
     text-align: center;
     margin-bottom: 2rem;
     font-size: 2.5rem;
-    color: var(--dark-text);
+    /* color: var(--dark-text); */
     position: relative;
 }
 
@@ -202,7 +202,7 @@
     transform: translateX(-50%);
     width: 100px;
     height: 4px;
-    background-color: var(--primary-color);
+    background-color: var(--secondary-color);
 }
 
 .product-grid {
@@ -221,7 +221,7 @@
     box-shadow: var(--soft-shadow);
     transition: all 0.3s ease;
     text-decoration: none;
-    color: inherit;
+    /* color: inherit; */
 }
 
 .product-card:hover {
@@ -249,18 +249,19 @@
     font-size: 1.2rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
+    color: #333;
 }
 
 .product-card-price {
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: var(--secondary-color);
     margin-bottom: 1rem;
 }
 
 .product-card-btn {
     width: 100%;
     padding: 0.75rem;
-    background-color: var(--primary-color);
+    background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 5px;
@@ -268,7 +269,7 @@
 }
 
 .product-card-btn:hover {
-    background-color: #0056b3;
+    /* background-color: #065ab3; */
 }
 
 /* Animations */

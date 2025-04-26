@@ -1,10 +1,10 @@
 <%-include("partials/header") %>
 <link rel="stylesheet" href="/stylesheets/shop.css">
 <div class="container">
-    <nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb" >
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item"><a href="/users/shop">Shop</a></li>
+          <li class="breadcrumb-item"><a class="text-dark" href="/">Home</a></li>
+          <li class="breadcrumb-item"><a class="text-dark" href="/users/shop">Shop</a></li>
           
         </ol>
       </nav>
@@ -25,10 +25,10 @@
             <!-- Size Filter -->
             <div class="mb-3">
               <h6>Size</h6>
-              <div class="size-filter d-flex flex-wrap">
+              <div class="size-filter  d-flex flex-wrap">
                 <% const globalSizes = [ 6, 7, 8, 9, 10, 11, 12]; %>
                 <% globalSizes.forEach((size) => { %>
-                <div class="size-box" data-size="<%= size %>" id="size-<%= size %>">
+                <div class="size-box " data-size="<%= size %>" id="size-<%= size %>">
                   <%= size %>
                 </div>
                 <% }); %>
@@ -102,7 +102,7 @@
               <div class="card-image-container">
                 <img src="/<%= product.images[0] %>" class="card-img-top product-image" alt="<%= product.name %>">
                 <div class="product-overlay">
-                  <a href="/users/productDetails/<%= product._id %>" class="btn btn-primary view-details-btn">View Details</a>
+                  <a href="/users/productDetails/<%= product._id %>" class="btn btn-secondary view-details-btn">View Details</a>
                 </div>
               </div>
               <div class="card-body">
@@ -145,7 +145,7 @@
           <!-- Page Number Links -->
           <% for (let i = 1; i <= totalPages; i++) { %>
           <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&<%= queryString %>">
+            <a class="page-link bg-black" href="?page=<%= i %>&limit=<%= limit %>&<%= queryString %>">
               <%= i %>
             </a>
           </li>
