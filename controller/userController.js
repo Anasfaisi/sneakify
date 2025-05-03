@@ -408,7 +408,6 @@ exports.home = async (req, res) => {
         }
       }
     ])
-    console.log(products);
     const users = await User.find({ isBlocked: false });
     res.render("users/home", { products, users });
   } catch (error) {
@@ -433,7 +432,6 @@ exports.listingProducts = async (req, res) => {
       limit = 5, 
       search 
     } = req.query;
-    console.log(category)
 
     // First get active categories
     const activeCategories = await Category.find({ isActive: true }).select('_id');
@@ -445,7 +443,6 @@ exports.listingProducts = async (req, res) => {
       categoryId: { $in: activeCategoryIds } // Add this to base filter
     };
 
-    console.log(filter)
 
     // Search filter
     if (search) {
@@ -464,7 +461,6 @@ exports.listingProducts = async (req, res) => {
 
     // Category filter - modified to use categoryId
     if (category) {
-      console.log(category)
       const categories = category.split(",").map((cat) => cat.trim());
       // Find the category IDs that match both the user's selection AND are active
       const selectedCategories = await Category.find({
@@ -572,7 +568,6 @@ exports.productDetails = async (req, res) => {
   try {
     console.log("it is reaching in product details")
     const productId = req.params.id;
-  console.log(productId)
     const product = await Product.findById(productId).populate("offer");
      if (!product) {
       return res.status(500).render("users/errorPage", {
@@ -586,8 +581,6 @@ exports.productDetails = async (req, res) => {
  
     if (product.offer?._id) {
      const offer = await Offer.findById(product.offer?._id);
-     console.log("hgfdsdfghj");
-      console.log(new Date().getDate() <= offer.validUntil.getDate(),"==============")
       if (offer && offer.isActive) {
         const discount = (product.price * offer.percentage) / 100;
         discountedPrice = product.price - Math.min(discount, offer.maximumDiscount);
@@ -611,13 +604,6 @@ exports.productDetails = async (req, res) => {
     product.finalDiscount = Math.max(product.offerDiscount || 0, product.categoryDiscount || 0);
 
    await product.save()
-   console.log(product);
-   
-
-
-
-
-     
     const relatedProducts = await Product.find()
     
     res.render("users/productDetails", {
@@ -710,7 +696,7 @@ exports.profile = async (req, res) => {
 
     const user = await User.findById(currentUser);
     res.render("users/profile", { user });
-    console.log(user)
+
   } catch (error) {
     console.log("error in rendering the profile* :", error);
     res.status(500).json({ message: "rendering failed" });
